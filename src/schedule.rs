@@ -519,9 +519,9 @@ fn fnm_dir() -> Option<PathBuf> {
     })
 }
 
-/// Where run logs and history live: `~/Library/Logs/repoke`, `~/.local/state/repoke` or
-/// `%LOCALAPPDATA%\repoke`.
-fn state_dir() -> Result<PathBuf, String> {
+/// Where run logs, run history and the update check live: `~/Library/Logs/repoke`,
+/// `~/.local/state/repoke` or `%LOCALAPPDATA%\repoke`.
+pub fn state_dir() -> Result<PathBuf, String> {
     let home = snapshot::home().ok_or("cannot find the home directory")?;
     Ok(if cfg!(target_os = "macos") {
         home.join("Library/Logs/repoke")

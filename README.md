@@ -4,6 +4,17 @@ Finds the package managers installed on your system, shows what is outdated and 
 
 > Status: early development.
 
+## Install
+
+Not published yet. Once it is:
+
+```sh
+brew install paveldelpozo/tap/repoke   # macOS and Linux
+cargo install repoke                   # anywhere with Rust
+```
+
+or download the archive for your system from the [releases](https://github.com/paveldelpozo/repoke/releases) and put `repoke` on your `PATH`. `repoke self-update` updates it, through Homebrew or cargo when it was installed with them; `--check` only reports (exit 100 when there is a newer version). In a terminal, repoke also mentions a new version once a day; `REPOKE_NO_UPDATE_CHECK=1` turns that off.
+
 ## Usage
 
 ```sh
@@ -110,8 +121,14 @@ Planned: yarn, bun, deno, volta, asdf, `softwareupdate` (opt in). See [docs/tare
 scripts/ci.sh           # what CI checks: fmt, clippy for macOS/Linux/Windows, tests
 scripts/ci.sh --quick   # same, without the Linux tests in Docker
 cargo run -- check
+scripts/release.sh 0.2.0 --dry-run   # build and package every target into dist/
+scripts/release.sh 0.2.0             # bump, tag, GitHub release, Homebrew tap (--crate: crates.io)
 ```
 
 The GitHub workflow is manual (`gh workflow run CI`) so pushes don't spend Actions minutes. To run the quick checks before every push, opt in to the bundled hook with `git config core.hooksPath .githooks`. Cross-target clippy needs `rustup target add x86_64-unknown-linux-gnu x86_64-pc-windows-msvc`.
 
 Each manager lives in `src/managers/<id>.rs` and implements the `Manager` trait in `src/manager.rs`. Output parsing is a pure function with tests over real captured output.
+
+## License
+
+Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT license](LICENSE-MIT), at your option.

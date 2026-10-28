@@ -83,17 +83,19 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [ ] Evitar dos ejecuciones a la vez (un fichero de bloqueo).
 - [ ] Rotar `history.jsonl` cuando crezca.
 
-## Fase 6 · Distribución
+## Fase 6 · Distribución (preparada; falta publicar)
 
-- [ ] Releases con binarios para macOS (arm64/x86_64), Linux y Windows.
-- [ ] Release final publicada en **crates.io** (`cargo install repoke`) y en **Homebrew**: primero un tap propio (`brew install paveldelpozo/tap/repoke`) y, cuando cumpla los requisitos de popularidad, la fórmula en homebrew-core.
-- [ ] Automatizar en `scripts/release.sh` la publicación en los dos sitios (`cargo publish` y actualizar la fórmula del tap con la URL y el sha256 nuevos).
-- [ ] Elegir licencia antes de abrir el repositorio.
-- [ ] `repoke self-update`, cuando el repositorio sea público (`upgrade` ya es el de los paquetes). Según cómo se instaló:
-  - Con Homebrew o con cargo: lo deja en manos de ese gestor (`brew upgrade repoke`, `cargo install repoke`), para no desincronizarlo. Con brew, además, `repoke upgrade` ya lo incluye como un paquete más.
-  - Binario descargado: busca la última release en GitHub, comprueba el checksum (y la firma, si se firman las releases) y sustituye el binario de forma atómica, con vuelta atrás si falla.
-  - `--check` solo informa y sale con 100 si hay versión nueva, igual que `check`. `--json` para agentes.
-- [ ] Aviso discreto de versión nueva al usar repoke, como mucho una vez al día y nunca con `--json` ni fuera de una terminal.
+- [x] Licencia `MIT OR Apache-2.0` (elegida por Pavel), metadatos de crates.io en `Cargo.toml`, perfil `release` con `strip` y LTO. `cargo publish --dry-run` pasa.
+- [x] `scripts/release.sh <versión> [--dry-run] [--crate]`, en local como en hvf: CI, subida de versión, binarios de macOS (arm64 e Intel), Linux musl (x86_64 y arm64, con cargo-zigbuild) y Windows (mingw), archivos con `.sha256`, etiqueta, release de GitHub con notas desde el log, fórmula del tap y, con `--crate`, `cargo publish`. Sin todos los objetivos no publica, porque `self-update` busca el suyo.
+- [x] `repoke self-update [--check] [--yes] [--json]`: con Homebrew o cargo lanza `brew upgrade repoke` o `cargo install repoke --locked`; si es un binario, descarga el de su objetivo, comprueba el SHA-256 y lo cambia de forma atómica (con vuelta atrás). `GITHUB_TOKEN` permite probarlo con el repositorio privado.
+- [x] Aviso de versión nueva como mucho una vez al día, solo en terminal y nunca con `--json` ni en la tarea programada (`REPOKE_NO_UPDATE_CHECK` lo apaga).
+- [x] Dry-run en el Mac: binarios de macOS y Windows generados y verificados; los de Linux necesitan zig y cargo-zigbuild.
+- [ ] Instalar zig y cargo-zigbuild para los binarios de Linux (pendiente del permiso de Pavel).
+- [ ] Crear el repositorio del tap `paveldelpozo/homebrew-tap` (pendiente de Pavel).
+- [ ] Primera release `v0.1.0` (privada mientras el repositorio lo sea).
+- [ ] `cargo login` y publicación en crates.io, al abrir el repositorio.
+- [ ] Decidir con qué correo firmar los commits antes de abrir el repositorio: ahora salen con el del trabajo.
+- [ ] Más adelante, la fórmula en homebrew-core cuando cumpla sus requisitos de popularidad.
 
 ## Fase 7 · Agentes
 

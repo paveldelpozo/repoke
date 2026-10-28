@@ -8,9 +8,11 @@ mod managers;
 mod progress;
 mod run;
 mod schedule;
+mod self_update;
 mod snapshot;
 mod upgrade;
 
+use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -51,6 +53,8 @@ enum Command {
     Export(ExportArgs),
     /// Install a saved snapshot (--from) or pick tools from a catalog, on a new machine
     Init(InitArgs),
+    /// Update repoke itself, through Homebrew or cargo when it was installed with them
+    SelfUpdate(SelfUpdateArgs),
     /// Keep the machine up to date on a schedule, through the system scheduler
     Schedule {
         #[command(subcommand)]
@@ -75,6 +79,18 @@ enum ScheduleAction {
     },
     /// Run the scheduled job now, as the scheduler does: log it and notify
     Run,
+}
+
+#[derive(Args)]
+struct SelfUpdateArgs {
+    /// Only say whether a newer version exists; exits 100 when it does
+    #[arg(long)]
+    check: bool,
+    /// Update without asking
+    #[arg(long, short)]
+    yes: bool,
+    #[arg(long)]
+    json: bool,
 }
 
 #[derive(Args)]
@@ -201,7 +217,27 @@ fn main() -> ExitCode {
         console::set_colors_enabled_stderr(false);
     }
     let command = Cli::parse().command;
-    let scheduled = match &command {
+    let code = dispatch(&command);
+    if notices_updates(&command) {
+        self_update::notice();
+    }
+    code
+}
+
+/// Only for people at a terminal: never under --json, in a pipe or in the scheduled job.
+fn notices_updates(command: &Command) -> bool {
+    let json = match command {
+        Command::List { json } | Command::Check { json, .. } => *json,
+        Command::Upgrade(args) => args.json,
+        Command::Export(args) => args.json,
+        Command::Init(args) => args.json,
+        Command::SelfUpdate(_) | Command::Schedule { .. } => true,
+    };
+    !json && std::io::stdout().is_terminal() && std::io::stderr().is_terminal()
+}
+
+fn dispatch(command: &Command) -> ExitCode {
+    let scheduled = match command {
         Command::List { json } => return list(*json),
         Command::Schedule { action } => Some(match action {
             ScheduleAction::Install(args) => schedule::install(args),
@@ -222,6 +258,7 @@ fn main() -> ExitCode {
         Command::Upgrade(args) => upgrade::run(args, &config),
         Command::Export(args) => export::run(args, &config),
         Command::Init(args) => init::run(args, &config),
+        Command::SelfUpdate(args) => self_update::run(args),
         Command::List { .. } | Command::Schedule { .. } => unreachable!("handled above"),
     });
     outcome.unwrap_or_else(|e| {
