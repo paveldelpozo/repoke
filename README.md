@@ -26,7 +26,7 @@ repoke upgrade --yes --json --no-sudo --hold eslint
 
 ### Configuration
 
-`~/.config/repoke/config.toml` (`%APPDATA%\\repoke\\config.toml` on Windows, or the file in `REPOKE_CONFIG`):
+`~/.config/repoke/config.toml` (`%APPDATA%\repoke\config.toml` on Windows, or the file in `REPOKE_CONFIG`):
 
 ```toml
 exclude = ["brew"]               # managers left out unless named in --only
