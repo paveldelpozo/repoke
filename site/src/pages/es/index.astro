@@ -65,7 +65,7 @@ repoke schedule remove</code></pre>
       <pre><code>repoke check --json                     # sale con 100 si hay algo desactualizado
 repoke upgrade --yes --no-sudo --json   # un evento JSON por línea
 repoke mcp                              # servidor MCP por stdio</code></pre>
-      <p>Sin terminal, repoke nunca se queda esperando una respuesta: un gestor que pide contraseña se salta o falla en el momento. <code>repoke mcp</code> da a los agentes de IA cuatro herramientas: <code>list_managers</code>, <code>check_updates</code>, <code>upgrade</code> y <code>schedule_status</code>. <code>upgrade</code> solo previsualiza hasta que se le indica lo contrario, y nunca usa sudo. En Claude Code:</p>
+      <p>Sin terminal, repoke nunca se queda esperando una respuesta: un gestor que pide contraseña se salta o falla en el momento. <code>repoke mcp</code> da a los agentes de IA seis herramientas: <code>list_managers</code>, <code>check_updates</code>, <code>upgrade</code>, <code>export</code>, <code>init_preview</code> y <code>schedule_status</code>. <code>upgrade</code> solo previsualiza hasta que se le indica lo contrario, y nunca usa sudo. En Claude Code:</p>
       <pre><code>/plugin install repoke --marketplace paveldelpozo/repoke</code></pre>
       <p>Codex y otros clientes MCP ejecutan <code>repoke mcp</code> como servidor por stdio; la <a href="commands.html#repoke-mcp">referencia</a> tiene la configuración.</p>
       <pre><code>repoke plugin search            # plugins oficiales: oh-my-zsh, extensiones de VS Code…

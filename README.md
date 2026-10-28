@@ -58,7 +58,7 @@ The job is registered with the system scheduler: a launchd agent (`~/Library/Lau
 
 ### With AI agents
 
-`repoke mcp` is an MCP server over stdio with four tools: `list_managers`, `check_updates`, `upgrade` and `schedule_status`. `upgrade` only previews unless it gets `dry_run: false`, and never uses sudo.
+`repoke mcp` is an MCP server over stdio with six tools: `list_managers`, `check_updates`, `upgrade`, `export`, `init_preview` and `schedule_status`. `upgrade` only previews unless it gets `dry_run: false`, and never uses sudo.
 
 Claude Code: the plugin adds the MCP server and a skill that tells Claude when and how to use it.
 

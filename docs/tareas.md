@@ -125,7 +125,7 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] README: instalación en Claude Code, Codex y cualquier cliente MCP.
 - [x] Plugin activado en todos los perfiles de Claude con `hvf` (`plugin_add`, marketplace `paveldelpozo/repoke`), 28-10.
 - [x] Probado en una conversación nueva (28-10): "¿qué tengo desactualizado?" usa `check_updates`.
-- [ ] Más herramientas MCP si hacen falta: `export`, `init --dry-run`.
+- [x] Herramientas MCP `export` (sin configuración salvo `include_config`) e `init_preview` (`init --dry-run` desde una foto o del catálogo).
 
 ## Fase 8 · Plugins de la comunidad (hecha)
 

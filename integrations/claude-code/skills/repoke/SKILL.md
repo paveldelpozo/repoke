@@ -5,7 +5,7 @@ description: Check and upgrade the software installed through package managers o
 
 # repoke
 
-repoke finds the package managers installed here and checks or upgrades them all with one command. Use its MCP tools (`check_updates`, `upgrade`, `list_managers`, `schedule_status`) when they are available; otherwise run the `repoke` command, always with `--json`.
+repoke finds the package managers installed here and checks or upgrades them all with one command. Use its MCP tools (`check_updates`, `upgrade`, `list_managers`, `export`, `init_preview`, `schedule_status`) when they are available; otherwise run the `repoke` command, always with `--json`.
 
 ## Checking
 
@@ -23,6 +23,10 @@ Report the result grouped by manager, with current and latest versions. Say whic
 Never upgrade without `--no-sudo` and never run sudo yourself. Managers that need root (apt, dnf, pacman, a system npm) and Homebrew casks that ask for a password come back as `skipped`; tell the user to run `repoke upgrade` in their own terminal for those. npm, pnpm and yarn globals whose new version needs a newer Node are `skipped` too, with the version they need. Exit code 75 means another upgrade is already running: wait and try again.
 
 Node versions under fnm or nvm show up as `node@<major>`: upgrading moves to the newest release of that major line and carries the global npm packages over. Moving to a new major is the user's call.
+
+## Moving to another machine
+
+`export` (or `repoke export --yes --json --output <folder>`) saves what is installed to a folder; config files only with `include_config`, and secret-looking values are removed from them. On the new machine, `init_preview` with `from` shows what `repoke init --from <folder>` would install. Installing is the user's call: suggest the command and let them run it in a terminal.
 
 ## Scheduling
 

@@ -131,13 +131,15 @@ In a terminal, repoke also mentions a new version at most once a day. `REPOKE_NO
 
 ## repoke mcp
 
-An MCP server over stdio, so AI agents can use repoke as a tool. It has four tools:
+An MCP server over stdio, so AI agents can use repoke as a tool. It has six tools:
 
 | Tool | What it does |
 |------|--------------|
 | `list_managers` | The managers on the machine and their versions |
 | `check_updates` | What is outdated; takes `only`, `exclude`, `hold`, `refresh` |
 | `upgrade` | Upgrades; takes `only`, `exclude`, `hold`, `packages` and `dry_run`. It only previews unless `dry_run` is `false`, and never uses sudo |
+| `export` | Saves a snapshot to `output`; takes `only`, `exclude` and `include_config` (config files are left out by default) |
+| `init_preview` | What `repoke init` would do with a snapshot (`from`) or catalog `tools`, changing nothing; takes `only` and `exclude` |
 | `schedule_status` | The schedule and the last run |
 
 In Claude Code, `/plugin install repoke --marketplace paveldelpozo/repoke` adds the server and a skill on when to use it. In Codex, add to `~/.codex/config.toml`:

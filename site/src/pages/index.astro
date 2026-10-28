@@ -65,7 +65,7 @@ repoke schedule remove</code></pre>
       <pre><code>repoke check --json                     # exits 100 when something is outdated
 repoke upgrade --yes --no-sudo --json   # one JSON event per line
 repoke mcp                              # MCP server over stdio</code></pre>
-      <p>Without a terminal, repoke never waits for input: a manager that wants a password is skipped or fails at once. <code>repoke mcp</code> gives AI agents four tools: <code>list_managers</code>, <code>check_updates</code>, <code>upgrade</code> and <code>schedule_status</code>. <code>upgrade</code> only previews until it is told otherwise, and never uses sudo. In Claude Code:</p>
+      <p>Without a terminal, repoke never waits for input: a manager that wants a password is skipped or fails at once. <code>repoke mcp</code> gives AI agents six tools: <code>list_managers</code>, <code>check_updates</code>, <code>upgrade</code>, <code>export</code>, <code>init_preview</code> and <code>schedule_status</code>. <code>upgrade</code> only previews until it is told otherwise, and never uses sudo. In Claude Code:</p>
       <pre><code>/plugin install repoke --marketplace paveldelpozo/repoke</code></pre>
       <p>Codex and other MCP clients run <code>repoke mcp</code> as a stdio server; the <a href="commands.html#repoke-mcp">reference</a> has the configuration.</p>
       <pre><code>repoke plugin search            # official plugins: oh-my-zsh, VS Code extensions…
