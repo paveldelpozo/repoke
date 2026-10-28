@@ -4,21 +4,18 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 
 ## Estado al cierre de la sesión del 28-10-2026
 
-Publicado: **v0.3.0** (28-10 por la tarde; antes v0.2.1) en GitHub (5 binarios), crates.io, el tap `paveldelpozo/tap` y el plugin de Claude Code (activo en todos los perfiles de Pavel); landing bilingüe en https://repoke.paveldelpozo.es (Dokploy, proyecto «repoke» → «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`, se redespliega sola); plugins oficiales en `paveldelpozo/repoke-plugins` (`omz`, `vscode`). En el Mac de Pavel: repoke instalado con cargo desde el código local, plugins `omz` y `vscode`, `[brew] greedy = true` y el modo programado a las 03:00.
+Publicado: **v0.5.0** (28-10 por la noche) en GitHub (5 binarios), crates.io, el tap `paveldelpozo/tap` y el plugin de Claude Code; landing bilingüe en https://repoke.paveldelpozo.es (Dokploy, proyecto «repoke» → «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`, se redespliega sola); plugins oficiales en `paveldelpozo/repoke-plugins` (`omz`, `vscode`) con el índice comunitario montado (release `files`, Discussions, cifras diarias). En el Mac de Pavel: repoke instalado con cargo desde el código local, plugins `omz` y `vscode`, `[brew] greedy = true`, el modo programado a las 03:00 y las cifras de plugins a las 04:30.
 
-Lo siguiente, por orden (actualizado el 28-10 por la noche, antes de reiniciar la sesión):
+Lo siguiente, por orden (actualizado el 29-10):
 
-1. **v0.5.0 publicada** (28-10, noche, la lanzó Pavel): `softwareupdate`, sha256 obligatorio en `plugin install` y `list` agrupado con colores. Antes, la v0.4.0 (asdf, cifrado del backup, aviso de cookies de la landing).
-2. **Pavel, 29-10 por la mañana:** `repoke schedule status` para ver cómo fue la primera ejecución programada (y `~/Library/Logs/repoke/last-run.log` si algo falló).
-3. **Un compañero de Pavel, como beta-tester:** `brew install` desde el tap tras `brew trust paveldelpozo/tap`.
-4. **En espera, hasta que Pavel pueda probarlo en una imagen de Docker o en su portátil con Ubuntu:** probar en Linux lo que solo tiene tests de parseo (apt, dnf, pacman, zypper, flatpak, snap). Windows (winget, scoop, choco) sigue sin máquina donde probarlo.
-5. **Cifrado del backup:** hecho con el crate `age` (28-10, noche). Pavel puede probarlo en su terminal: `repoke export --encrypt -o /tmp/snap` y `HOME=$(mktemp -d) repoke init --from /tmp/snap --dry-run`.
-6. **Pruebas que solo puede hacer Pavel:** las preguntas interactivas de `export` e `init` en una terminal real; un cask que pida contraseña (`.pkg`); `[node] remove_old = true` en real (solo se ha probado con `--dry-run`).
+1. **Sin publicar:** `f49238f` (plugins de la comunidad en `plugin search` e `install`). Por el `feat:` será la **v0.6.0**; la lanza Pavel con `! scripts/release.sh --crate`.
+2. **Pavel, 29-10 por la mañana:** `repoke schedule status` para ver cómo fue la primera ejecución programada (y `~/Library/Logs/repoke/last-run.log` si algo falló), y `~/Library/Logs/repoke-plugins/stats.log` para la primera de las cifras.
+3. **Pruebas que solo puede hacer Pavel:** las preguntas interactivas de `export --encrypt` e `init` en una terminal real; un cask que pida contraseña (`.pkg`); `[node] remove_old = true` en real; `softwareupdate` el día que Apple publique algo.
+4. **Un compañero de Pavel, como beta-tester:** `brew install` desde el tap tras `brew trust paveldelpozo/tap`.
+5. **Linux y Windows:** probar en contenedores Docker o en el portátil con Ubuntu lo que solo tiene tests de parseo (apt, dnf, pacman, zypper, flatpak, snap); Windows (winget, scoop, choco) sigue sin máquina.
+6. **Test intermitente** `plugins::exec::tests::rejects_bad_descriptions` en Linux (ver la fase 9).
 
-Decisiones que tiene que tomar Pavel:
-
-- **Índice comunitario de plugins:** dónde vive (otro repositorio, o el mismo `repoke-plugins` con una sección aparte) y quién revisa lo que entra.
-- **deno y volta:** Pavel prefiere mantenerlos pendientes (28-10); propuesta original de descartarlos. deno no sabe decir qué globales están desactualizados, y volta lleva tiempo sin mantenimiento.
+Decisiones abiertas: ninguna. deno y volta siguen pendientes por decisión de Pavel (28-10), aunque deno no sabe decir qué globales están desactualizados y volta lleva tiempo sin mantenimiento.
 
 Hecho el 28-10 por la tarde: imagen Open Graph; robustez (`engines.node`, casks con contraseña, bloqueo, rotación del historial); landing en Astro; plugin de Claude probado en conversación; v0.3.0 publicada.
 
@@ -149,7 +146,7 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] El ejemplo `brew-greedy.toml` se retiró (28-10): `brew outdated --greedy` lista todos los casks, no solo los que se actualizan solos, y duplicaba lo del gestor integrado (terminal-browser salía dos veces). Ahora es la opción `[brew] greedy = true`.
 - [x] Pistas para errores conocidos (`hint` en el evento `failed`); la primera, para un cask cuya app se borró a mano.
 - [x] Documentación del protocolo y del formato TOML en `docs/plugins.md`, lista para la landing.
-- [ ] Índice comunitario de plugins, además del oficial (`plugin search` e `install` ya existen para el oficial; `REPOKE_PLUGIN_INDEX` permite usar otro).
+- [x] Índice comunitario de plugins (29-10): opción C, ver más abajo.
 - [x] Tiempo máximo por llamada a un plugin (28-10, a petición de Pavel): 10 minutos por defecto, también en las actualizaciones. `plugin_timeout` en `config.toml` o `REPOKE_PLUGIN_TIMEOUT` (`600`, `90s`, `10m`, `1h`; `0` sin límite). Al pasarse, se corta el proceso y cuenta como fallo de ese plugin.
 - [x] Ejemplo instalado en el Mac de Pavel: `~/.local/bin/repoke-omz` (copia). `brew-greedy.toml` sustituido por `[brew] greedy = true` en su `config.toml`.
 
@@ -183,4 +180,4 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - Índice comunitario de plugins (decidido el 28-10 por la noche): **opción C**, empezar todo en GitHub (carpeta `community/` en `repoke-plugins` por PR, revisión del agente a petición de Pavel, descargas contadas como ficheros de release, votos y opiniones en una Discussion por plugin, un script que escribe los números en `index.toml`) y pasar a un servicio propio en Dokploy solo si hace falta. Hecho el primer paso: `sha256` obligatorio en el índice remoto. Segundo paso (29-10): `tier`, `author`, `url`, `discussion`, `downloads` y `votes` en el índice; `plugin search` separa oficiales y comunidad, con autor y cifras; `install` avisa de que un plugin es de la comunidad y enseña su Discussion. En `repoke-plugins`: `scripts/publish.py` (fija la suma, sube el fichero a la release `files` y abre la Discussion con `--discussion`) y `scripts/stats.py` (escribe descargas y votos).
 - [x] Publicado en `repoke-plugins` (29-10, comandos lanzados por Pavel, porque el modo automático bloquea crear cosas públicas): release `files` con `omz` y `vscode`, Discussions activadas, categoría `Plugins` en formato Announcement (solo Pavel abre hilos; todos votan y comentan), Discussions #1 y #2.
 - [x] Cifras al día (29-10): LaunchAgent `repoke-plugins.stats` en el Mac de Pavel, cada día a las 04:30, que lanza `repoke-plugins/scripts/update-stats.sh` (pull, `stats.py`, `check.sh`, commit y push por HTTPS con la sesión de `gh`, porque launchd no tiene ssh-agent; no hace nada si hay cambios sin commit). Log en `~/Library/Logs/repoke-plugins/stats.log`. Probado bajo launchd; el push se verá el primer día que cambien las cifras.
-- [ ] Test intermitente en Linux: `plugins::exec::tests::rejects_bad_descriptions` falló una vez en Docker (29-10) y pasó al repetir. Sospecha: ETXTBSY al ejecutar un script recién escrito mientras otro hilo de test tiene abierto un descriptor. Ya decididas: 0.4.0, asdf, cifrado con `age`, deno y volta pendientes, `softwareupdate` añadido.
+- [ ] Test intermitente en Linux: `plugins::exec::tests::rejects_bad_descriptions` falló una vez en Docker (29-10) y pasó al repetir. Sospecha: ETXTBSY al ejecutar un script recién escrito mientras otro hilo de test tiene abierto un descriptor.

@@ -68,10 +68,10 @@ repoke mcp                              # MCP server over stdio</code></pre>
       <p>Without a terminal, repoke never waits for input: a manager that wants a password is skipped or fails at once. <code>repoke mcp</code> gives AI agents six tools: <code>list_managers</code>, <code>check_updates</code>, <code>upgrade</code>, <code>export</code>, <code>init_preview</code> and <code>schedule_status</code>. <code>upgrade</code> only previews until it is told otherwise, and never uses sudo. In Claude Code:</p>
       <pre><code>/plugin install repoke --marketplace paveldelpozo/repoke</code></pre>
       <p>Codex and other MCP clients run <code>repoke mcp</code> as a stdio server; the <a href="commands.html#repoke-mcp">reference</a> has the configuration.</p>
-      <pre><code>repoke plugin search            # official plugins: oh-my-zsh, VS Code extensions…
-repoke plugin install vscode    # shows its code and asks before installing
+      <pre><code>repoke plugin search            # official and community plugins, with downloads and votes
+repoke plugin install vscode    # checks it is the reviewed version, shows its code, asks
 repoke plugin new my-tool       # start your own from a template</code></pre>
-      <p>Any other manager can be added with a TOML file or a small executable. <a href="plugins.html">The plugin guide</a> explains both.</p>
+      <p>Any other manager can be added with a TOML file or a small executable. <a href="plugins.html">The plugin guide</a> explains both, and how to share yours: community plugins get in by pull request, are reviewed and pinned by their sha256, and people vote for them on <a href="https://github.com/paveldelpozo/repoke-plugins/discussions/categories/plugins">GitHub Discussions</a>.</p>
     </section>
 
     <section id="commands">
