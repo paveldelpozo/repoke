@@ -93,7 +93,7 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] zig 0.17 y cargo-zigbuild 0.24 instalados (28-10, con permiso de Pavel): el dry-run genera los cinco objetivos; los de Linux son estáticos.
 - [x] Tap público `paveldelpozo/homebrew-tap` creado con la fórmula de v0.1.0 (28-10). Homebrew 7 obliga a `brew trust paveldelpozo/tap` antes de instalar desde un tap de terceros: va en el README y tendrá que ir en la landing.
 - [x] Repositorio de repoke **público** (28-10), tras reescribir el historial: commits con `paveldelpozo@gmail.com` y sin la IP del servidor. `self-update` ya lee las releases sin token.
-- [ ] Subir forzando el commit del tap reescrito con el Gmail (bloqueado dos veces por tiempo en Blast Radius).
+- [x] Commit del tap reescrito con el Gmail y subido (28-10).
 - [ ] Probar `brew install` desde el tap una vez hecho `brew trust` (en el Mac de Pavel convive con la versión de cargo).
 - [x] Primera release `v0.1.0` (28-10, privada): cinco binarios con su `.sha256`. `repoke self-update --check` con `GITHUB_TOKEN` la lee bien y detecta la instalación por cargo.
 - [ ] `cargo login` y publicación en crates.io, al abrir el repositorio.
