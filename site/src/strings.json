@@ -30,6 +30,11 @@
         "GitHub"
       ]
     ],
+    "consent_label": "Cookies",
+    "consent_text": "If you accept, this site uses Google Analytics to count visits and see which pages get read. Without your consent it does not load.",
+    "consent_accept": "Accept analytics",
+    "consent_decline": "Decline",
+    "privacy": "Privacy policy",
     "footer": "repoke is free software under the MIT or Apache 2.0 license, written by Pavel del Pozo.",
     "source": "Source",
     "plugins": "Official plugins",
@@ -84,6 +89,11 @@
         "GitHub"
       ]
     ],
+    "consent_label": "Cookies",
+    "consent_text": "Si aceptas, esta web usa Google Analytics para contar visitas y ver qué páginas se leen. Sin tu permiso no se carga.",
+    "consent_accept": "Aceptar analítica",
+    "consent_decline": "Rechazar",
+    "privacy": "Política de privacidad",
     "footer": "repoke es software libre con licencia MIT o Apache 2.0, escrito por Pavel del Pozo.",
     "source": "Código",
     "plugins": "Plugins oficiales",

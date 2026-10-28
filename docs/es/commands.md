@@ -60,10 +60,13 @@ Guarda lo que cada gestor tiene instalado a propósito (sin dependencias) en una
 | `--config` | Incluye la configuración de todos los gestores sin preguntar |
 | `--no-config` | Deja fuera toda la configuración |
 | `-y`, `--yes` | No pregunta nada: configuración solo con `--config`, y se quitan los valores que parecen secretos |
+| `--encrypt` | Incluye toda la configuración, con sus secretos, cifrada con una contraseña |
 | `--force` | Sustituye una foto que ya esté en la carpeta |
 | `--json` | Imprime JSON en vez de texto |
 
 La carpeta contiene `repoke.toml`, una línea por paquete (`cask:firefox`, `eslint==10.13.0`), y `files/`, con los ficheros de configuración en su ruta dentro de tu carpeta personal. Las líneas que parecen secretos (`_authToken=…`, `password: …`, claves privadas) se detectan antes de guardar: en una terminal eliges quitar sus valores, dejar el fichero fuera o guardarlo tal cual; sin terminal, los valores se quitan siempre. Un fichero de configuración que es un enlace a un repositorio git se apunta como parte de tus dotfiles en vez de copiarse.
+
+Con `--encrypt`, o si eliges guardar cifrados los secretos de un fichero, la configuración va a `files.age` con sus secretos intactos, cifrada con una contraseña que repoke te pide (o lee de `REPOKE_PASSWORD`). Es un fichero [age](https://age-encryption.org) estándar: `age -d files.age` lo abre sin repoke. `repoke.toml` sigue siendo legible.
 
 ## repoke init
 
@@ -82,7 +85,7 @@ Prepara una máquina, a partir de una foto o de un catálogo de herramientas hab
 | `--overwrite` | Sustituye sin preguntar los ficheros de configuración que difieren; antes guarda una copia de los tuyos |
 | `--json` | Imprime JSON en vez de texto |
 
-Con `--from`, los gestores que no existen en este sistema se saltan, solo se instala lo que falta y Homebrew va primero, porque a menudo instala los demás gestores. Si sigue faltando algún gestor, se ofrece instalarlo con Homebrew. Los ficheros de configuración que faltan se restauran, los iguales no se tocan y los que difieren se conservan salvo que elijas la copia de la foto; el tuyo se guarda como `<fichero>.repoke-<fecha>.bak`. Los valores quitados de los secretos se rellenan con los del fichero que ya hay en la máquina.
+Con `--from`, los gestores que no existen en este sistema se saltan, solo se instala lo que falta y Homebrew va primero, porque a menudo instala los demás gestores. Si sigue faltando algún gestor, se ofrece instalarlo con Homebrew. Los ficheros de configuración que faltan se restauran, los iguales no se tocan y los que difieren se conservan salvo que elijas la copia de la foto; el tuyo se guarda como `<fichero>.repoke-<fecha>.bak`. Los valores quitados de los secretos se rellenan con los del fichero que ya hay en la máquina. Si la foto tiene configuración cifrada, la contraseña se pide antes de instalar nada (o se lee de `REPOKE_PASSWORD`); un `--dry-run` sin ella la enseña como no comparada.
 
 Sin `--from`, repoke ofrece un catálogo de herramientas (git, gh, ripgrep, fd, bat, fzf, neovim, VS Code…) e instala cada una con el primer gestor de la máquina que la tenga.
 
@@ -188,6 +191,7 @@ remove_old = true                # fnm y nvm: cuando la nueva versión de una l�
 | `REPOKE_NO_PLUGINS` | Ignora todos los plugins en una ejecución |
 | `REPOKE_PLUGIN_INDEX` | Otro índice de plugins, una URL o un fichero local |
 | `REPOKE_NO_UPDATE_CHECK` | No avisa nunca de versiones nuevas de repoke |
+| `REPOKE_PASSWORD` | Contraseña de la configuración cifrada en `export --encrypt` e `init --from`, sin preguntarla |
 | `NO_COLOR` | Salida sin colores |
 
 ## Salida en JSON

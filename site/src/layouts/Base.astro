@@ -54,6 +54,7 @@ const nav = s.nav.map(([href, label]) => {
   </script>
   <link rel="stylesheet" href="/style.css">
   <script is:inline src="/site.js" defer></script>
+  <script is:inline src="/consent.js" defer></script>
 </head>
 <body data-copy={s.copy} data-copied={s.copied} data-copy-failed={s.copy_failed}>
   <a class="skip" href="#main">{s.skip}</a>
@@ -87,6 +88,15 @@ const nav = s.nav.map(([href, label]) => {
   <footer>
     <p>{s.footer} <a href={`https://github.com/paveldelpozo/repoke/releases/tag/v${version}`}>repoke {version}</a>.</p>
     <p><a href="https://github.com/paveldelpozo/repoke">{s.source}</a> <span aria-hidden="true">·</span> <a href="https://github.com/paveldelpozo/repoke/releases">Releases</a> <span aria-hidden="true">·</span> <a href="https://crates.io/crates/repoke">crates.io</a> <span aria-hidden="true">·</span> <a href="https://github.com/paveldelpozo/repoke-plugins">{s.plugins}</a></p>
+    <p><a href="https://paveldelpozo.es/privacidad">{s.privacy}</a> <span aria-hidden="true">·</span> <button type="button" class="link" data-consent-open>{s.consent_label}</button></p>
   </footer>
+
+  <div id="consent" class="consent" data-ga-id="G-THB40Z7HTL" role="region" aria-label={s.consent_label} hidden>
+    <p>{s.consent_text} <a href="https://paveldelpozo.es/privacidad">{s.privacy}</a></p>
+    <div class="consent-actions">
+      <button type="button" class="copy" data-consent="granted">{s.consent_accept}</button>
+      <button type="button" class="copy" data-consent="denied">{s.consent_decline}</button>
+    </div>
+  </div>
 </body>
 </html>

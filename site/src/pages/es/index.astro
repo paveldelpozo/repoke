@@ -51,7 +51,7 @@ repoke upgrade --hold eslint    # deja un paquete como está</code></pre>
       <pre><code>repoke export                 # lo que instalaste, y tu configuración si quieres
 repoke init --from foto       # en la máquina nueva, solo lo que falta
 repoke init                   # o elige herramientas de un catálogo</code></pre>
-      <p>Los valores que parecen secretos, como los tokens de registro de <code>.npmrc</code>, se quitan antes de guardar la foto, y al restaurar nunca se sustituye un fichero tuyo sin preguntar antes y guardar una copia.</p>
+      <p>Los valores que parecen secretos, como los tokens de registro de <code>.npmrc</code>, se quitan antes de guardar la foto, salvo que prefieras guardarlos cifrados con una contraseña (<code>--encrypt</code>), y al restaurar nunca se sustituye un fichero tuyo sin preguntar antes y guardar una copia.</p>
       <pre><code>repoke schedule install                 # cada día a las 03:00, actualiza lo que no pide sudo
 repoke schedule install --check-only    # o solo consulta, y avisa
 repoke schedule status                  # cuándo se ejecuta, y cómo fue la última vez

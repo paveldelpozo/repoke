@@ -266,3 +266,31 @@ footer p { margin: 0.3rem 0; }
 @media (max-width: 22.5rem) {
   .brand span { display: none; }
 }
+
+/* Analytics consent: both choices weigh the same, so declining is as easy as accepting. */
+.consent {
+  position: fixed;
+  inset: auto 1rem 1rem;
+  z-index: 10;
+  max-width: 40rem;
+  margin-inline: auto;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
+}
+.consent[hidden] { display: none; }
+.consent p { margin: 0 0 0.75rem; font-size: 0.9rem; }
+.consent-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.consent .copy { margin: 0; padding: 0 1rem; }
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

@@ -3,12 +3,14 @@ use std::io::{self, IsTerminal};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+use age::secrecy::SecretString;
 use console::style;
 use inquire::{Confirm, InquireError, Select};
 use serde::Serialize;
 
 use crate::check::{self, Found};
 use crate::config::Config;
+use crate::crypt::{self, Bundle};
 use crate::progress::Progress;
 use crate::run::{EXIT_CANCELLED, plural};
 use crate::snapshot::{self, ConfigFile, Entry, FILE, FILES, Snapshot};
@@ -34,7 +36,7 @@ struct ManagerReport {
 #[derive(Serialize)]
 struct ConfigReport {
     path: String,
-    /// `copied`, `redacted`, `dotfiles` or `left_out`.
+    /// `copied`, `redacted`, `encrypted`, `dotfiles` or `left_out`.
     result: &'static str,
     #[serde(skip_serializing_if = "Option::is_none")]
     detail: Option<String>,
@@ -44,6 +46,38 @@ enum Secrets {
     Remove,
     LeaveOut,
     Keep,
+    Encrypt,
+}
+
+/// Collects the files that go into `files.age`; the password is asked the first time one does.
+struct Sealer {
+    all: bool,
+    interactive: bool,
+    password: Option<SecretString>,
+    bundle: Bundle,
+}
+
+impl Sealer {
+    fn password(&mut self) -> Result<SecretString, String> {
+        if let Some(password) = &self.password {
+            return Ok(password.clone());
+        }
+        let password = match crypt::from_env() {
+            Some(password) => password,
+            None if self.interactive => {
+                crypt::ask("Password for the encrypted config files:", true)
+                    .map_err(|e| e.to_string())?
+            }
+            None => {
+                return Err(format!(
+                    "set {} to encrypt the config files without a terminal",
+                    crypt::ENV
+                ));
+            }
+        };
+        self.password = Some(password.clone());
+        Ok(password)
+    }
 }
 
 pub fn run(args: &ExportArgs, config: &Config) -> Result<ExitCode, String> {
@@ -63,6 +97,16 @@ pub fn run(args: &ExportArgs, config: &Config) -> Result<ExitCode, String> {
             "{} already holds a snapshot, pass --force to replace it",
             output.display()
         ));
+    }
+
+    let mut sealer = Sealer {
+        all: args.encrypt,
+        interactive,
+        password: None,
+        bundle: Bundle::new(),
+    };
+    if args.encrypt && !args.no_config {
+        sealer.password()?;
     }
 
     let progress = Progress::new(args.json);
@@ -102,7 +146,8 @@ pub fn run(args: &ExportArgs, config: &Config) -> Result<ExitCode, String> {
             match include_config(args, interactive, &found, &present, &home) {
                 Ok(true) => {
                     for rel in present {
-                        let (file, config_report) = save_config(&home, &output, rel, interactive)?;
+                        let (file, config_report) =
+                            save_config(&home, &output, rel, interactive, &mut sealer)?;
                         entry.config.extend(file);
                         report.config.push(config_report);
                     }
@@ -123,6 +168,15 @@ pub fn run(args: &ExportArgs, config: &Config) -> Result<ExitCode, String> {
     }
 
     snapshot.write(&output)?;
+    let sealed = output.join(crypt::FILE);
+    if sealer.bundle.is_empty() {
+        // A snapshot replaced with --force must not keep the old one's encrypted files.
+        let _ = fs::remove_file(&sealed);
+    } else {
+        let password = sealer.password()?;
+        let data = crypt::seal(&sealer.bundle, &password)?;
+        fs::write(&sealed, data).map_err(|e| format!("{}: {e}", sealed.display()))?;
+    }
     let report = Report {
         output,
         managers: reports,
@@ -149,7 +203,7 @@ fn include_config(
     if args.no_config {
         return Ok(false);
     }
-    if args.config {
+    if args.config || args.encrypt {
         return Ok(true);
     }
     if !interactive {
@@ -168,12 +222,14 @@ fn include_config(
     .prompt()
 }
 
-/// Copies one config into `files/`, or records where it comes from when it is a dotfiles link.
+/// Copies one config into `files/` or the sealer, or records where it comes from when it is a
+/// dotfiles link.
 fn save_config(
     home: &Path,
     output: &Path,
     rel: &str,
     interactive: bool,
+    sealer: &mut Sealer,
 ) -> Result<(Option<ConfigFile>, ConfigReport), String> {
     let source = home.join(rel);
     let shown = snapshot::tilde(&source, home);
@@ -188,6 +244,7 @@ fn save_config(
         let file = ConfigFile {
             path: rel.to_string(),
             redacted: false,
+            encrypted: false,
             dotfiles: Some(dotfiles),
         };
         return Ok((Some(file), report("dotfiles", detail)));
@@ -198,14 +255,27 @@ fn save_config(
     };
     let secrets = snapshot::secret_lines(&text);
     let choice = if secrets.is_empty() {
-        Secrets::Keep
+        if sealer.all {
+            Secrets::Encrypt
+        } else {
+            Secrets::Keep
+        }
     } else if interactive {
         let lines: Vec<String> = secrets.iter().map(|i| (i + 1).to_string()).collect();
-        let options = vec![
-            "Remove their values (recommended)",
-            "Leave this file out",
-            "Keep them as they are",
-        ];
+        let options = if sealer.all {
+            vec![
+                "Keep them, encrypted (recommended)",
+                "Remove their values",
+                "Leave this file out",
+            ]
+        } else {
+            vec![
+                "Remove their values (recommended)",
+                "Keep them, encrypted with a password",
+                "Leave this file out",
+                "Keep them as they are",
+            ]
+        };
         let picked = Select::new(
             &format!(
                 "{shown} has {} that look{} like secrets (line {}). What should be saved?",
@@ -220,8 +290,13 @@ fn save_config(
         match picked {
             "Leave this file out" => Secrets::LeaveOut,
             "Keep them as they are" => Secrets::Keep,
+            "Keep them, encrypted (recommended)" | "Keep them, encrypted with a password" => {
+                Secrets::Encrypt
+            }
             _ => Secrets::Remove,
         }
+    } else if sealer.all {
+        Secrets::Encrypt
     } else {
         Secrets::Remove
     };
@@ -231,8 +306,21 @@ fn save_config(
             return Ok((None, report("left_out", Some("holds secrets".into()))));
         }
         Secrets::Remove => (snapshot::redact(&text), true),
-        Secrets::Keep => (text, false),
+        Secrets::Keep | Secrets::Encrypt => (text, false),
     };
+
+    if matches!(choice, Secrets::Encrypt) || sealer.all {
+        sealer.password()?;
+        sealer.bundle.insert(rel.to_string(), text);
+        let file = ConfigFile {
+            path: rel.to_string(),
+            redacted,
+            encrypted: true,
+            dotfiles: None,
+        };
+        let detail = redacted.then(|| format!("{} removed", plural(secrets.len(), "secret")));
+        return Ok((Some(file), report("encrypted", detail)));
+    }
 
     let target = output.join(FILES).join(rel);
     if let Some(parent) = target.parent() {
@@ -247,6 +335,7 @@ fn save_config(
     let file = ConfigFile {
         path: rel.to_string(),
         redacted,
+        encrypted: false,
         dotfiles: None,
     };
     Ok(if redacted {
@@ -298,6 +387,7 @@ fn print(report: &Report) {
             let what = match c.result {
                 "dotfiles" => "recorded, comes from your dotfiles",
                 "left_out" => "left out",
+                "encrypted" => "saved, encrypted",
                 _ => "saved",
             };
             println!("      {mark} {} {what}{}", c.path, style(detail).dim());

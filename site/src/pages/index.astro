@@ -51,7 +51,7 @@ repoke upgrade --hold eslint    # leave a package where it is</code></pre>
       <pre><code>repoke export                 # what you installed, and your config files if you want
 repoke init --from snapshot   # on the new machine, only what is missing
 repoke init                   # or pick tools from a catalog</code></pre>
-      <p>Values that look like secrets, such as registry tokens in <code>.npmrc</code>, are taken out before a snapshot is saved, and a restore never replaces one of your files without asking first and keeping yours as a backup.</p>
+      <p>Values that look like secrets, such as registry tokens in <code>.npmrc</code>, are taken out before a snapshot is saved, unless you choose to keep them encrypted with a password (<code>--encrypt</code>), and a restore never replaces one of your files without asking first and keeping yours as a backup.</p>
       <pre><code>repoke schedule install                 # every day at 03:00, upgrades what needs no sudo
 repoke schedule install --check-only    # or only check, and notify
 repoke schedule status                  # when it runs, and how the last run went

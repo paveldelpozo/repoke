@@ -1,6 +1,7 @@
 mod catalog;
 mod check;
 mod config;
+mod crypt;
 mod export;
 mod init;
 mod manager;
@@ -231,6 +232,9 @@ struct ExportArgs {
     /// Don't ask anything: config only with --config, and secret-looking values are removed
     #[arg(long, short)]
     yes: bool,
+    /// Include every config file, secrets and all, encrypted with a password (asked, or REPOKE_PASSWORD)
+    #[arg(long, conflicts_with = "no_config")]
+    encrypt: bool,
     /// Replace a snapshot already in the output folder
     #[arg(long)]
     force: bool,

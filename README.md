@@ -33,13 +33,14 @@ repoke upgrade --yes --json --no-sudo --hold eslint
 ```sh
 repoke export                         # asks, per manager, whether to include its config files
 repoke export --yes --config -o snap  # unattended: config included, secret values removed
+REPOKE_PASSWORD=… repoke export --yes --encrypt -o snap  # config with its secrets, encrypted
 repoke init --from snap               # pick what to install (all preselected), then restore config
 repoke init --from snap --dry-run     # what would be installed and restored
 repoke init                           # fresh machine: pick tools from a catalog (ripgrep, fd, gh…)
 repoke init --tools ripgrep,fd --yes  # the same without the picker
 ```
 
-`export` writes a folder with `repoke.toml`, one line per package (`cask:firefox`, `eslint==10.13.0`), and `files/` with the config files at their path under your home. It records only what you installed on purpose, not dependencies. Lines that look like secrets (`_authToken=…`, `password: …`, private keys) are found before saving: interactively you choose to remove their values, leave the file out or keep it; unattended, the values are always removed. `${VAR}` references are kept. A config that is a symlink into a git repository is recorded as coming from your dotfiles (with the repository's remote) instead of being copied.
+`export` writes a folder with `repoke.toml`, one line per package (`cask:firefox`, `eslint==10.13.0`), and `files/` with the config files at their path under your home. It records only what you installed on purpose, not dependencies. Lines that look like secrets (`_authToken=…`, `password: …`, private keys) are found before saving: interactively you choose to remove their values, leave the file out or keep it; unattended, the values are always removed. `${VAR}` references are kept. With `--encrypt` (or choosing it for one file) config files keep their secrets and go into `files.age`, an [age](https://age-encryption.org) file encrypted with a password that `init` asks for before installing anything; `REPOKE_PASSWORD` gives it without a prompt. A config that is a symlink into a git repository is recorded as coming from your dotfiles (with the repository's remote) instead of being copied.
 
 `init --from` skips managers the machine doesn't have for its OS, installs only what is missing, runs Homebrew first (it often installs the other managers) and offers to install a still-missing manager with Homebrew. Config files are compared first: missing ones are restored, equal ones left alone, and different ones are kept unless you choose the snapshot's copy (or pass `--overwrite`), with yours backed up as `<file>.repoke-<date>.bak`. Removed secret values are filled back from the file already on the machine, so restoring never swaps a real token for the placeholder.
 

@@ -43,6 +43,9 @@ pub struct ConfigFile {
     /// Values of lines that looked like secrets were replaced with `REDACTED`.
     #[serde(default, skip_serializing_if = "is_false")]
     pub redacted: bool,
+    /// Kept in `files.age` instead of `files/`.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub encrypted: bool,
     /// Set, instead of copying the file, when it is a link into a dotfiles repository.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dotfiles: Option<Dotfiles>,

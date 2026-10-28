@@ -12,7 +12,7 @@ Lo siguiente, por orden (actualizado el 28-10 por la noche, antes de reiniciar l
 2. **Pavel, 29-10 por la mañana:** `repoke schedule status` para ver cómo fue la primera ejecución programada (y `~/Library/Logs/repoke/last-run.log` si algo falló).
 3. **Un compañero de Pavel, como beta-tester:** `brew install` desde el tap tras `brew trust paveldelpozo/tap`.
 4. **En espera, hasta que Pavel pueda probarlo en una imagen de Docker o en su portátil con Ubuntu:** probar en Linux lo que solo tiene tests de parseo (apt, dnf, pacman, zypper, flatpak, snap). Windows (winget, scoop, choco) sigue sin máquina donde probarlo.
-5. **Cifrado del backup de `export`:** Pavel eligió una dependencia en Rust (28-10), que funciona igual en todos los sistemas. Siguiente tarea de código.
+5. **Cifrado del backup:** hecho con el crate `age` (28-10, noche). Pavel puede probarlo en su terminal: `repoke export --encrypt -o /tmp/snap` y `HOME=$(mktemp -d) repoke init --from /tmp/snap --dry-run`.
 6. **Pruebas que solo puede hacer Pavel:** las preguntas interactivas de `export` e `init` en una terminal real; un cask que pida contraseña (`.pkg`); `[node] remove_old = true` en real (solo se ha probado con `--dry-run`).
 
 Decisiones que tiene que tomar Pavel:
@@ -91,7 +91,7 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] `repoke init` sin `--from`: catálogo de 26 herramientas (`src/catalog.toml`) con su nombre en cada gestor; usa el primero disponible. `--tools` para no usar la lista.
 - [x] Probado en el Mac de Pavel: exportación real (84 paquetes de brew, `.npmrc` con el token quitado y la referencia `${NODE_AUTH_TOKEN}` intacta), `init --from` de su propia foto sin nada que hacer, y restauración real en un `HOME` falso.
 - [ ] Probar las preguntas interactivas de `export` e `init` en una terminal real.
-- [ ] Cifrar el backup con contraseña como alternativa a quitar los secretos.
+- [x] Cifrar el backup con contraseña (28-10, noche): `export --encrypt`, o la opción «Keep them, encrypted» por fichero, guarda la configuración con sus secretos en un único `files.age` (formato age, un solo scrypt por exportación o restauración; `age -d` lo abre sin repoke). `init` pide la contraseña antes de instalar nada (tres intentos) o la lee de `REPOKE_PASSWORD`; restaura con permisos `600`; `--dry-run` sin contraseña los marca como no comparados. Crate `age` 0.12: +66 KB al binario. Probado con un `HOME` falso; falta probar las preguntas interactivas en una terminal real y abrir un `files.age` con la herramienta `age`.
 - [x] Node en el catálogo: `node@lts` con fnm (resuelve la línea LTS más nueva con `ls-remote --lts`) o nvm (`lts/*`), y queda como la versión por defecto. Solo se ofrece si fnm o nvm ya están instalados.
 - [ ] Configuraciones que no son de un gestor (`~/.gitconfig`, `~/.zshrc`): vendrán con los plugins oficiales (fase 9).
 - [x] Al restaurar en otra máquina: el lote fallido ya se reintentaba paquete a paquete; ahora brew explica las fórmulas o casks que no conoce (tap no configurado, renombrado) y los taps que no puede clonar (privados o borrados).

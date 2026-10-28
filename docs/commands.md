@@ -60,10 +60,13 @@ Saves what each manager has installed on purpose (not dependencies) to a folder 
 | `--config` | Include every manager's config files without asking |
 | `--no-config` | Leave all config files out |
 | `-y`, `--yes` | Ask nothing: config only with `--config`, and secret-looking values are removed |
+| `--encrypt` | Include every config file, secrets and all, encrypted with a password |
 | `--force` | Replace a snapshot already in the folder |
 | `--json` | Print JSON instead of text |
 
 The folder holds `repoke.toml`, one line per package (`cask:firefox`, `eslint==10.13.0`), and `files/` with the config files at their path under your home. Lines that look like secrets (`_authToken=…`, `password: …`, private keys) are found before saving: interactively you choose to remove their values, leave the file out or keep it; unattended, the values are always removed. A config file that is a link into a git repository is recorded as coming from your dotfiles instead of being copied.
+
+With `--encrypt`, or by choosing to keep a file's secrets encrypted, config files go into `files.age` with their secrets intact, encrypted with a password that repoke asks for (or reads from `REPOKE_PASSWORD`). It is a standard [age](https://age-encryption.org) file: `age -d files.age` opens it without repoke. `repoke.toml` stays readable.
 
 ## repoke init
 
@@ -82,7 +85,7 @@ Sets up a machine, from a snapshot or from a catalog of common tools.
 | `--overwrite` | Replace config files that differ without asking; yours are backed up first |
 | `--json` | Print JSON instead of text |
 
-With `--from`, managers that don't exist on this system are skipped, only what is missing is installed, and Homebrew goes first, since it often installs the other managers. A manager that is still missing is offered through Homebrew. Config files that are missing are restored, equal ones are left alone, and different ones are kept unless you choose the snapshot's copy; yours is saved as `<file>.repoke-<date>.bak`. Values removed from secrets are filled back from the file already on the machine.
+With `--from`, managers that don't exist on this system are skipped, only what is missing is installed, and Homebrew goes first, since it often installs the other managers. A manager that is still missing is offered through Homebrew. Config files that are missing are restored, equal ones are left alone, and different ones are kept unless you choose the snapshot's copy; yours is saved as `<file>.repoke-<date>.bak`. Values removed from secrets are filled back from the file already on the machine. When the snapshot has encrypted config files, the password is asked before anything is installed (or read from `REPOKE_PASSWORD`); a `--dry-run` without it lists them as not compared.
 
 Without `--from`, repoke offers a catalog of tools (git, gh, ripgrep, fd, bat, fzf, neovim, VS Code…) and installs each with the first manager on the machine that has it.
 
@@ -188,6 +191,7 @@ remove_old = true                # fnm and nvm: once a line's new release runs, 
 | `REPOKE_NO_PLUGINS` | Ignore every plugin for one run |
 | `REPOKE_PLUGIN_INDEX` | Another plugin index, a URL or a local file |
 | `REPOKE_NO_UPDATE_CHECK` | Never mention a new repoke version |
+| `REPOKE_PASSWORD` | Password for encrypted config files in `export --encrypt` and `init --from`, without asking |
 | `NO_COLOR` | Output without colors |
 
 ## JSON output

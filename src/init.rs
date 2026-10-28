@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 use std::env;
 use std::fs;
-use std::io::{self, ErrorKind, IsTerminal};
+use std::io::{self, ErrorKind, IsTerminal, Write};
 use std::path::{Path, PathBuf};
-use std::process::ExitCode;
+use std::process::{Command, ExitCode, Stdio};
 use std::time::Instant;
 
 use console::style;
@@ -14,7 +14,8 @@ use crate::InitArgs;
 use crate::catalog::{self, Tool};
 use crate::check::{self, Found};
 use crate::config::Config;
-use crate::manager::{self, Installed, Manager, Package};
+use crate::crypt::{self, Bundle};
+use crate::manager::{Installed, Manager, Package};
 use crate::managers;
 use crate::progress::Progress;
 use crate::run::{Action, EXIT_CANCELLED, Engine, Options, choose, plural};
@@ -150,6 +151,24 @@ fn from_snapshot(
         }
     }
 
+    let configs: Vec<&ConfigFile> = if args.no_config {
+        Vec::new()
+    } else {
+        entries
+            .iter()
+            .flat_map(|(_, entry)| &entry.config)
+            .collect()
+    };
+    // Before installing anything: a wrong password found at the end would waste the whole run.
+    let bundle = if configs.iter().any(|f| f.encrypted) {
+        match unlock(dir, args, interactive)? {
+            Ok(bundle) => bundle,
+            Err(e) => return Ok(Err(e)),
+        }
+    } else {
+        None
+    };
+
     let installed = check::parallel(entries.iter().copied(), |(m, entry)| {
         let path = m.locate();
         let have: HashSet<Key> = path
@@ -254,19 +273,55 @@ fn from_snapshot(
         engine.held_back(m, &held);
     }
 
-    let configs: Vec<&ConfigFile> = if args.no_config {
-        Vec::new()
-    } else {
-        entries
-            .iter()
-            .flat_map(|(_, entry)| &entry.config)
-            .collect()
-    };
-    let configs_failed = match restore_configs(dir, &configs, args, interactive)? {
+    let configs_failed = match restore_configs(dir, &configs, bundle.as_ref(), args, interactive)? {
         Ok(failed) => failed,
         Err(e) => return Ok(Err(e)),
     };
     Ok(Ok(engine.finish(started, configs_failed)))
+}
+
+/// The contents of `files.age`, or none in a dry run that has no way to get the password.
+fn unlock(
+    dir: &Path,
+    args: &InitArgs,
+    interactive: bool,
+) -> Result<Result<Option<Bundle>, String>, Cancel> {
+    let path = dir.join(crypt::FILE);
+    let data = match fs::read(&path) {
+        Ok(data) => data,
+        Err(e) => return Ok(Err(format!("{}: {e}", path.display()))),
+    };
+    if let Some(password) = crypt::from_env() {
+        return Ok(crypt::open(&data, &password)
+            .map(Some)
+            .map_err(|e| format!("{}: {e} (from {})", path.display(), crypt::ENV)));
+    }
+    if !interactive {
+        if args.dry_run {
+            return Ok(Ok(None));
+        }
+        return Ok(Err(format!(
+            "the snapshot keeps config files encrypted: set {}, or pass --no-config",
+            crypt::ENV
+        )));
+    }
+    for attempt in 1..=3 {
+        let password = match prompt(crypt::ask(
+            "Password for the encrypted config files:",
+            false,
+        ))? {
+            Ok(password) => password,
+            Err(e) => return Ok(Err(e)),
+        };
+        match crypt::open(&data, &password) {
+            Ok(bundle) => return Ok(Ok(Some(bundle))),
+            Err(e) if e == "wrong password" && attempt < 3 => {
+                println!("{}", style("Wrong password, try again.").yellow());
+            }
+            Err(e) => return Ok(Err(format!("{}: {e}", path.display()))),
+        }
+    }
+    unreachable!("the last attempt returns")
 }
 
 type Key = (String, Option<String>);
@@ -333,6 +388,7 @@ struct ConfigEvent<'a> {
 fn restore_configs(
     dir: &Path,
     files: &[&ConfigFile],
+    bundle: Option<&Bundle>,
     args: &InitArgs,
     interactive: bool,
 ) -> Result<Result<bool, String>, Cancel> {
@@ -349,7 +405,8 @@ fn restore_configs(
     for file in files {
         let target = home.join(&file.path);
         let shown = snapshot::tilde(&target, &home);
-        let (result, detail) = match restore(dir, file, &target, &shown, args, interactive)? {
+        let (result, detail) = match restore(dir, file, bundle, &target, &shown, args, interactive)?
+        {
             Ok(outcome) => outcome,
             Err(e) => {
                 failed = true;
@@ -387,6 +444,7 @@ fn restore_configs(
             "would_restore" => "would be restored",
             "would_replace" => "differs, would be replaced",
             "dotfiles" => "comes from your dotfiles",
+            "locked" => "encrypted, not compared",
             _ => "not restored",
         };
         println!("  {mark} {shown}  {text}");
@@ -405,6 +463,7 @@ type Restored = (&'static str, Option<String>);
 fn restore(
     dir: &Path,
     file: &ConfigFile,
+    bundle: Option<&Bundle>,
     target: &Path,
     shown: &str,
     args: &InitArgs,
@@ -418,9 +477,20 @@ fn restore(
         return Ok(Ok(("dotfiles", Some(detail))));
     }
     let source = dir.join(FILES).join(&file.path);
-    let mut new = match fs::read(&source) {
-        Ok(new) => new,
-        Err(e) => return Ok(Err(format!("{}: {e}", source.display()))),
+    let mut new = if file.encrypted {
+        let Some(bundle) = bundle else {
+            let detail = format!("set {} to compare it", crypt::ENV);
+            return Ok(Ok(("locked", Some(detail))));
+        };
+        match bundle.get(&file.path) {
+            Some(text) => text.clone().into_bytes(),
+            None => return Ok(Err(format!("missing from {}", crypt::FILE))),
+        }
+    } else {
+        match fs::read(&source) {
+            Ok(new) => new,
+            Err(e) => return Ok(Err(format!("{}: {e}", source.display()))),
+        }
     };
     let current = match fs::read(target) {
         Ok(current) => Some(current),
@@ -432,7 +502,12 @@ fn restore(
         if args.dry_run {
             return Ok(Ok(("would_restore", None)));
         }
-        return Ok(copy(&source, target).map(|()| ("restored", None)));
+        let restored = if file.encrypted {
+            write_private(target, &new)
+        } else {
+            copy(&source, target)
+        };
+        return Ok(restored.map(|()| ("restored", None)));
     };
     if file.redacted
         && let (Ok(snap), Ok(here)) = (
@@ -451,7 +526,7 @@ fn restore(
     let replace = if args.overwrite {
         true
     } else if interactive {
-        print_diff(target, &source);
+        print_diff(target, &new);
         let options = vec!["Keep mine", "Use the snapshot's (mine is kept as a backup)"];
         match prompt(Select::new(&format!("{shown} differs from the snapshot."), options).prompt())?
         {
@@ -490,15 +565,45 @@ fn copy(source: &Path, target: &Path) -> Result<(), String> {
         .map_err(|e| format!("{}: {e}", target.display()))
 }
 
-fn print_diff(current: &Path, snapshot: &Path) {
-    let diff = manager::capture(
-        "diff",
-        ["-u".as_ref(), current.as_os_str(), snapshot.as_os_str()],
-    );
-    let Ok(out) = diff else {
+/// The snapshot's file was encrypted, so the original permissions are unknown: owner only.
+fn write_private(target: &Path, data: &[u8]) -> Result<(), String> {
+    if let Some(parent) = target.parent() {
+        fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
+    }
+    let mut options = fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
+    options
+        .open(target)
+        .and_then(|mut f| f.write_all(data))
+        .map_err(|e| format!("{}: {e}", target.display()))
+}
+
+/// The snapshot side goes through stdin: it may be decrypted, or merged with the secrets here.
+fn print_diff(current: &Path, snapshot: &[u8]) {
+    let child = Command::new("diff")
+        .arg("-u")
+        .arg(current)
+        .arg("-")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn();
+    let Ok(mut child) = child else {
         return;
     };
-    for line in out.stdout.lines().skip(2).take(40) {
+    if let Some(mut stdin) = child.stdin.take() {
+        let _ = stdin.write_all(snapshot);
+    }
+    let Ok(out) = child.wait_with_output() else {
+        return;
+    };
+    for line in String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .skip(2)
+        .take(40)
+    {
         let styled = match line.chars().next() {
             Some('+') => style(line).green(),
             Some('-') => style(line).red(),
