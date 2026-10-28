@@ -12,8 +12,8 @@ Lo siguiente, por orden (actualizado el 29-10):
 2. **Pavel, 29-10 por la mañana:** `repoke schedule status` para ver cómo fue la primera ejecución programada (y `~/Library/Logs/repoke/last-run.log` si algo falló), y `~/Library/Logs/repoke-plugins/stats.log` para la primera de las cifras.
 3. **Pruebas que solo puede hacer Pavel:** las preguntas interactivas de `export --encrypt` e `init` en una terminal real; un cask que pida contraseña (`.pkg`); `[node] remove_old = true` en real; `softwareupdate` el día que Apple publique algo.
 4. **Un compañero de Pavel, como beta-tester:** `brew install` desde el tap tras `brew trust paveldelpozo/tap`.
-5. **Linux y Windows:** probar en contenedores Docker o en el portátil con Ubuntu lo que solo tiene tests de parseo (apt, dnf, pacman, zypper, flatpak, snap); Windows (winget, scoop, choco) sigue sin máquina.
-6. **Test intermitente** `plugins::exec::tests::rejects_bad_descriptions` en Linux (ver la fase 9).
+5. **Linux y Windows:** apt, dnf, pacman, zypper y el modo programado sin systemd, probados en Docker (29-10). Quedan flatpak, snap, el timer de systemd (portátil con Ubuntu) y Windows (winget, scoop, choco), que sigue sin máquina.
+6. **Test intermitente** de Linux: arreglado el 29-10 (ETXTBSY), 60 de 60 en Docker.
 
 Decisiones abiertas: ninguna. deno y volta siguen pendientes por decisión de Pavel (28-10), aunque deno no sabe decir qué globales están desactualizados y volta lleva tiempo sin mantenimiento.
 
@@ -66,7 +66,9 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] Linux: apt (simulación sin root), dnf, pacman (siempre `-Syu` completo, usa `checkupdates` si está), zypper, snap, flatpak.
 - [x] Windows: winget, scoop, choco. winget y scoop no tienen JSON: se leen sus tablas por la posición de las columnas.
 - [x] Probados de verdad en el Mac de Pavel (28-10): brew, npm, pnpm, fnm, pip, uv, cargo, rustup, composer.
-- [ ] Probar apt, dnf, pacman, zypper y flatpak en contenedores Docker (`scripts/ci.sh` ya tiene el paso; falta arrancar Docker y añadir imágenes por distro).
+- [x] Probados en Docker con imágenes antiguas, para que hubiera actualizaciones (29-10): **apt** (Debian 12 de 2023: 45 pendientes, iguales que `apt list --upgradable`, todas instaladas en 8 s; `export` bien), **dnf** (Fedora 41; ahora enseña la versión actual con `rpm -q`), **pacman** (Arch de octubre, x86_64 emulado con `DisableSandbox`; el resumen cuenta ahora todo lo que actualiza `-Syu`, no solo lo elegido) y **zypper** (Leap 16.0; Leap 15.6 ya no recibe actualizaciones).
+- [ ] `export` para zypper: zypper no distingue lo que instalaste tú de las dependencias (¿`/var/log/zypp/history`?).
+- [ ] flatpak y snap sin probar: snap necesita systemd en marcha, y flatpak descargaría runtimes de cientos de MB.
 - [ ] Probar winget, scoop y choco en un Windows real; la salida de winget cambia con el idioma y la versión.
 - [ ] Probar mas, nvm, gem y mise en una máquina que los tenga.
 - [x] yarn global (solo Yarn 1; explica el fallo por variables sin definir en `.npmrc`) y bun global, probados con datos reales (bun en una carpeta aislada, `BUN_INSTALL`).
@@ -104,7 +106,8 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] Instalado en el Mac de Pavel (28-10).
 - [ ] Comprobar el 29-10 por la mañana con `repoke schedule status` que la ejecución de las 03:00 fue bien (Pavel).
 - [ ] Windows: no hay notificación (habría que usar un toast de PowerShell).
-- [ ] Probar en Linux con systemd y sin él.
+- [x] Sin systemd (29-10, Debian en Docker): `install` daba la línea de crontab con un error y sin guardar la configuración, así que `schedule run` no hacía nada. Ahora la guarda; `status` mira `crontab -l`; systemd se detecta por `/run/systemd/system` (en un contenedor con `cron` instalado hay `systemctl` sin systemd).
+- [ ] Con systemd de verdad (timer de usuario): en el portátil con Ubuntu de Pavel.
 - [x] Evitar dos ejecuciones a la vez: `upgrade` e `init` bloquean `run.lock` en la carpeta de estado (`File::try_lock`, por eso el MSRV pasa a 1.89); el segundo sale con 75.
 - [x] Rotar `history.jsonl`: guarda las últimas 1000 ejecuciones.
 
@@ -180,4 +183,4 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - Índice comunitario de plugins (decidido el 28-10 por la noche): **opción C**, empezar todo en GitHub (carpeta `community/` en `repoke-plugins` por PR, revisión del agente a petición de Pavel, descargas contadas como ficheros de release, votos y opiniones en una Discussion por plugin, un script que escribe los números en `index.toml`) y pasar a un servicio propio en Dokploy solo si hace falta. Hecho el primer paso: `sha256` obligatorio en el índice remoto. Segundo paso (29-10): `tier`, `author`, `url`, `discussion`, `downloads` y `votes` en el índice; `plugin search` separa oficiales y comunidad, con autor y cifras; `install` avisa de que un plugin es de la comunidad y enseña su Discussion. En `repoke-plugins`: `scripts/publish.py` (fija la suma, sube el fichero a la release `files` y abre la Discussion con `--discussion`) y `scripts/stats.py` (escribe descargas y votos).
 - [x] Publicado en `repoke-plugins` (29-10, comandos lanzados por Pavel, porque el modo automático bloquea crear cosas públicas): release `files` con `omz` y `vscode`, Discussions activadas, categoría `Plugins` en formato Announcement (solo Pavel abre hilos; todos votan y comentan), Discussions #1 y #2.
 - [x] Cifras al día (29-10): LaunchAgent `repoke-plugins.stats` en el Mac de Pavel, cada día a las 04:30, que lanza `repoke-plugins/scripts/update-stats.sh` (pull, `stats.py`, `check.sh`, commit y push por HTTPS con la sesión de `gh`, porque launchd no tiene ssh-agent; no hace nada si hay cambios sin commit). Log en `~/Library/Logs/repoke-plugins/stats.log`. Probado bajo launchd; el push se verá el primer día que cambien las cifras.
-- [ ] Test intermitente en Linux: `plugins::exec::tests::rejects_bad_descriptions` falló una vez en Docker (29-10) y pasó al repetir. Sospecha: ETXTBSY al ejecutar un script recién escrito mientras otro hilo de test tiene abierto un descriptor.
+- [x] Test intermitente en Linux (`rejects_bad_descriptions`): era ETXTBSY, un hijo lanzado por otro test hereda el script recién escrito hasta su `exec`. La función auxiliar espera a que deje de estar ocupado (`a189f14`); 60 de 60 en Docker.

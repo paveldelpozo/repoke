@@ -115,6 +115,9 @@ pub fn install(args: &ScheduleInstallArgs) -> Result<ExitCode, String> {
         for command in &plan.commands {
             println!("$ {}", command.join(" "));
         }
+        if let Some(line) = &plan.cron {
+            println!("{}\n{line}", style("# crontab").dim());
+        }
         return Ok(ExitCode::SUCCESS);
     }
 
@@ -136,6 +139,14 @@ pub fn install(args: &ScheduleInstallArgs) -> Result<ExitCode, String> {
         &toml::to_string_pretty(&settings).map_err(|e| e.to_string())?,
     )?;
 
+    if let Some(line) = &plan.cron {
+        println!(
+            "{} {}. There is no systemd here, so add this line to your crontab (`crontab -e`):\n{line}",
+            style("Saved:").bold(),
+            settings.describe()
+        );
+        return Ok(ExitCode::SUCCESS);
+    }
     println!("{} {}.", style("Scheduled:").bold(), settings.describe());
     println!(
         "{}",
@@ -186,6 +197,9 @@ pub fn remove(dry_run: bool) -> Result<ExitCode, String> {
         let _ = capture("systemctl", ["--user", "daemon-reload"]);
     }
     println!("Schedule removed.");
+    if cfg!(target_os = "linux") && !systemd_running() {
+        println!("Delete its line from your crontab too (`crontab -e`).");
+    }
     Ok(ExitCode::SUCCESS)
 }
 
@@ -210,6 +224,8 @@ pub fn status(json: bool) -> Result<ExitCode, String> {
     let (files, _) = removal()?;
     let registered = if cfg!(windows) {
         capture("schtasks", ["/Query", "/TN", TASK]).is_ok_and(|o| o.code == Some(0))
+    } else if cfg!(target_os = "linux") && !systemd_running() {
+        capture("crontab", ["-l"]).is_ok_and(|o| o.stdout.contains("repoke\" schedule run"))
     } else {
         files.iter().any(|f| f.exists())
     };
@@ -569,6 +585,8 @@ struct Plan {
     /// Commands whose failure is expected, such as unloading a job that was never loaded.
     before: Vec<Vec<String>>,
     commands: Vec<Vec<String>>,
+    /// A crontab line for the user to add, where there is no scheduler repoke can drive.
+    cron: Option<String>,
 }
 
 fn plan(exe: &Path, path: &str, settings: &Settings, hour: u8, minute: u8) -> Result<Plan, String> {
@@ -605,16 +623,22 @@ fn plan(exe: &Path, path: &str, settings: &Settings, hour: u8, minute: u8) -> Re
                 domain,
                 file.display().to_string(),
             ]],
+            cron: None,
         })
     } else if cfg!(target_os = "linux") {
-        if manager::locate("systemctl").is_none() {
+        if !systemd_running() {
             let (dom, dow) = match settings.every {
                 Every::Daily => ("*", "*"),
                 Every::Weekly => ("*", "1"),
             };
-            return Err(format!(
-                "systemd isn't available here; add this line to your crontab (`crontab -e`) instead:\n{minute} {hour} {dom} * {dow} PATH=\"{path}\" \"{exe_s}\" schedule run"
-            ));
+            return Ok(Plan {
+                files: Vec::new(),
+                before: Vec::new(),
+                commands: Vec::new(),
+                cron: Some(format!(
+                    "{minute} {hour} {dom} * {dow} PATH=\"{path}\" \"{exe_s}\" schedule run"
+                )),
+            });
         }
         let dir = env::var_os("XDG_CONFIG_HOME")
             .map(PathBuf::from)
@@ -640,16 +664,24 @@ fn plan(exe: &Path, path: &str, settings: &Settings, hour: u8, minute: u8) -> Re
                 systemctl(&["daemon-reload"]),
                 systemctl(&["enable", "--now", "repoke.timer"]),
             ],
+            cron: None,
         })
     } else if cfg!(windows) {
         Ok(Plan {
             files: Vec::new(),
             before: Vec::new(),
             commands: vec![schtasks(&exe_s, settings.every, hour, minute)],
+            cron: None,
         })
     } else {
         Err("scheduling is supported on macOS, Linux and Windows".into())
     }
+}
+
+/// What `sd_booted` checks: `systemctl` can be installed in a container or WSL where systemd
+/// isn't running.
+fn systemd_running() -> bool {
+    Path::new("/run/systemd/system").is_dir()
 }
 
 /// Files and commands that undo `install`.

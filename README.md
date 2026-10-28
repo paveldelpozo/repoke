@@ -55,7 +55,7 @@ repoke schedule run                            # run the job now, as the schedul
 repoke schedule remove
 ```
 
-The job is registered with the system scheduler: a launchd agent (`~/Library/LaunchAgents/repoke.schedule.plist`) on macOS, a systemd user timer (`repoke.timer`) on Linux, a `repoke` task in the Task Scheduler on Windows. Without systemd, `install` prints the crontab line to add instead. A run missed while the machine was asleep or off happens at the next wake or boot. It calls `repoke schedule run`, which runs `upgrade --yes --no-sudo` (or `check` with `--check-only`), keeps the output of the last run and a `history.jsonl` in `~/Library/Logs/repoke` (`~/.local/state/repoke` on Linux, `%LOCALAPPDATA%\repoke` on Windows) and sends a system notification when something was upgraded, failed or is pending. Schedulers start jobs with a bare `PATH`, so `install` saves yours, swapping fnm's per-shell folder for its `default` alias; run `install` again after changing your `PATH`.
+The job is registered with the system scheduler: a launchd agent (`~/Library/LaunchAgents/repoke.schedule.plist`) on macOS, a systemd user timer (`repoke.timer`) on Linux, a `repoke` task in the Task Scheduler on Windows. Where systemd isn't running (a container, WSL), `install` saves the schedule and prints the crontab line to add. A run missed while the machine was asleep or off happens at the next wake or boot. It calls `repoke schedule run`, which runs `upgrade --yes --no-sudo` (or `check` with `--check-only`), keeps the output of the last run and a `history.jsonl` in `~/Library/Logs/repoke` (`~/.local/state/repoke` on Linux, `%LOCALAPPDATA%\repoke` on Windows) and sends a system notification when something was upgraded, failed or is pending. Schedulers start jobs with a bare `PATH`, so `install` saves yours, swapping fnm's per-shell folder for its `default` alias; run `install` again after changing your `PATH`.
 
 ### With AI agents
 
@@ -120,10 +120,10 @@ repoke never waits for input when stdin is not a terminal: a manager that tries 
 | brew     | Homebrew formulae and casks | macOS, Linux  | macOS    | `--refresh` runs `brew update` |
 | softwareupdate | macOS Software Update | macOS        | macOS    | needs sudo; updates that restart the Mac are left to System Settings |
 | mas      | Mac App Store               | macOS         |          | |
-| apt      | APT                         | Linux         |          | needs sudo; `--refresh` runs `apt-get update` |
-| dnf      | DNF                         | Linux         |          | needs sudo |
-| pacman   | pacman                      | Linux         |          | needs sudo; always a full `-Syu`, Arch has no partial upgrades |
-| zypper   | zypper                      | Linux         |          | needs sudo |
+| apt      | APT                         | Linux         | Debian   | needs sudo; `--refresh` runs `apt-get update` |
+| dnf      | DNF                         | Linux         | Fedora   | needs sudo |
+| pacman   | pacman                      | Linux         | Arch     | needs sudo; always a full `-Syu`, Arch has no partial upgrades: a selection, `--package` or `--hold` still upgrades everything |
+| zypper   | zypper                      | Linux         | openSUSE | needs sudo; no `export`, zypper doesn't tell what you installed from dependencies |
 | snap     | Snap                        | Linux         |          | needs sudo |
 | flatpak  | Flatpak                     | Linux         |          | |
 | winget   | WinGet                      | Windows       |          | |

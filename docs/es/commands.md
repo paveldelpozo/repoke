@@ -106,7 +106,7 @@ Registra la ejecución periódica, sustituyendo la anterior si la había.
 | `--exclude <ids>` | Salta estos gestores |
 | `--dry-run` | Imprime los ficheros y comandos del planificador, sin registrar nada |
 
-Por defecto, la tarea ejecuta `repoke upgrade --yes --no-sudo`. Los planificadores arrancan las tareas con un `PATH` mínimo, así que `install` guarda el tuyo (cambiando la carpeta por sesión de fnm por su alias `default`); vuelve a lanzarlo si cambias el `PATH`. Actualizar repoke no afecta a la programación: la tarea ejecuta el `repoke` de tu PATH, que Homebrew, cargo y `self-update` mantienen al día. Sin systemd, imprime la línea de crontab que hay que añadir.
+Por defecto, la tarea ejecuta `repoke upgrade --yes --no-sudo`. Los planificadores arrancan las tareas con un `PATH` mínimo, así que `install` guarda el tuyo (cambiando la carpeta por sesión de fnm por su alias `default`); vuelve a lanzarlo si cambias el `PATH`. Actualizar repoke no afecta a la programación: la tarea ejecuta el `repoke` de tu PATH, que Homebrew, cargo y `self-update` mantienen al día. Donde systemd no está en marcha (un contenedor, WSL), guarda la programación e imprime la línea de crontab que hay que añadir; `status` busca entonces esa línea en `crontab -l`.
 
 ### repoke schedule status
 

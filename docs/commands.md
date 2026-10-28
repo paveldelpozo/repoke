@@ -106,7 +106,7 @@ Registers the periodic run, replacing an earlier one.
 | `--exclude <ids>` | Skip these managers |
 | `--dry-run` | Print the scheduler files and commands, register nothing |
 
-By default the job runs `repoke upgrade --yes --no-sudo`. Schedulers start jobs with a bare `PATH`, so `install` saves yours (with fnm's per-shell folder swapped for its `default` alias); run it again after changing your `PATH`. Upgrading repoke doesn't touch the schedule: the job runs the `repoke` on your PATH, which Homebrew, cargo and `self-update` keep current. Without systemd it prints the crontab line to add instead.
+By default the job runs `repoke upgrade --yes --no-sudo`. Schedulers start jobs with a bare `PATH`, so `install` saves yours (with fnm's per-shell folder swapped for its `default` alias); run it again after changing your `PATH`. Upgrading repoke doesn't touch the schedule: the job runs the `repoke` on your PATH, which Homebrew, cargo and `self-update` keep current. Where systemd isn't running (a container, WSL), it saves the schedule and prints the crontab line to add; `status` then looks for that line in `crontab -l`.
 
 ### repoke schedule status
 
