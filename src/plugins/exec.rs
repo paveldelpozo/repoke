@@ -295,6 +295,16 @@ mod tests {
         let path = dir.join(format!("repoke-{id}"));
         fs::write(&path, format!("#!/bin/sh\n{body}\n")).unwrap();
         fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+        // On Linux, a child that another test forks while the file is still open for writing
+        // keeps it open until it execs, and running the script meanwhile fails with ETXTBSY.
+        for _ in 0..100 {
+            match std::process::Command::new(&path).output() {
+                Err(e) if e.kind() == std::io::ErrorKind::ExecutableFileBusy => {
+                    std::thread::sleep(std::time::Duration::from_millis(10));
+                }
+                _ => break,
+            }
+        }
         path
     }
 
