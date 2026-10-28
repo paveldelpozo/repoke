@@ -9,7 +9,7 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] `repoke check`: pendientes en paralelo, `--only`, `--exclude`, `--json`, códigos de salida 0/100/1/2.
 - [x] Proveedores brew (formulae y casks), npm global y pnpm global, con tests de parseo.
 - [x] CI en local con `scripts/ci.sh`: fmt, clippy para macOS, Linux y Windows, tests en el host y en Linux con Docker si está arrancado. El workflow de GitHub queda solo manual (el presupuesto de Actions se agotó el 28-10).
-- [ ] Activar el hook de pre-push (`git config core.hooksPath .githooks`): pendiente de que Pavel lo confirme.
+- [x] Hook de pre-push activado (28-10, a petición de Pavel): `scripts/ci.sh --quick` antes de cada push.
 
 ## Fase 2 · Actualizar (hecha)
 
@@ -69,7 +69,7 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [ ] Configuraciones que no son de un gestor (`~/.gitconfig`, `~/.zshrc`): vendrán con los plugins oficiales (fase 9).
 - [ ] Al restaurar en otra máquina, avisar de los paquetes que no existen allí (p. ej. taps privados) en vez de dejar que falle brew.
 
-## Fase 5 · Modo programado (hecha; falta instalarlo de verdad)
+## Fase 5 · Modo programado (hecha e instalada)
 
 - [x] `repoke schedule install --every daily|weekly --at HH:MM [--check-only] [--only/--exclude] [--dry-run]`: launchd (LaunchAgent), timer de systemd de usuario o Programador de tareas. Sin systemd, imprime la línea de crontab.
 - [x] Por defecto actualiza (`upgrade --yes --no-sudo`), porque Pavel pidió "que mantenga actualizado el sistema"; `--check-only` solo consulta y avisa.
@@ -77,13 +77,14 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] `schedule status` (también `--json`) y `schedule remove`.
 - [x] PATH: el planificador arranca con un PATH mínimo. Se guarda el del usuario sin duplicados y cambiando la carpeta por sesión de fnm (`fnm_multishells/…`, que desaparece) por `$FNM_DIR/aliases/default/bin`.
 - [x] Probado en el Mac: plist validado con `plutil`, `schedule run` en modo consulta con un HOME falso, `status` con el historial.
-- [ ] Instalarlo de verdad en el Mac de Pavel (`repoke schedule install`) y comprobar que la notificación llega a su hora. No se ha hecho sin su permiso porque deja una tarea programada.
+- [x] Instalado en el Mac de Pavel (28-10).
+- [ ] Comprobar el 29-10 por la mañana con `repoke schedule status` que la ejecución de las 03:00 fue bien (Pavel).
 - [ ] Windows: no hay notificación (habría que usar un toast de PowerShell).
 - [ ] Probar en Linux con systemd y sin él.
 - [ ] Evitar dos ejecuciones a la vez (un fichero de bloqueo).
 - [ ] Rotar `history.jsonl` cuando crezca.
 
-## Fase 6 · Distribución (preparada; falta publicar)
+## Fase 6 · Distribución (publicada)
 
 - [x] Licencia `MIT OR Apache-2.0` (elegida por Pavel), metadatos de crates.io en `Cargo.toml`, perfil `release` con `strip` y LTO. `cargo publish --dry-run` pasa.
 - [x] `scripts/release.sh <versión> [--dry-run] [--crate]`, en local como en hvf: CI, subida de versión, binarios de macOS (arm64 e Intel), Linux musl (x86_64 y arm64, con cargo-zigbuild) y Windows (mingw), archivos con `.sha256`, etiqueta, release de GitHub con notas desde el log, fórmula del tap y, con `--crate`, `cargo publish`. Sin todos los objetivos no publica, porque `self-update` busca el suyo.
@@ -97,7 +98,7 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [ ] Probar `brew install` desde el tap una vez hecho `brew trust` (en el Mac de Pavel convive con la versión de cargo).
 - [x] Primera release `v0.1.0` (28-10, privada): cinco binarios con su `.sha256`. `repoke self-update --check` con `GITHUB_TOKEN` la lee bien y detecta la instalación por cargo.
 - [x] Publicado en crates.io: `repoke 0.1.0` (28-10). Las próximas versiones, con `scripts/release.sh --crate`.
-- [ ] Revocar el token de crates.io que quedó escrito en la conversación y crear uno nuevo con `cargo login` desde otra terminal.
+- [x] Token de crates.io revocado y sustituido por uno nuevo (Pavel, 28-10).
 - [x] Correo de los commits: `paveldelpozo@gmail.com` (elegido por Pavel), configurado en el repo.
 - [ ] Más adelante, la fórmula en homebrew-core cuando cumpla sus requisitos de popularidad.
 
@@ -121,7 +122,7 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] El ejemplo `brew-greedy.toml` se retiró (28-10): `brew outdated --greedy` lista todos los casks, no solo los que se actualizan solos, y duplicaba lo del gestor integrado (terminal-browser salía dos veces). Ahora es la opción `[brew] greedy = true`.
 - [x] Pistas para errores conocidos (`hint` en el evento `failed`); la primera, para un cask cuya app se borró a mano.
 - [x] Documentación del protocolo y del formato TOML en `docs/plugins.md`, lista para la landing.
-- [ ] Índice comunitario de plugins (¿un repositorio con un `index.toml`?) y `repoke plugin install <id>` que descargue y enseñe el código antes de instalarlo.
+- [ ] Índice comunitario de plugins, además del oficial (`plugin search` e `install` ya existen para el oficial; `REPOKE_PLUGIN_INDEX` permite usar otro).
 - [x] Tiempo máximo por llamada a un plugin (28-10, a petición de Pavel): 10 minutos por defecto, también en las actualizaciones. `plugin_timeout` en `config.toml` o `REPOKE_PLUGIN_TIMEOUT` (`600`, `90s`, `10m`, `1h`; `0` sin límite). Al pasarse, se corta el proceso y cuenta como fallo de ese plugin.
 - [x] Ejemplo instalado en el Mac de Pavel: `~/.local/bin/repoke-omz` (copia). `brew-greedy.toml` sustituido por `[brew] greedy = true` en su `config.toml`.
 
@@ -133,7 +134,7 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] En repoke, `plugin search`, `plugin install <id>` (enseña el código y pregunta; `--yes`, `--force`) y `plugin remove <id>` (solo borra lo que instaló). `REPOKE_PLUGIN_INDEX` para otro índice.
 - [x] `paveldelpozo/repoke-plugins` publicado (28-10, lo creó Pavel). Prueba de punta a punta: `plugin search` e `install vscode` desde el índice real de GitHub, y `check` con las 4 extensiones pendientes.
 - [ ] tpm, zinit, antidote, lazy.nvim, vim-plug y componentes de gcloud: Pavel no tiene ninguno instalado, así que quedan pendientes hasta poder probarlos en una máquina que los tenga.
-- [ ] Se quedan en el núcleo, por ser gestores de paquetes: mas, rustup.
+- Se quedan en el núcleo, por ser gestores de paquetes: mas, rustup.
 
 ## Landing (publicada en https://repoke.paveldelpozo.es)
 
@@ -151,4 +152,4 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 
 ## Preguntas abiertas
 
-- Mientras el repositorio sea privado, la gente no puede abrir issues. Opción: un repositorio público aparte solo para issues y releases hasta abrir el código.
+- Ninguna por ahora. (La de recibir issues con el repositorio privado se resolvió al hacerlo público el 28-10.)
