@@ -3,7 +3,7 @@ use std::path::Path;
 
 use serde::Deserialize;
 
-use crate::manager::{Manager, Package, capture};
+use crate::manager::{Manager, Package, capture, writable};
 
 pub struct Npm;
 
@@ -21,9 +21,31 @@ impl Manager for Npm {
     }
 
     fn outdated(&self, bin: &Path) -> Result<Vec<Package>, String> {
-        let json = capture(bin, &["outdated", "--global", "--json"])?.expect(&[0, 1])?;
+        let json = capture(bin, ["outdated", "--global", "--json"])?.expect(&[0, 1])?;
         parse_outdated(&json)
     }
+
+    fn upgrade_args(&self, packages: &[&str]) -> Vec<String> {
+        install_latest("install", packages)
+    }
+
+    /// A system Node (e.g. /usr/local) keeps globals in a root-owned prefix; fnm and nvm don't.
+    fn needs_root(&self, bin: &Path) -> bool {
+        if cfg!(windows) {
+            return false;
+        }
+        match capture(bin, ["prefix", "--global"]).and_then(|o| o.expect(&[0])) {
+            Ok(prefix) => !writable(&Path::new(prefix.trim()).join("lib/node_modules")),
+            Err(_) => false,
+        }
+    }
+}
+
+/// `update -g` stays within the current major, so globals are reinstalled at `@latest`.
+pub(super) fn install_latest(verb: &str, packages: &[&str]) -> Vec<String> {
+    let mut args = vec![verb.to_string(), "--global".to_string()];
+    args.extend(packages.iter().map(|p| format!("{p}@latest")));
+    args
 }
 
 #[derive(Deserialize)]
@@ -75,6 +97,19 @@ mod tests {
     fn empty_output_means_up_to_date() {
         assert!(parse_outdated("").unwrap().is_empty());
         assert!(parse_outdated("{}").unwrap().is_empty());
+    }
+
+    #[test]
+    fn installs_scoped_packages_at_latest() {
+        assert_eq!(
+            Npm.upgrade_args(&["@google/gemini-cli", "eslint"]),
+            [
+                "install",
+                "--global",
+                "@google/gemini-cli@latest",
+                "eslint@latest"
+            ]
+        );
     }
 
     #[test]

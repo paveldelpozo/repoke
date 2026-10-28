@@ -24,8 +24,18 @@ impl Manager for Brew {
     }
 
     fn outdated(&self, bin: &Path) -> Result<Vec<Package>, String> {
-        let json = capture(bin, &["outdated", "--json=v2"])?.expect(&[0, 1])?;
+        let json = capture(bin, ["outdated", "--json=v2"])?.expect(&[0, 1])?;
         parse_outdated(&json)
+    }
+
+    fn upgrade_args(&self, packages: &[&str]) -> Vec<String> {
+        let mut args = vec!["upgrade".to_string()];
+        args.extend(packages.iter().map(|p| p.to_string()));
+        args
+    }
+
+    fn refresh(&self, bin: &Path) -> Result<(), String> {
+        capture(bin, ["update"])?.expect(&[0]).map(drop)
     }
 }
 

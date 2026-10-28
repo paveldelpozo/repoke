@@ -18,7 +18,11 @@ impl Manager for Pnpm {
     }
 
     fn outdated(&self, bin: &Path) -> Result<Vec<Package>, String> {
-        let json = capture(bin, &["outdated", "--global", "--format", "json"])?.expect(&[0, 1])?;
+        let json = capture(bin, ["outdated", "--global", "--format", "json"])?.expect(&[0, 1])?;
         super::npm::parse_outdated(&json)
+    }
+
+    fn upgrade_args(&self, packages: &[&str]) -> Vec<String> {
+        super::npm::install_latest("add", packages)
     }
 }

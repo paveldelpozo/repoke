@@ -11,14 +11,19 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] CI en local con `scripts/ci.sh`: fmt, clippy para macOS, Linux y Windows, tests en el host y en Linux con Docker si está arrancado. El workflow de GitHub queda solo manual (el presupuesto de Actions se agotó el 28-10).
 - [ ] Activar el hook de pre-push (`git config core.hooksPath .githooks`): pendiente de que Pavel lo confirme.
 
-## Fase 2 · Actualizar
+## Fase 2 · Actualizar (hecha, falta probar una actualización real)
 
-- [ ] `repoke upgrade` interactivo: lista para marcar por gestor y por paquete, opción "todo".
-- [ ] Modo automático: `--yes`, `--dry-run`, `--only`, `--exclude`, salida JSON por líneas (un evento por paso).
-- [ ] Sudo: detectar qué gestores lo necesitan; `--no-sudo` los salta en vez de bloquearse.
-- [ ] Resumen final: qué se actualizó, qué falló y por qué.
-- [ ] Fichero de configuración `~/.config/repoke/config.toml`: selección por defecto, paquetes fijados o excluidos, timeouts.
-- [ ] `brew update` antes de consultar, opcional (`--refresh`), porque `brew outdated` usa el índice local.
+- [x] `repoke upgrade` interactivo: lista con todo marcado (espacio marca, → todo, ← nada); Esc cancela con código 130.
+- [x] Modo automático: `--yes`, `--dry-run`, `--only`, `--exclude`, `--hold`, salida JSON por líneas (un evento por paso).
+- [x] Sudo: npm comprueba si su prefijo global es escribible. Siempre `sudo -n`; en interactivo se pide antes la contraseña con `sudo -v`. `--no-sudo` salta esos gestores.
+- [x] Resumen final con actualizados, fallidos, saltados y planificados; los errores incluyen las últimas 20 líneas de salida.
+- [x] `~/.config/repoke/config.toml` (o `REPOKE_CONFIG`) con `exclude` y `hold`; rechaza claves desconocidas.
+- [x] `--refresh` lanza `brew update` antes de consultar.
+- [x] Spinners en paralelo por gestor al consultar y, al actualizar, con la última línea de salida y el tiempo transcurrido. Solo por stderr y con terminal.
+- [ ] Probar `repoke upgrade` de verdad en el Mac de Pavel (por ahora solo se ha probado con `--dry-run`).
+- [ ] Algunos casks de brew piden contraseña con sudo por su cuenta: el aviso queda tapado por el spinner. Detectar los casks y pedir `sudo -v` antes, o mostrar su salida tal cual.
+- [ ] Timeouts por gestor en la configuración.
+- [ ] Con `--refresh`, el spinner de npm y pnpm dice "refreshing" un instante aunque no tengan índice que refrescar.
 
 ## Fase 3 · Más gestores
 
@@ -57,9 +62,21 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [ ] Skill de Claude Code que use `repoke check --json` y `repoke upgrade --yes --json`.
 - [ ] Valorar un servidor MCP.
 
+## Fase 8 · Plugins de la comunidad
+
+Cuando todo lo anterior funcione. Que cualquiera pueda añadir un gestor sin tocar el código de repoke.
+
+- [ ] Plugins ejecutables: un programa `repoke-<id>` en el PATH (como los subcomandos de git o cargo) que responde a `detect`, `outdated` y `upgrade` con un protocolo JSON versionado sobre stdin/stdout. Sirve cualquier lenguaje.
+- [ ] Gestores declarativos: un `.toml` en `~/.config/repoke/managers/` que describe los comandos y cómo leer su salida (JSON o expresión regular), para los casos que no necesitan código.
+- [ ] `repoke plugin list`, y que los plugins salgan en `list`, `check` y `upgrade` como un gestor más.
+- [ ] Repositorio o plantilla de ejemplo para escribir un plugin, con tests del protocolo.
+- [ ] Documentación en la landing: cómo funciona el protocolo y cómo hacer, probar y publicar un plugin.
+- [ ] Decidir cómo se descubren y comparten (¿un índice comunitario?) y qué avisos de seguridad mostrar, porque un plugin ejecuta código en la máquina.
+
 ## Landing
 
 - [ ] Landing del proyecto. El icono parte de la idea de un **repóker de ases** (juego de palabras con el nombre). El logo final hay que pedírselo a Pavel o confirmarlo con él antes de usarlo.
+- [ ] Apartado de documentación para plugins (ver fase 8).
 - [ ] Desplegar en el Dokploy personal; antes, pedir el dominio y comprobar con `dig` que apunta al servidor.
 
 ## Preguntas abiertas
