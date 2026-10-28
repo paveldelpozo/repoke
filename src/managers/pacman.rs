@@ -36,9 +36,15 @@ impl Manager for Pacman {
         needs_sudo()
     }
 
-    /// Arch only supports full upgrades, so any selection runs `-Syu` for everything.
-    fn upgrade_steps(&self, _bin: &Path, packages: &[Package]) -> Vec<Step> {
-        vec![Step::new(["-Syu", "--noconfirm"], packages)]
+    /// Arch only supports full upgrades, so any selection runs `-Syu` for everything, and the
+    /// step lists every pending package so the summary counts what really changed.
+    fn upgrade_steps(&self, bin: &Path, packages: &[Package]) -> Vec<Step> {
+        let pending = self
+            .outdated(bin)
+            .ok()
+            .filter(|all| all.len() > packages.len())
+            .unwrap_or_else(|| packages.to_vec());
+        vec![Step::new(["-Syu", "--noconfirm"], &pending)]
     }
 
     /// Explicitly installed packages from the repos; AUR ones (`-m`) need an AUR helper.
