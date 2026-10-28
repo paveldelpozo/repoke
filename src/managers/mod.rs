@@ -24,10 +24,15 @@ mod winget;
 mod zypper;
 
 use crate::manager::Manager;
+use crate::plugins;
 
-/// The managers supported on this OS, system package managers first.
+/// The managers supported on this OS, system package managers first and plugins last.
 pub fn all() -> Vec<&'static dyn Manager> {
-    every().into_iter().filter(|m| m.supported()).collect()
+    every()
+        .into_iter()
+        .chain(plugins::loaded().managers.iter().copied())
+        .filter(|m| m.supported())
+        .collect()
 }
 
 /// Every manager repoke knows, whatever the OS.

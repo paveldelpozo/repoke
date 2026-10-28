@@ -6,6 +6,7 @@ mod init;
 mod manager;
 mod managers;
 mod mcp;
+mod plugins;
 mod progress;
 mod run;
 mod schedule;
@@ -58,6 +59,11 @@ enum Command {
     SelfUpdate(SelfUpdateArgs),
     /// Serve repoke's tools to AI agents over MCP (stdio)
     Mcp,
+    /// Managers added as plugins: `repoke-<id>` executables or TOML files
+    Plugin {
+        #[command(subcommand)]
+        action: PluginAction,
+    },
     /// Keep the machine up to date on a schedule, through the system scheduler
     Schedule {
         #[command(subcommand)]
@@ -82,6 +88,29 @@ enum ScheduleAction {
     },
     /// Run the scheduled job now, as the scheduler does: log it and notify
     Run,
+}
+
+#[derive(Subcommand)]
+enum PluginAction {
+    /// Show the plugins found and any problem with them
+    List {
+        #[arg(long)]
+        json: bool,
+    },
+    /// Start a plugin from a template: a TOML manager, or a script with --exec
+    New(PluginNewArgs),
+}
+
+#[derive(Args)]
+struct PluginNewArgs {
+    /// Manager id: lowercase letters, digits and dashes
+    id: String,
+    /// Write a `repoke-<id>` script speaking the JSON protocol instead of a TOML manager
+    #[arg(long)]
+    exec: bool,
+    /// Where to write it (default: ~/.config/repoke/managers/<id>.toml, or ./repoke-<id>)
+    #[arg(long, short)]
+    output: Option<PathBuf>,
 }
 
 #[derive(Args)]
@@ -237,7 +266,10 @@ fn notices_updates(command: &Command) -> bool {
         Command::Upgrade(args) => args.json,
         Command::Export(args) => args.json,
         Command::Init(args) => args.json,
-        Command::SelfUpdate(_) | Command::Schedule { .. } | Command::Mcp => true,
+        Command::SelfUpdate(_)
+        | Command::Schedule { .. }
+        | Command::Mcp
+        | Command::Plugin { .. } => true,
     };
     !json && std::io::stdout().is_terminal() && std::io::stderr().is_terminal()
 }
@@ -246,6 +278,10 @@ fn dispatch(command: &Command) -> ExitCode {
     let scheduled = match command {
         Command::List { json } => return list(*json),
         Command::Mcp => Some(mcp::serve()),
+        Command::Plugin { action } => Some(match action {
+            PluginAction::List { json } => plugins::list(*json),
+            PluginAction::New(args) => plugins::new(args),
+        }),
         Command::Schedule { action } => Some(match action {
             ScheduleAction::Install(args) => schedule::install(args),
             ScheduleAction::Status { json } => schedule::status(*json),
@@ -266,7 +302,7 @@ fn dispatch(command: &Command) -> ExitCode {
         Command::Export(args) => export::run(args, &config),
         Command::Init(args) => init::run(args, &config),
         Command::SelfUpdate(args) => self_update::run(args),
-        Command::List { .. } | Command::Schedule { .. } | Command::Mcp => {
+        Command::List { .. } | Command::Schedule { .. } | Command::Mcp | Command::Plugin { .. } => {
             unreachable!("handled above")
         }
     });

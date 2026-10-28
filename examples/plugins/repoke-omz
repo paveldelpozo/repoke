@@ -1,0 +1,37 @@
+#!/bin/sh
+# repoke plugin for oh-my-zsh, protocol 1: https://github.com/paveldelpozo/repoke/blob/main/docs/plugins.md
+# Put it on your PATH (e.g. ~/.local/bin/repoke-omz). oh-my-zsh is a git clone, so "outdated" means
+# its branch is behind the remote one; the version shown is the commit.
+set -eu
+dir=${ZSH:-$HOME/.oh-my-zsh}
+
+case "${1:-}" in
+  describe)
+    echo '{"protocol":1,"id":"omz","name":"oh-my-zsh","os":["macos","linux"],"capabilities":[]}'
+    ;;
+  detect)
+    if [ -e "$dir/.git" ] && [ -f "$dir/oh-my-zsh.sh" ]; then
+      printf '{"installed":true,"version":"%s"}\n' "$(git -C "$dir" rev-parse --short HEAD)"
+    else
+      echo '{"installed":false}'
+    fi
+    ;;
+  outdated)
+    branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD)
+    git -C "$dir" fetch --quiet origin "$branch"
+    if git -C "$dir" merge-base --is-ancestor "origin/$branch" HEAD; then
+      echo '[]'
+    else
+      printf '[{"name":"oh-my-zsh","current":"%s","latest":"%s"}]\n' \
+        "$(git -C "$dir" rev-parse --short HEAD)" "$(git -C "$dir" rev-parse --short "origin/$branch")"
+    fi
+    ;;
+  upgrade)
+    # What `omz update` runs, without needing an interactive zsh.
+    ZSH=$dir zsh -f "$dir/tools/upgrade.sh"
+    ;;
+  *)
+    echo "usage: $0 describe|detect|outdated|upgrade" >&2
+    exit 2
+    ;;
+esac

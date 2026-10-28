@@ -1,0 +1,17 @@
+# Homebrew casks that update themselves (Chrome, Slack…), which `brew outdated` skips by default.
+# Copy to ~/.config/repoke/managers/brew-greedy.toml.
+id = "brew-greedy"
+name = "Homebrew casks (self-updating)"
+binary = "brew"
+os = ["macos"]
+
+[outdated]
+command = ["outdated", "--cask", "--greedy", "--json=v2"]
+format = "json"
+items = "/casks"
+name = "name"
+current = "/installed_versions/0"
+latest = "current_version"
+
+[upgrade]
+command = ["upgrade", "--cask", "--greedy", "{packages}"]

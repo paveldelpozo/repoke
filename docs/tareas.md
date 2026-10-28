@@ -111,22 +111,22 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [ ] Probarlo en una conversación nueva: pedir "¿qué tengo desactualizado?" y ver que usa `check_updates`.
 - [ ] Más herramientas MCP si hacen falta: `export`, `init --dry-run`.
 
-## Fase 8 · Plugins de la comunidad
+## Fase 8 · Plugins de la comunidad (hecha)
 
-Cuando todo lo anterior funcione. Que cualquiera pueda añadir un gestor sin tocar el código de repoke.
-
-- [ ] Plugins ejecutables: un programa `repoke-<id>` en el PATH (como los subcomandos de git o cargo) que responde a `detect`, `outdated` y `upgrade` con un protocolo JSON versionado sobre stdin/stdout. Sirve cualquier lenguaje.
-- [ ] Gestores declarativos: un `.toml` en `~/.config/repoke/managers/` que describe los comandos y cómo leer su salida (JSON o expresión regular), para los casos que no necesitan código.
-- [ ] `repoke plugin list`, y que los plugins salgan en `list`, `check` y `upgrade` como un gestor más.
-- [ ] Repositorio o plantilla de ejemplo para escribir un plugin, con tests del protocolo.
-- [ ] Documentación en la landing: cómo funciona el protocolo y cómo hacer, probar y publicar un plugin.
-- [ ] Decidir cómo se descubren y comparten (¿un índice comunitario?) y qué avisos de seguridad mostrar, porque un plugin ejecuta código en la máquina.
+- [x] Plugins ejecutables `repoke-<id>` en el PATH con protocolo JSON versionado (1): `describe`, `detect`, `outdated`, `upgrade` y, opcionales, `refresh`, `installed` e `install`. stdin cerrado, error = salida distinta de 0 con stderr.
+- [x] Gestores declarativos en `~/.config/repoke/managers/*.toml`: comandos y lectura de la salida en JSON (punteros JSON) o por líneas (regex con grupos con nombre), con `{packages}`, `{name}` y `{version}`. Las claves desconocidas son error.
+- [x] Aparecen en `list`, `check`, `upgrade`, `export`, `init`, `schedule` y el MCP. Un id que choca con uno integrado u otro plugin no se carga y se avisa. `REPOKE_NO_PLUGINS=1` los apaga.
+- [x] `repoke plugin list [--json]` y `repoke plugin new <id> [--exec] [-o]` con plantillas que funcionan tal cual.
+- [x] Ejemplos reales en `examples/plugins/`: `brew-greedy.toml` (casks que se actualizan solos) y `repoke-omz` (oh-my-zsh). Probados en el Mac de Pavel con datos reales.
+- [x] Documentación del protocolo y del formato TOML en `docs/plugins.md`, lista para la landing.
+- [ ] Índice comunitario de plugins (¿un repositorio con un `index.toml`?) y `repoke plugin install <id>` que descargue y enseñe el código antes de instalarlo.
+- [ ] Tiempo máximo por llamada a un plugin: ahora uno que se cuelgue en `describe` cuelga repoke.
 
 ## Fase 9 · Plugins oficiales (`repoke-plugins`, repositorio aparte)
 
 Herramientas que no son gestores de paquetes pero se actualizan solas. Son los primeros plugins que se escriben, para poner a prueba el protocolo de la fase 8 antes de abrirlo a la comunidad. La idea es detectar lo máximo posible de lo que hay instalado.
 
-- [ ] oh-my-zsh: se detecta por `$ZSH` o `~/.oh-my-zsh`; consulta con `git fetch` + comparar con el remoto, actualiza con `omz update`.
+- [ ] oh-my-zsh: ya existe como ejemplo (`examples/plugins/repoke-omz`); pasarlo al repositorio de plugins oficiales.
 - [ ] zinit, antidote y otros gestores de plugins de zsh.
 - [ ] tpm (plugins de tmux), plugins de Neovim (lazy.nvim, vim-plug).
 - [ ] Extensiones de VS Code (`code --update-extensions`).

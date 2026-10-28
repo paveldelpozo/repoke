@@ -134,6 +134,18 @@ repoke never waits for input when stdin is not a terminal: a manager that tries 
 
 Planned: yarn, bun, deno, volta, asdf, `softwareupdate` (opt in). See [docs/tareas.md](docs/tareas.md).
 
+### Plugins
+
+Any other manager can be added without changing repoke: a TOML file in `~/.config/repoke/managers/` that says which commands to run and how to read their output, or a `repoke-<id>` executable on your PATH that answers a small JSON protocol. Plugins show up in every command, including the MCP server.
+
+```sh
+repoke plugin new gh-ext          # TOML template in ~/.config/repoke/managers/gh-ext.toml
+repoke plugin new omz --exec      # ./repoke-omz, a script speaking the protocol
+repoke plugin list                # what was found, and any problem with it
+```
+
+How to write one: [docs/plugins.md](docs/plugins.md). Examples: [examples/plugins](examples/plugins) (self-updating Homebrew casks, oh-my-zsh).
+
 ## Development
 
 ```sh
