@@ -155,7 +155,8 @@ if $dry_run; then
 fi
 
 step "tag $tag"
-git commit --quiet -am "Release $tag"
+# Nothing to commit when the version was already set by hand.
+git diff --quiet || git commit --quiet -am "Release $tag"
 git tag -a "$tag" -m "$tag"
 git push --quiet origin main "$tag"
 
