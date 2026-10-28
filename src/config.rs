@@ -2,6 +2,7 @@ use std::env;
 use std::fs;
 use std::io::ErrorKind;
 use std::path::PathBuf;
+use std::time::Duration;
 
 use serde::Deserialize;
 
@@ -13,6 +14,8 @@ pub struct Config {
     pub exclude: Vec<String>,
     /// Packages never upgraded nor reported as pending, as `name` or `manager:name`.
     pub hold: Vec<String>,
+    /// How long a plugin command may run: seconds, or `90s`, `10m`, `1h`; `0` for no limit.
+    pub plugin_timeout: Option<String>,
 }
 
 pub fn load() -> Result<Config, String> {
@@ -20,7 +23,15 @@ pub fn load() -> Result<Config, String> {
         return Ok(Config::default());
     };
     match fs::read_to_string(&path) {
-        Ok(text) => toml::from_str(&text).map_err(|e| format!("{}: {e}", path.display())),
+        Ok(text) => {
+            let config: Config =
+                toml::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?;
+            if let Some(timeout) = &config.plugin_timeout {
+                parse_duration(timeout)
+                    .map_err(|e| format!("{}: plugin_timeout: {e}", path.display()))?;
+            }
+            Ok(config)
+        }
         Err(e) if e.kind() == ErrorKind::NotFound => Ok(Config::default()),
         Err(e) => Err(format!("{}: {e}", path.display())),
     }
@@ -45,6 +56,32 @@ pub fn dir() -> Option<PathBuf> {
     Some(base?.join("repoke"))
 }
 
+/// `600`, `90s`, `10m` or `1h`; `0` means no limit and gives `None`.
+pub fn parse_duration(text: &str) -> Result<Option<Duration>, String> {
+    let text = text.trim();
+    let (number, unit) = match text.find(|c: char| !c.is_ascii_digit()) {
+        Some(i) => text.split_at(i),
+        None => (text, "s"),
+    };
+    let invalid = || format!("'{text}' isn't a duration like 600, 90s, 10m or 1h");
+    let value: u64 = number.parse().map_err(|_| invalid())?;
+    let seconds = match unit {
+        "s" => value,
+        "m" => value * 60,
+        "h" => value * 3600,
+        _ => return Err(invalid()),
+    };
+    Ok((seconds > 0).then(|| Duration::from_secs(seconds)))
+}
+
+pub fn show_duration(duration: Duration) -> String {
+    match duration.as_secs() {
+        s if s % 3600 == 0 => format!("{}h", s / 3600),
+        s if s % 60 == 0 => format!("{}m", s / 60),
+        s => format!("{s}s"),
+    }
+}
+
 pub fn held(hold: &[String], manager: &str, package: &str) -> bool {
     hold.iter()
         .any(|h| h == package || h.split_once(':') == Some((manager, package)))
@@ -65,6 +102,19 @@ mod tests {
         .unwrap();
         assert_eq!(config.exclude, ["brew"]);
         assert_eq!(config.hold, ["eslint", "pnpm:typescript"]);
+    }
+
+    #[test]
+    fn parses_durations() {
+        assert_eq!(parse_duration("600"), Ok(Some(Duration::from_secs(600))));
+        assert_eq!(parse_duration("90s"), Ok(Some(Duration::from_secs(90))));
+        assert_eq!(parse_duration("10m"), Ok(Some(Duration::from_secs(600))));
+        assert_eq!(parse_duration("1h"), Ok(Some(Duration::from_secs(3600))));
+        assert_eq!(parse_duration("0"), Ok(None));
+        assert!(parse_duration("10 minutes").is_err());
+        assert!(parse_duration("m").is_err());
+        assert_eq!(show_duration(Duration::from_secs(600)), "10m");
+        assert_eq!(show_duration(Duration::from_secs(90)), "90s");
     }
 
     #[test]

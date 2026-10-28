@@ -3,13 +3,14 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use regex_lite::Regex;
 use serde::Deserialize;
 use serde_json::Value;
 
-use super::{Candidate, leak, supported};
-use crate::manager::{self, Installed, Manager, Package, Step, capture};
+use super::{Candidate, leak, supported, timeout};
+use crate::manager::{self, Installed, Manager, Package, Step, capture_within};
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -262,7 +263,7 @@ impl Manager for Declared {
 
     fn outdated(&self, bin: &Path) -> Result<Vec<Package>, String> {
         let query = &self.spec.outdated;
-        let text = capture(bin, &query.command)?.expect(&query.ok_codes)?;
+        let text = capture_within(bin, &query.command, timeout())?.expect(&query.ok_codes)?;
         Ok(rows(query, self.outdated_pattern.as_ref(), &text)?
             .into_iter()
             .map(|row| Package {
@@ -289,9 +290,15 @@ impl Manager for Declared {
 
     fn refresh(&self, bin: &Path) -> Result<(), String> {
         match &self.spec.refresh {
-            Some(run) => capture(bin, &run.command)?.expect(&[0]).map(drop),
+            Some(run) => capture_within(bin, &run.command, timeout())?
+                .expect(&[0])
+                .map(drop),
             None => Ok(()),
         }
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        timeout()
     }
 
     fn needs_root(&self, _bin: &Path) -> bool {
@@ -304,7 +311,7 @@ impl Manager for Declared {
             .installed
             .as_ref()
             .ok_or("this manager has no [installed] section")?;
-        let text = capture(bin, &query.command)?.expect(&query.ok_codes)?;
+        let text = capture_within(bin, &query.command, timeout())?.expect(&query.ok_codes)?;
         Ok(rows(query, self.installed_pattern.as_ref(), &text)?
             .into_iter()
             .map(|row| Installed::new(row.name).version(row.version))

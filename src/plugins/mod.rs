@@ -9,6 +9,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::sync::OnceLock;
+use std::time::Duration;
 
 use console::style;
 use serde::Serialize;
@@ -79,6 +80,28 @@ fn load() -> Loaded {
         });
     }
     loaded
+}
+
+const DEFAULT_TIMEOUT: Duration = Duration::from_secs(10 * 60);
+
+/// The longest a plugin command may run: `REPOKE_PLUGIN_TIMEOUT`, else `plugin_timeout` in the
+/// config file, else 10 minutes. `0` means no limit.
+pub fn timeout() -> Option<Duration> {
+    static TIMEOUT: OnceLock<Option<Duration>> = OnceLock::new();
+    *TIMEOUT.get_or_init(|| {
+        let Ok(text) = env::var("REPOKE_PLUGIN_TIMEOUT") else {
+            // A bad value in the config file is reported when the config is loaded.
+            return config::load()
+                .ok()
+                .and_then(|c| c.plugin_timeout)
+                .and_then(|t| config::parse_duration(&t).ok())
+                .unwrap_or(Some(DEFAULT_TIMEOUT));
+        };
+        config::parse_duration(&text).unwrap_or_else(|e| {
+            eprintln!("repoke: REPOKE_PLUGIN_TIMEOUT: {e}; using 10m");
+            Some(DEFAULT_TIMEOUT)
+        })
+    })
 }
 
 /// Plugins are loaded once and live for the whole run, which is what `&'static` needs.

@@ -120,7 +120,8 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] Ejemplos reales en `examples/plugins/`: `brew-greedy.toml` (casks que se actualizan solos) y `repoke-omz` (oh-my-zsh). Probados en el Mac de Pavel con datos reales.
 - [x] Documentación del protocolo y del formato TOML en `docs/plugins.md`, lista para la landing.
 - [ ] Índice comunitario de plugins (¿un repositorio con un `index.toml`?) y `repoke plugin install <id>` que descargue y enseñe el código antes de instalarlo.
-- [ ] Tiempo máximo por llamada a un plugin: ahora uno que se cuelgue en `describe` cuelga repoke.
+- [x] Tiempo máximo por llamada a un plugin (28-10, a petición de Pavel): 10 minutos por defecto, también en las actualizaciones. `plugin_timeout` en `config.toml` o `REPOKE_PLUGIN_TIMEOUT` (`600`, `90s`, `10m`, `1h`; `0` sin límite). Al pasarse, se corta el proceso y cuenta como fallo de ese plugin.
+- [x] Ejemplos instalados en el Mac de Pavel: `~/.local/bin/repoke-omz` y `~/.config/repoke/managers/brew-greedy.toml` (copias, no enlaces).
 
 ## Fase 9 · Plugins oficiales (`repoke-plugins`, repositorio aparte)
 

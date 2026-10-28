@@ -1,7 +1,10 @@
 use std::env;
 use std::ffi::OsStr;
+use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::{Child, Command, ExitStatus, Stdio};
+use std::thread;
+use std::time::{Duration, Instant};
 
 use std::fmt;
 
@@ -173,6 +176,11 @@ pub trait Manager: Sync {
         false
     }
 
+    /// How long one of its commands may run; plugins have a limit, built-in managers don't.
+    fn timeout(&self) -> Option<Duration> {
+        None
+    }
+
     /// What the user installed on purpose, leaving out dependencies, for `export`.
     fn installed(&self, _bin: &Path) -> Result<Vec<Installed>, String> {
         Err("export is not supported for this manager yet".into())
@@ -240,18 +248,82 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
 {
+    capture_within(program, args, None)
+}
+
+/// Like `capture`, but the program is stopped once `timeout` passes.
+pub fn capture_within<I, S>(
+    program: impl AsRef<OsStr>,
+    args: I,
+    timeout: Option<Duration>,
+) -> Result<Output, String>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
     let program = program.as_ref();
     // stdin is closed so a manager that wants to prompt fails instead of hanging an agent.
-    let out = Command::new(program)
-        .args(args)
-        .stdin(Stdio::null())
-        .output()
+    let mut command = Command::new(program);
+    command.args(args).stdin(Stdio::null());
+    let Some(limit) = timeout else {
+        let out = command
+            .output()
+            .map_err(|e| format!("could not run {}: {e}", program.display()))?;
+        return Ok(Output {
+            code: out.status.code(),
+            stdout: String::from_utf8_lossy(&out.stdout).into_owned(),
+            stderr: String::from_utf8_lossy(&out.stderr).into_owned(),
+        });
+    };
+    let mut child = command
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
         .map_err(|e| format!("could not run {}: {e}", program.display()))?;
+    let read = |mut pipe: Box<dyn Read + Send>| {
+        thread::spawn(move || {
+            let mut bytes = Vec::new();
+            let _ = pipe.read_to_end(&mut bytes);
+            String::from_utf8_lossy(&bytes).into_owned()
+        })
+    };
+    let stdout = read(Box::new(child.stdout.take().expect("stdout is piped")));
+    let stderr = read(Box::new(child.stderr.take().expect("stderr is piped")));
+    let status = wait_within(&mut child, Some(limit), program)?;
     Ok(Output {
-        code: out.status.code(),
-        stdout: String::from_utf8_lossy(&out.stdout).into_owned(),
-        stderr: String::from_utf8_lossy(&out.stderr).into_owned(),
+        code: status.code(),
+        stdout: stdout.join().unwrap_or_default(),
+        stderr: stderr.join().unwrap_or_default(),
     })
+}
+
+/// Waits for `child`, killing it once `timeout` passes. Readers of its output are left alone
+/// then: a grandchild may still hold the pipes open.
+pub fn wait_within(
+    child: &mut Child,
+    timeout: Option<Duration>,
+    program: &OsStr,
+) -> Result<ExitStatus, String> {
+    let failed = |e: std::io::Error| format!("could not wait for {}: {e}", program.display());
+    let Some(limit) = timeout else {
+        return child.wait().map_err(failed);
+    };
+    let deadline = Instant::now() + limit;
+    loop {
+        if let Some(status) = child.try_wait().map_err(failed)? {
+            return Ok(status);
+        }
+        if Instant::now() >= deadline {
+            let _ = child.kill();
+            let _ = child.wait();
+            return Err(format!(
+                "{} was stopped after {} (plugin_timeout)",
+                program.display(),
+                crate::config::show_duration(limit)
+            ));
+        }
+        thread::sleep(Duration::from_millis(50));
+    }
 }
 
 pub fn locate(bin: &str) -> Option<PathBuf> {

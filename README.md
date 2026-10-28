@@ -89,7 +89,10 @@ Any other MCP client: run `repoke mcp` as a stdio server. Without MCP, agents ca
 ```toml
 exclude = ["brew"]               # managers left out unless named in --only
 hold = ["eslint", "pnpm:pnpm"]   # never upgraded nor reported, as name or manager:name
+plugin_timeout = "10m"           # longest a plugin command may run (600, 90s, 10m, 1h; 0 = no limit)
 ```
+
+`REPOKE_PLUGIN_TIMEOUT` overrides `plugin_timeout` for one run.
 
 ### Exit codes
 

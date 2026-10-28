@@ -5,7 +5,7 @@ use std::fmt;
 use std::io::{BufRead, BufReader, Read};
 use std::process::{Command, ExitCode, Stdio};
 use std::slice;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -15,7 +15,7 @@ use inquire::{InquireError, MultiSelect};
 use serde::Serialize;
 
 use crate::check::Found;
-use crate::manager::{Manager, Package, Step};
+use crate::manager::{self, Manager, Package, Step};
 use crate::progress::Progress;
 
 pub const EXIT_CANCELLED: u8 = 130;
@@ -292,7 +292,7 @@ impl<'a> Engine<'a> {
                 packages: &step.packages,
             });
             let bar = self.progress.spinner(self.manager(), &shown);
-            let outcome = execute(&command, &bar);
+            let outcome = execute(&command, &bar, found.manager.timeout());
             bar.finish_and_clear();
             if let Err(error) = outcome {
                 return (started.elapsed(), Err(format!("{shown} {error}")));
@@ -603,7 +603,7 @@ fn authenticate(progress: &Progress) -> Result<(), String> {
 }
 
 /// The manager's output is streamed into the spinner so a long install shows what it is doing.
-fn execute(command: &[String], bar: &ProgressBar) -> Result<(), String> {
+fn execute(command: &[String], bar: &ProgressBar, timeout: Option<Duration>) -> Result<(), String> {
     let (program, args) = command.split_first().expect("command has a program");
     let mut child = Command::new(program)
         .args(args)
@@ -617,29 +617,31 @@ fn execute(command: &[String], bar: &ProgressBar) -> Result<(), String> {
         Box::new(child.stdout.take().expect("stdout is piped")),
         Box::new(child.stderr.take().expect("stderr is piped")),
     ];
-    let lines = Mutex::new(Vec::new());
-    let shared = &lines;
-    thread::scope(|s| {
-        for pipe in pipes {
-            s.spawn(move || {
+    let lines = Arc::new(Mutex::new(Vec::new()));
+    let readers: Vec<_> = pipes
+        .into_iter()
+        .map(|pipe| {
+            let (bar, lines) = (bar.clone(), Arc::clone(&lines));
+            thread::spawn(move || {
                 for line in BufReader::new(pipe).lines().map_while(Result::ok) {
                     let line = line.trim();
                     if !line.is_empty() && !is_warning(line) {
                         bar.set_message(line.to_string());
-                        shared.lock().expect("output lock").push(line.to_string());
+                        lines.lock().expect("output lock").push(line.to_string());
                     }
                 }
-            });
-        }
-    });
+            })
+        })
+        .collect();
 
-    let status = child
-        .wait()
-        .map_err(|e| format!("could not wait for {program}: {e}"))?;
+    let status = manager::wait_within(&mut child, timeout, program.as_ref())?;
+    for reader in readers {
+        let _ = reader.join();
+    }
     if status.success() {
         return Ok(());
     }
-    let lines = lines.into_inner().expect("output lock");
+    let lines = lines.lock().expect("output lock");
     Err(format!(
         "exited with {}\n{}",
         status
@@ -683,6 +685,7 @@ mod tests {
         let error = execute(
             &sh("echo working; echo broken >&2; exit 3"),
             &ProgressBar::hidden(),
+            None,
         )
         .unwrap_err();
         assert!(error.starts_with("exited with 3\n"), "{error}");
@@ -698,6 +701,7 @@ mod tests {
         let error = execute(
             &sh("echo '[WARN] Failed to replace env in config' >&2; echo 'Error: real cause' >&2; exit 1"),
             &ProgressBar::hidden(),
+            None,
         )
         .unwrap_err();
         assert_eq!(error, "exited with 1\nError: real cause");
@@ -705,7 +709,21 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
+    fn execute_stops_commands_that_run_too_long() {
+        let started = Instant::now();
+        let error = execute(
+            &sh("sleep 5"),
+            &ProgressBar::hidden(),
+            Some(Duration::from_millis(200)),
+        )
+        .unwrap_err();
+        assert!(error.contains("was stopped after"), "{error}");
+        assert!(started.elapsed() < Duration::from_secs(3));
+    }
+
+    #[cfg(unix)]
+    #[test]
     fn execute_succeeds_on_zero_exit() {
-        assert!(execute(&sh("echo done"), &ProgressBar::hidden()).is_ok());
+        assert!(execute(&sh("echo done"), &ProgressBar::hidden(), None).is_ok());
     }
 }

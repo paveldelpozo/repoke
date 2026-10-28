@@ -5,11 +5,12 @@ use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use serde::Deserialize;
 
-use super::{Candidate, leak, supported};
-use crate::manager::{Installed, Manager, Package, Step, capture};
+use super::{Candidate, leak, supported, timeout};
+use crate::manager::{Installed, Manager, Package, Step, capture_within};
 
 /// The newest protocol this repoke speaks; a plugin's `describe` names the one it uses.
 pub const PROTOCOL: u32 = 1;
@@ -116,7 +117,7 @@ fn executable(path: &Path) -> bool {
 }
 
 fn describe(id: &str, path: &Path) -> Result<Exec, String> {
-    let json = capture(path, ["describe"])?.expect(&[0])?;
+    let json = capture_within(path, ["describe"], timeout())?.expect(&[0])?;
     let describe: Describe = serde_json::from_str(&json)
         .map_err(|e| format!("`describe` didn't print the expected JSON: {e}"))?;
     if describe.protocol > PROTOCOL {
@@ -144,7 +145,10 @@ fn describe(id: &str, path: &Path) -> Result<Exec, String> {
 
 impl Exec {
     fn detect(&self) -> Option<Detect> {
-        let json = capture(&self.path, ["detect"]).ok()?.expect(&[0]).ok()?;
+        let json = capture_within(&self.path, ["detect"], timeout())
+            .ok()?
+            .expect(&[0])
+            .ok()?;
         serde_json::from_str(&json).ok()
     }
 
@@ -182,7 +186,7 @@ impl Manager for Exec {
     }
 
     fn outdated(&self, bin: &Path) -> Result<Vec<Package>, String> {
-        let json = capture(bin, ["outdated"])?.expect(&[0])?;
+        let json = capture_within(bin, ["outdated"], timeout())?.expect(&[0])?;
         serde_json::from_str(&json)
             .map_err(|e| format!("`outdated` didn't print a JSON list of packages: {e}"))
     }
@@ -199,7 +203,13 @@ impl Manager for Exec {
         if !self.can("refresh") {
             return Ok(());
         }
-        capture(bin, ["refresh"])?.expect(&[0]).map(drop)
+        capture_within(bin, ["refresh"], timeout())?
+            .expect(&[0])
+            .map(drop)
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        timeout()
     }
 
     fn needs_root(&self, _bin: &Path) -> bool {
@@ -210,7 +220,7 @@ impl Manager for Exec {
         if !self.can("installed") {
             return Err("this plugin doesn't list what is installed".into());
         }
-        let json = capture(bin, ["installed"])?.expect(&[0])?;
+        let json = capture_within(bin, ["installed"], timeout())?.expect(&[0])?;
         let listed: Vec<Listed> = serde_json::from_str(&json)
             .map_err(|e| format!("`installed` didn't print a JSON list: {e}"))?;
         Ok(listed

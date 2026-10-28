@@ -11,6 +11,8 @@ A plugin's id must not clash with a built-in manager or with another plugin; `pl
 
 Plugins run with your user's permissions, like any command on your PATH. Read one before installing it.
 
+Every command repoke runs for a plugin, upgrades included, is stopped after 10 minutes and reported as a failure of that plugin. Change the limit with `plugin_timeout` in `~/.config/repoke/config.toml` (`600`, `90s`, `10m`, `1h`, or `0` for none), or for one run with `REPOKE_PLUGIN_TIMEOUT`.
+
 ## TOML managers
 
 repoke reads every `*.toml` file in `~/.config/repoke/managers/` (`%APPDATA%\repoke\managers\` on Windows).
