@@ -66,6 +66,11 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [ ] Tap de Homebrew propio.
 - [ ] Publicar en crates.io (`cargo install repoke`).
 - [ ] Elegir licencia antes de abrir el repositorio.
+- [ ] `repoke self-update`, cuando el repositorio sea público (`upgrade` ya es el de los paquetes). Según cómo se instaló:
+  - Con Homebrew o con cargo: lo deja en manos de ese gestor (`brew upgrade repoke`, `cargo install repoke`), para no desincronizarlo. Con brew, además, `repoke upgrade` ya lo incluye como un paquete más.
+  - Binario descargado: busca la última release en GitHub, comprueba el checksum (y la firma, si se firman las releases) y sustituye el binario de forma atómica, con vuelta atrás si falla.
+  - `--check` solo informa y sale con 100 si hay versión nueva, igual que `check`. `--json` para agentes.
+- [ ] Aviso discreto de versión nueva al usar repoke, como mucho una vez al día y nunca con `--json` ni fuera de una terminal.
 
 ## Fase 7 · Agentes
 
