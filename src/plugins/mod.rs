@@ -3,6 +3,7 @@
 
 mod declared;
 mod exec;
+pub mod registry;
 
 use std::env;
 use std::fs;
@@ -194,7 +195,7 @@ pub fn new(args: &PluginNewArgs) -> Result<ExitCode, String> {
     Ok(ExitCode::SUCCESS)
 }
 
-fn write(path: &Path, text: &str, executable: bool) -> Result<(), String> {
+pub(super) fn write(path: &Path, text: &str, executable: bool) -> Result<(), String> {
     if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
         fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
     }
@@ -209,6 +210,6 @@ fn write(path: &Path, text: &str, executable: bool) -> Result<(), String> {
     Ok(())
 }
 
-fn supported(os: &[String]) -> bool {
+pub(super) fn supported(os: &[String]) -> bool {
     os.is_empty() || os.iter().any(|o| o == env::consts::OS)
 }

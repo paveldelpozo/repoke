@@ -127,15 +127,13 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 
 ## Fase 9 · Plugins oficiales (`repoke-plugins`, repositorio aparte)
 
-Herramientas que no son gestores de paquetes pero se actualizan solas. Son los primeros plugins que se escriben, para poner a prueba el protocolo de la fase 8 antes de abrirlo a la comunidad. La idea es detectar lo máximo posible de lo que hay instalado.
-
-- [ ] oh-my-zsh: ya existe como ejemplo (`examples/plugins/repoke-omz`); pasarlo al repositorio de plugins oficiales.
-- [ ] zinit, antidote y otros gestores de plugins de zsh.
-- [ ] tpm (plugins de tmux), plugins de Neovim (lazy.nvim, vim-plug).
-- [ ] Extensiones de VS Code (`code --update-extensions`).
-- [ ] Componentes de gcloud, Starship.
-- [ ] zsh: si viene de brew, ya lo cubre brew; el de macOS (`/bin/zsh`) se actualiza con el sistema, así que solo se informa.
-- Se quedan en el núcleo, por ser gestores de paquetes: mas, rustup.
+- [x] Repositorio local `~/Documents/Repositories/repoke-plugins` con `index.toml`, README, licencias y `scripts/check.sh` (comprueba que cada plugin es ejecutable y que `describe` cuadra con el índice).
+- [x] `omz`: oh-my-zsh, probado en el Mac de Pavel.
+- [x] `vscode` (Python): extensiones con una versión **estable** más nueva en el Marketplace (las pre-release se ignoran y solo se pide el historial completo de las extensiones cuya última versión es pre-release), más `installed` e `install` para `export` e `init`. Probado con las 57 extensiones de Pavel: 4 pendientes, en unos 4 segundos.
+- [x] En repoke, `plugin search`, `plugin install <id>` (enseña el código y pregunta; `--yes`, `--force`) y `plugin remove <id>` (solo borra lo que instaló). `REPOKE_PLUGIN_INDEX` para otro índice.
+- [ ] Publicar `paveldelpozo/repoke-plugins` en GitHub (el clasificador bloquea que lo cree el agente: lo crea Pavel).
+- [ ] tpm, zinit, antidote, lazy.nvim, vim-plug y componentes de gcloud: Pavel no tiene ninguno instalado, así que quedan pendientes hasta poder probarlos en una máquina que los tenga.
+- [ ] Se quedan en el núcleo, por ser gestores de paquetes: mas, rustup.
 
 ## Landing
 

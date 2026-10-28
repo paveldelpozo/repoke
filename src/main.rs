@@ -99,6 +99,26 @@ enum PluginAction {
     },
     /// Start a plugin from a template: a TOML manager, or a script with --exec
     New(PluginNewArgs),
+    /// Show the official plugins (github.com/paveldelpozo/repoke-plugins)
+    Search {
+        #[arg(long)]
+        json: bool,
+    },
+    /// Download an official plugin, show its code and install it
+    Install(PluginInstallArgs),
+    /// Remove a plugin that `plugin install` installed
+    Remove { id: String },
+}
+
+#[derive(Args)]
+struct PluginInstallArgs {
+    id: String,
+    /// Install without showing the code or asking
+    #[arg(long, short)]
+    yes: bool,
+    /// Replace a plugin already installed with that id
+    #[arg(long)]
+    force: bool,
 }
 
 #[derive(Args)]
@@ -281,6 +301,9 @@ fn dispatch(command: &Command) -> ExitCode {
         Command::Plugin { action } => Some(match action {
             PluginAction::List { json } => plugins::list(*json),
             PluginAction::New(args) => plugins::new(args),
+            PluginAction::Search { json } => plugins::registry::search(*json),
+            PluginAction::Install(args) => plugins::registry::install(args),
+            PluginAction::Remove { id } => plugins::registry::remove(id),
         }),
         Command::Schedule { action } => Some(match action {
             ScheduleAction::Install(args) => schedule::install(args),

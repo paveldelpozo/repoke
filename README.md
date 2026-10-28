@@ -148,6 +148,9 @@ Any other manager can be added without changing repoke: a TOML file in `~/.confi
 repoke plugin new gh-ext          # TOML template in ~/.config/repoke/managers/gh-ext.toml
 repoke plugin new omz --exec      # ./repoke-omz, a script speaking the protocol
 repoke plugin list                # what was found, and any problem with it
+repoke plugin search              # official plugins (github.com/paveldelpozo/repoke-plugins)
+repoke plugin install vscode      # shows its code, asks, installs into ~/.local/bin
+repoke plugin remove vscode
 ```
 
 How to write one: [docs/plugins.md](docs/plugins.md). Examples: [examples/plugins](examples/plugins) (GitHub CLI extensions, oh-my-zsh).
