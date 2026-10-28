@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Builds the release archives, then tags, publishes the GitHub release and updates the Homebrew
 # tap. Releases are made locally because GitHub Actions minutes are not used for this project.
-# Usage: scripts/release.sh <version> [--dry-run] [--crate]
+# Versions follow semver, worked out from Conventional Commits since the last tag: a `!` or a
+# `BREAKING CHANGE` bumps the major version, `feat:` the minor one, anything else the patch.
+# Usage: scripts/release.sh [auto|major|minor|patch|X.Y.Z] [--dry-run] [--crate]
 #   --dry-run  build and package into dist/ only; no version bump, tag, push or upload
 #   --crate    also `cargo publish` (once the repository is public)
 # Linux builds need `cargo install cargo-zigbuild` and `brew install zig`; Windows needs
@@ -9,19 +11,54 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-version="${1:?usage: scripts/release.sh <version> [--dry-run] [--crate]}"
-shift
+bump=auto
 dry_run=false
 crate=false
 for arg in "$@"; do
   case "$arg" in
     --dry-run) dry_run=true ;;
     --crate) crate=true ;;
-    *) echo "unknown option: $arg" >&2; exit 2 ;;
+    -*) echo "unknown option: $arg" >&2; exit 2 ;;
+    *) bump=$arg ;;
   esac
 done
-[[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "the version looks like 1.2.3" >&2; exit 2; }
+
+semver='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'
+last_tag=$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || true)
+current=${last_tag#v}
+current=${current:-0.0.0}
+range=${last_tag:+$last_tag..}HEAD
+if [[ -z "$(git log --oneline "$range")" && "$bump" == auto ]]; then
+  echo "nothing to release: no commits since $last_tag"
+  exit 0
+fi
+if [[ "$bump" == auto ]]; then
+  subjects=$(git log --format='%s%n%b' "$range")
+  if grep -qE '^[a-z]+(\([^)]*\))?!:|^BREAKING CHANGE' <<<"$subjects"; then
+    bump=major
+  elif grep -qE '^feat(\([^)]*\))?:' <<<"$subjects"; then
+    bump=minor
+  else
+    bump=patch
+  fi
+fi
+IFS=. read -r major minor patch <<<"${current%%-*}"
+case "$bump" in
+  major) version="$((major + 1)).0.0" ;;
+  minor) version="$major.$((minor + 1)).0" ;;
+  patch) version="$major.$minor.$((patch + 1))" ;;
+  *)
+    [[ "$bump" =~ $semver ]] || { echo "the version is auto, major, minor, patch or like 1.2.3" >&2; exit 2; }
+    version=$bump
+    ;;
+esac
+if [[ -n "$last_tag" && "$(printf '%s\n%s\n' "$current" "$version" | sort -V | tail -1)" != "$version" ]] \
+  || [[ "$version" == "$current" && -n "$last_tag" ]]; then
+  echo "$version is not newer than $current" >&2
+  exit 2
+fi
 tag="v$version"
+echo "releasing $tag (from ${last_tag:-the first commit}, bump: $bump)"
 tap_dir="${TAP_DIR:-$HOME/Documents/Repositories/homebrew-tap}"
 repo="paveldelpozo/repoke"
 targets=(
@@ -156,13 +193,25 @@ fi
 
 step "tag $tag"
 # Nothing to commit when the version was already set by hand.
-git diff --quiet || git commit --quiet -am "Release $tag"
+git diff --quiet || git commit --quiet -am "chore(release): $tag"
 git tag -a "$tag" -m "$tag"
 git push --quiet origin main "$tag"
 
 step "GitHub release"
-previous=$(git describe --tags --abbrev=0 "$tag^" 2>/dev/null || git rev-list --max-parents=0 HEAD)
-notes=$(git log --pretty='- %s' "$previous..$tag^")
+# Notes grouped by commit type; commits from before Conventional Commits land in "Other changes".
+log=$(git log --pretty='%s' "${last_tag:+$last_tag..}$tag^")
+section() {
+  local title=$1 pattern=$2 lines
+  lines=$(grep -E "$pattern" <<<"$log" | sed -E 's/^[a-z]+(\([^)]*\))?!?: /- /' || true)
+  [[ -n "$lines" ]] && printf '## %s\n\n%s\n\n' "$title" "$lines"
+  return 0
+}
+notes=$(
+  section "Breaking changes" '^[a-z]+(\([^)]*\))?!:'
+  section "Features" '^feat(\([^)]*\))?:'
+  section "Fixes" '^fix(\([^)]*\))?:'
+  section "Other changes" '^(chore|docs|refactor|perf|test|build|ci|style)(\([^)]*\))?:|^[^a-z]|^[a-z]+[^a-z(!:]'
+)
 gh release create "$tag" dist/*.tar.gz dist/*.zip dist/*.sha256 --repo "$repo" --title "$tag" --notes "$notes"
 
 step "Homebrew tap"

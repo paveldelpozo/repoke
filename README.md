@@ -121,9 +121,12 @@ Planned: yarn, bun, deno, volta, asdf, `softwareupdate` (opt in). See [docs/tare
 scripts/ci.sh           # what CI checks: fmt, clippy for macOS/Linux/Windows, tests
 scripts/ci.sh --quick   # same, without the Linux tests in Docker
 cargo run -- check
-scripts/release.sh 0.2.0 --dry-run   # build and package every target into dist/
-scripts/release.sh 0.2.0             # bump, tag, GitHub release, Homebrew tap (--crate: crates.io)
+scripts/release.sh --dry-run   # next version and every target's archive in dist/, nothing published
+scripts/release.sh             # bump, tag, GitHub release, Homebrew tap (--crate: crates.io)
+scripts/release.sh minor       # or major, patch, or an exact version like 1.2.0
 ```
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/) so the release script can work out the next [semver](https://semver.org/) version: `feat:` is a minor bump, `fix:` and the other types a patch, and `!` or `BREAKING CHANGE` a major one. Release notes are grouped by those types.
 
 The GitHub workflow is manual (`gh workflow run CI`) so pushes don't spend Actions minutes. To run the quick checks before every push, opt in to the bundled hook with `git config core.hooksPath .githooks`. Cross-target clippy needs `rustup target add x86_64-unknown-linux-gnu x86_64-pc-windows-msvc`.
 
