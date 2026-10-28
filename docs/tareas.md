@@ -47,6 +47,11 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [ ] `repoke init` interactivo: elegir de un catálogo qué gestores y paquetes instalar en un equipo nuevo, incluida la instalación de los propios gestores (brew, fnm…).
 - [ ] `repoke export`: foto del equipo actual a `repoke.toml`.
 - [ ] `repoke init --from repoke.toml --yes`: reproducir esa foto sin preguntas.
+- [ ] Configuración en el backup: `export` pregunta gestor por gestor si incluir su configuración y enseña qué ficheros son. Cada gestor declara los suyos (npm `~/.npmrc`, pip `pip.conf`, zsh `~/.zshrc`, oh-my-zsh `custom/`…). Formato: directorio o `.tar.gz` con `repoke.toml` y `files/`, rutas relativas a `~`.
+- [ ] Secretos: por defecto no se incluye ninguna configuración. Buscar patrones (`_authToken`, `password`, `token`, claves privadas) y ofrecer quitar el valor, excluir el fichero o cifrar el backup con contraseña.
+- [ ] Restaurar sin pisar: `init --from` enseña qué ficheros ya existen y en qué cambian, pregunta antes de sobrescribir y guarda una copia `.bak` del original.
+- [ ] Dotfiles: detectar los enlaces simbólicos que apuntan a un repositorio de dotfiles (Pavel tiene `~/.oh-my-zsh -> ~/.dotfiles/...`) y apuntarlos como "viene de ahí" en vez de copiarlos.
+- [ ] Cambio de sistema operativo: saltar y avisar de los gestores que no existen en el destino.
 
 ## Fase 5 · Modo programado
 
@@ -77,6 +82,18 @@ Cuando todo lo anterior funcione. Que cualquiera pueda añadir un gestor sin toc
 - [ ] Repositorio o plantilla de ejemplo para escribir un plugin, con tests del protocolo.
 - [ ] Documentación en la landing: cómo funciona el protocolo y cómo hacer, probar y publicar un plugin.
 - [ ] Decidir cómo se descubren y comparten (¿un índice comunitario?) y qué avisos de seguridad mostrar, porque un plugin ejecuta código en la máquina.
+
+## Fase 9 · Plugins oficiales (`repoke-plugins`, repositorio aparte)
+
+Herramientas que no son gestores de paquetes pero se actualizan solas. Son los primeros plugins que se escriben, para poner a prueba el protocolo de la fase 8 antes de abrirlo a la comunidad. La idea es detectar lo máximo posible de lo que hay instalado.
+
+- [ ] oh-my-zsh: se detecta por `$ZSH` o `~/.oh-my-zsh`; consulta con `git fetch` + comparar con el remoto, actualiza con `omz update`.
+- [ ] zinit, antidote y otros gestores de plugins de zsh.
+- [ ] tpm (plugins de tmux), plugins de Neovim (lazy.nvim, vim-plug).
+- [ ] Extensiones de VS Code (`code --update-extensions`).
+- [ ] Componentes de gcloud, Starship.
+- [ ] zsh: si viene de brew, ya lo cubre brew; el de macOS (`/bin/zsh`) se actualiza con el sistema, así que solo se informa.
+- Se quedan en el núcleo, por ser gestores de paquetes: mas, rustup.
 
 ## Landing
 
