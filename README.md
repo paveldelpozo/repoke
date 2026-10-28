@@ -36,7 +36,7 @@ repoke init --tools ripgrep,fd --yes  # the same without the picker
 ### On a schedule
 
 ```sh
-repoke schedule install                        # daily at 09:00, upgrades what needs no sudo
+repoke schedule install                        # daily at 03:00, upgrades what needs no sudo
 repoke schedule install --every weekly --at 08:30 --check-only --exclude brew
 repoke schedule install --dry-run              # print the scheduler files and commands
 repoke schedule status                         # schedule, next run (Linux) and the last result

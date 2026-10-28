@@ -83,8 +83,8 @@ struct ScheduleInstallArgs {
     managers: Managers,
     #[arg(long, value_enum, default_value = "daily")]
     every: schedule::Every,
-    /// Local time, 24-hour clock; weekly runs are on Mondays
-    #[arg(long, default_value = "09:00")]
+    /// Local time, 24-hour clock; weekly runs are on Mondays. Missed while asleep, it runs on wake
+    #[arg(long, default_value = "03:00")]
     at: String,
     /// Only check and notify; don't upgrade
     #[arg(long)]
