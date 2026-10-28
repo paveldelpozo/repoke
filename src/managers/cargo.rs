@@ -1,8 +1,11 @@
 use std::path::Path;
+use std::thread;
 
 use crate::manager::{Installed, Manager, Package, Step, capture};
 
 pub struct Cargo;
+
+const SEARCHES_AT_ONCE: usize = 8;
 
 impl Manager for Cargo {
     fn id(&self) -> &'static str {
@@ -17,19 +20,40 @@ impl Manager for Cargo {
         "cargo"
     }
 
+    /// One `cargo search` per crate, a few at a time: crates.io limits how fast it is asked.
     fn outdated(&self, bin: &Path) -> Result<Vec<Package>, String> {
         let list = capture(bin, ["install", "--list"])?.expect(&[0])?;
         let mut packages = Vec::new();
-        for (name, current) in parse_installed(&list) {
-            let search = capture(bin, ["search", &name, "--limit", "10"])?.expect(&[0])?;
-            if let Some(latest) = parse_search(&search, &name)
-                && latest != current
-            {
-                packages.push(Package {
-                    name,
-                    current,
-                    latest,
-                });
+        for batch in parse_installed(&list).chunks(SEARCHES_AT_ONCE) {
+            let found = thread::scope(|scope| {
+                let searches: Vec<_> = batch
+                    .iter()
+                    .map(|(name, _)| {
+                        scope.spawn(move || {
+                            let search =
+                                capture(bin, ["search", name, "--limit", "10"])?.expect(&[0])?;
+                            Ok::<_, String>(parse_search(&search, name))
+                        })
+                    })
+                    .collect();
+                searches
+                    .into_iter()
+                    .map(|s| {
+                        s.join()
+                            .unwrap_or_else(|_| Err("cargo search panicked".into()))
+                    })
+                    .collect::<Result<Vec<_>, String>>()
+            })?;
+            for ((name, current), latest) in batch.iter().zip(found) {
+                if let Some(latest) = latest
+                    && latest != *current
+                {
+                    packages.push(Package {
+                        name: name.clone(),
+                        current: current.clone(),
+                        latest,
+                    });
+                }
             }
         }
         Ok(packages)
