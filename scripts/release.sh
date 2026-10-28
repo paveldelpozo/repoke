@@ -59,7 +59,7 @@ if [[ -n "$last_tag" && "$(printf '%s\n%s\n' "$current" "$version" | sort -V | t
 fi
 tag="v$version"
 echo "releasing $tag (from ${last_tag:-the first commit}, bump: $bump)"
-tap_dir="${TAP_DIR:-$HOME/Documents/Repositories/homebrew-tap}"
+tap_dir="${TAP_DIR:-$HOME/Documents/Repositories/personal/hivefold/homebrew-tap}"
 repo="paveldelpozo/repoke"
 targets=(
   aarch64-apple-darwin
