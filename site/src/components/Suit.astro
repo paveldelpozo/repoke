@@ -1,0 +1,11 @@
+---
+// The suits mark the four sections of the landing page, as they mark the four aces in the logo.
+const SUITS = {
+  spade: ["ink", "M12 2.5 L19.2 10 C21.6 12.4 21.3 16.2 18.6 17.9 C16.7 19.1 14.4 18.8 12.9 17.3 L14.2 21.5 H9.8 L11.1 17.3 C9.6 18.8 7.3 19.1 5.4 17.9 C2.7 16.2 2.4 12.4 4.8 10 Z"],
+  heart: ["red", "M12 21 L4.6 13.4 C2.2 11 2.5 7.1 5.2 5.3 C7.5 3.8 10.4 4.4 12 6.6 C13.6 4.4 16.5 3.8 18.8 5.3 C21.5 7.1 21.8 11 19.4 13.4 Z"],
+  club: ["ink", "M12 3.2 A3.9 3.9 0 0 1 15.6 8.6 A3.9 3.9 0 1 1 13.1 15.6 L14.3 21.5 H9.7 L10.9 15.6 A3.9 3.9 0 1 1 8.4 8.6 A3.9 3.9 0 0 1 12 3.2 Z"],
+  diamond: ["red", "M12 2.5 L19 12 L12 21.5 L5 12 Z"],
+};
+const [color, path] = SUITS[Astro.props.name];
+---
+<svg class={`suit ${color}`} viewBox="0 0 24 24" aria-hidden="true"><path d={path} /></svg>

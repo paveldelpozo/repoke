@@ -1,0 +1,11 @@
+---
+// A page rendered from docs/, so the site never drifts from the repository.
+import Base from "../layouts/Base.astro";
+import strings from "../strings.json";
+
+const { lang, name, source } = Astro.props;
+---
+<Base lang={lang} name={name} doc>
+  <slot />
+  <p class="note">{strings[lang].built_from} <a href={`https://github.com/paveldelpozo/repoke/blob/main/${source}`}>{source}</a>.</p>
+</Base>

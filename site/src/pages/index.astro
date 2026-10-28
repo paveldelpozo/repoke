@@ -1,10 +1,17 @@
+---
+import Base from "../layouts/Base.astro";
+import Suit from "../components/Suit.astro";
+import listing from "../list-output.txt?raw";
+import { version } from "../site.js";
+---
+<Base lang="en" name="index">
     <section class="intro">
       <h1>Every package manager on your machine, one&nbsp;command.</h1>
       <p class="lead">repoke finds Homebrew, npm, pnpm, pip, cargo, apt, winget and the rest of what you have installed, shows what is outdated and upgrades what you pick. In a terminal it asks first. In scripts, schedules and AI agents it runs without asking and answers in JSON.</p>
 
       <div id="install" class="install">
         <h2 class="label">Install</h2>
-        <p class="version">Latest release: <strong>v{{version}}</strong> · <a href="https://github.com/paveldelpozo/repoke/releases/tag/v{{version}}">release notes</a></p>
+        <p class="version">Latest release: <strong>v{version}</strong> · <a href={`https://github.com/paveldelpozo/repoke/releases/tag/v${version}`}>release notes</a></p>
         <pre><code>brew tap paveldelpozo/tap &amp;&amp; brew trust paveldelpozo/tap
 brew install repoke</code></pre>
         <p class="or">or with Rust</p>
@@ -14,9 +21,9 @@ brew install repoke</code></pre>
     </section>
 
     <section id="managers">
-      <h2>{{spade}}It finds what you use</h2>
+      <h2><Suit name="spade" />It finds what you use</h2>
       <p>Every manager repoke knows is looked for, and the ones that aren't there are skipped. This is <code>repoke list</code> on the Mac where repoke is written:</p>
-      <pre class="output" aria-label="Output of repoke list"><code>{{list_output}}</code></pre>
+      <pre class="output" aria-label="Output of repoke list"><code>{listing.trimEnd()}</code></pre>
       <div class="columns">
         <div>
           <h3>System</h3>
@@ -31,7 +38,7 @@ brew install repoke</code></pre>
     </section>
 
     <section id="usage">
-      <h2>{{heart}}Check first, upgrade what you choose</h2>
+      <h2><Suit name="heart" />Check first, upgrade what you choose</h2>
       <pre><code>repoke check                    # what is outdated; nothing changes
 repoke upgrade                  # pick from a list, everything preselected
 repoke upgrade --dry-run        # the commands it would run
@@ -40,7 +47,7 @@ repoke upgrade --hold eslint    # leave a package where it is</code></pre>
     </section>
 
     <section id="machines">
-      <h2>{{club}}A new machine, and updates while you sleep</h2>
+      <h2><Suit name="club" />A new machine, and updates while you sleep</h2>
       <pre><code>repoke export                 # what you installed, and your config files if you want
 repoke init --from snapshot   # on the new machine, only what is missing
 repoke init                   # or pick tools from a catalog</code></pre>
@@ -54,7 +61,7 @@ repoke schedule remove</code></pre>
     </section>
 
     <section id="agents">
-      <h2>{{diamond}}For scripts, agents and plugins</h2>
+      <h2><Suit name="diamond" />For scripts, agents and plugins</h2>
       <pre><code>repoke check --json                     # exits 100 when something is outdated
 repoke upgrade --yes --no-sudo --json   # one JSON event per line
 repoke mcp                              # MCP server over stdio</code></pre>
@@ -84,3 +91,4 @@ repoke plugin new my-tool       # start your own from a template</code></pre>
       </table>
       <p><a href="commands.html">The command reference</a> has every option, the configuration file, the JSON output and the exit codes.</p>
     </section>
+</Base>

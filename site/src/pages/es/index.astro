@@ -1,10 +1,17 @@
+---
+import Base from "../../layouts/Base.astro";
+import Suit from "../../components/Suit.astro";
+import listing from "../../list-output.txt?raw";
+import { version } from "../../site.js";
+---
+<Base lang="es" name="index">
     <section class="intro">
       <h1>Todos los gestores de paquetes de tu máquina, un solo&nbsp;comando.</h1>
       <p class="lead">repoke encuentra Homebrew, npm, pnpm, pip, cargo, apt, winget y el resto de lo que tienes instalado, te dice qué está desactualizado y actualiza lo que elijas. En una terminal pregunta antes. En scripts, tareas programadas y agentes de IA funciona sin preguntar y responde en JSON.</p>
 
       <div id="install" class="install">
         <h2 class="label">Instalar</h2>
-        <p class="version">Última versión: <strong>v{{version}}</strong> · <a href="https://github.com/paveldelpozo/repoke/releases/tag/v{{version}}">novedades</a></p>
+        <p class="version">Última versión: <strong>v{version}</strong> · <a href={`https://github.com/paveldelpozo/repoke/releases/tag/v${version}`}>novedades</a></p>
         <pre><code>brew tap paveldelpozo/tap &amp;&amp; brew trust paveldelpozo/tap
 brew install repoke</code></pre>
         <p class="or">o con Rust</p>
@@ -14,9 +21,9 @@ brew install repoke</code></pre>
     </section>
 
     <section id="managers">
-      <h2>{{spade}}Encuentra lo que usas</h2>
+      <h2><Suit name="spade" />Encuentra lo que usas</h2>
       <p>repoke busca todos los gestores que conoce y salta los que no están. Esto es <code>repoke list</code> en el Mac donde se escribe repoke:</p>
-      <pre class="output" aria-label="Salida de repoke list"><code>{{list_output}}</code></pre>
+      <pre class="output" aria-label="Salida de repoke list"><code>{listing.trimEnd()}</code></pre>
       <div class="columns">
         <div>
           <h3>Sistema</h3>
@@ -31,7 +38,7 @@ brew install repoke</code></pre>
     </section>
 
     <section id="usage">
-      <h2>{{heart}}Primero consulta, luego actualiza lo que elijas</h2>
+      <h2><Suit name="heart" />Primero consulta, luego actualiza lo que elijas</h2>
       <pre><code>repoke check                    # qué está desactualizado; no cambia nada
 repoke upgrade                  # elige de una lista, con todo marcado
 repoke upgrade --dry-run        # los comandos que lanzaría
@@ -40,7 +47,7 @@ repoke upgrade --hold eslint    # deja un paquete como está</code></pre>
     </section>
 
     <section id="machines">
-      <h2>{{club}}Una máquina nueva, y actualizaciones mientras duermes</h2>
+      <h2><Suit name="club" />Una máquina nueva, y actualizaciones mientras duermes</h2>
       <pre><code>repoke export                 # lo que instalaste, y tu configuración si quieres
 repoke init --from foto       # en la máquina nueva, solo lo que falta
 repoke init                   # o elige herramientas de un catálogo</code></pre>
@@ -54,7 +61,7 @@ repoke schedule remove</code></pre>
     </section>
 
     <section id="agents">
-      <h2>{{diamond}}Para scripts, agentes y plugins</h2>
+      <h2><Suit name="diamond" />Para scripts, agentes y plugins</h2>
       <pre><code>repoke check --json                     # sale con 100 si hay algo desactualizado
 repoke upgrade --yes --no-sudo --json   # un evento JSON por línea
 repoke mcp                              # servidor MCP por stdio</code></pre>
@@ -84,3 +91,4 @@ repoke plugin new mi-herramienta   # empieza el tuyo desde una plantilla</code><
       </table>
       <p><a href="commands.html">La referencia de comandos</a> tiene todas las opciones, el fichero de configuración, la salida JSON y los códigos de salida.</p>
     </section>
+</Base>

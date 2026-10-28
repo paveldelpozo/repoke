@@ -6,14 +6,14 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 
 Publicado: **v0.2.1** en GitHub (5 binarios), crates.io, el tap `paveldelpozo/tap` y el plugin de Claude Code (activo en todos los perfiles de Pavel); landing bilingüe en https://repoke.paveldelpozo.es (Dokploy, proyecto «repoke» → «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`, se redespliega sola); plugins oficiales en `paveldelpozo/repoke-plugins` (`omz`, `vscode`). En el Mac de Pavel: repoke 0.2.1 instalado con cargo, plugins `omz` y `vscode`, `[brew] greedy = true` y el modo programado a las 03:00.
 
-Lo siguiente, por orden:
+Lo siguiente, por orden (actualizado el 28-10 por la tarde):
 
 1. **Pavel, 29-10 por la mañana:** `repoke schedule status` para ver cómo fue la primera ejecución programada (y `~/Library/Logs/repoke/last-run.log` si algo falló).
-2. **Pavel:** probar el plugin de Claude en una conversación nueva ("¿qué tengo desactualizado?") y `brew install` desde el tap tras `brew trust paveldelpozo/tap`.
-3. **Convertir la landing a Astro** (paso final pedido por Pavel; norma nueva: toda landing en Astro salvo que diga lo contrario). Conservar lo que hoy hace el build en Python: páginas en `/` y `/es/`, referencia y guía generadas desde `docs/`, versión leída de `Cargo.toml`, menús de idioma y tema, y `scripts/check-docs.py` en la CI.
-4. Imagen para compartir en redes (Open Graph) a partir del logo.
-5. Robustez: avisar del `engines.node` antes de instalar globales de npm/pnpm; aviso de contraseña de casks tapado por el spinner; bloqueo contra dos ejecuciones programadas; rotar `history.jsonl`.
-6. Probar en Linux (Docker) y Windows lo que solo tiene tests de parseo.
+2. **Un compañero de Pavel, como beta-tester:** `brew install` desde el tap tras `brew trust paveldelpozo/tap`.
+3. Publicar lo hecho el 28-10 por la tarde (imagen Open Graph, robustez, landing en Astro): subir a `main` (Dokploy redespliega la landing) y sacar la release con `scripts/release.sh --crate`, que por los `feat:` será la 0.3.0.
+4. **En espera, hasta que Pavel pueda probarlo en una imagen de Docker o en su portátil con Ubuntu:** probar en Linux lo que solo tiene tests de parseo (apt, dnf, pacman, zypper, flatpak, snap). Windows (winget, scoop, choco) sigue sin máquina donde probarlo.
+
+Hecho el 28-10 por la tarde: imagen Open Graph; robustez (`engines.node`, casks con contraseña, bloqueo, rotación del historial); landing en Astro; plugin de Claude probado en conversación.
 
 Normas del proyecto: commits en Conventional Commits y en inglés, firmados con `paveldelpozo@gmail.com`; cada función nueva actualiza la landing y las referencias EN/ES (la CI lo vigila); tras cada cambio, `cargo install --path . --force`; releases con `scripts/release.sh --crate` (sin argumentos calcula la versión semántica).
 
@@ -163,7 +163,7 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] `scripts/check-docs.py` en la CI: falla si `repoke --help` tiene un comando u opción que no está en las dos referencias. **Cada función nueva actualiza la landing.**
 - [x] Autodespliegue: los `watchPaths` no incluían las referencias nuevas; ampliados a `site/**`, `docs/commands.md`, `docs/plugins.md`, `docs/es/**` y `Cargo.toml`, y desde entonces redespliega solo.
 - [x] La landing muestra la última versión publicada (junto a la instalación y en el pie), leída de `Cargo.toml` en el build: cada release la actualiza sin tocar nada (28-10, a petición de Pavel).
-- [ ] **Paso final: convertir la landing a Astro** (Pavel, 28-10). A partir de ahora, cualquier landing nueva se hace en Astro salvo que él diga lo contrario.
+- [x] **Landing convertida a Astro** (28-10): proyecto en `site/` (Astro 7, pnpm, Sätteri para el Markdown), las mismas URLs (`build.format: "preserve"`), la referencia y la guía importadas de `docs/`, la versión de `Cargo.toml`. La imagen de Docker se construye con Node 24 y la sirve nginx; la CI la compila. Las anclas de títulos con `<…>` cambian (`#upgrade-name` en vez de `#upgrade-lt-name-gt`); nada enlazaba a ellas. A partir de ahora, cualquier landing nueva se hace en Astro salvo que Pavel diga lo contrario.
 - [x] Imagen para compartir en redes (Open Graph): `site/og.html`, renderizada por `site/og.sh` en `og.png` y `og-es.png`.
 
 ## Preguntas abiertas

@@ -171,7 +171,7 @@ Commits follow [Conventional Commits](https://www.conventionalcommits.org/) so t
 
 The GitHub workflow is manual (`gh workflow run CI`) so pushes don't spend Actions minutes. To run the quick checks before every push, opt in to the bundled hook with `git config core.hooksPath .githooks`. Cross-target clippy needs `rustup target add x86_64-unknown-linux-gnu x86_64-pc-windows-msvc`.
 
-The website (https://repoke.paveldelpozo.es) is built from `site/` and `docs/`: `python3 site/build.py` writes it to `site/dist`. Every command and option in `repoke --help` must appear in `docs/commands.md` and `docs/es/commands.md`; `scripts/ci.sh` checks it.
+The website (https://repoke.paveldelpozo.es) is an Astro project in `site/` that renders `docs/`: `pnpm install && pnpm build` there writes it to `site/dist`. Every command and option in `repoke --help` must appear in `docs/commands.md` and `docs/es/commands.md`; `scripts/ci.sh` checks it.
 
 Each manager lives in `src/managers/<id>.rs` and implements the `Manager` trait in `src/manager.rs`. Output parsing is a pure function with tests over real captured output.
 

@@ -1,0 +1,15 @@
+{
+  "name": "repoke-site",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.15.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/markdown-satteri": "0.4.5",
+    "astro": "7.4.2"
+  }
+}

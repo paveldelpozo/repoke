@@ -28,7 +28,7 @@ cargo test
 step "docs cover every command and option"
 cargo build --quiet
 python3 scripts/check-docs.py target/debug/repoke
-python3 site/build.py "$(mktemp -d)"
+(cd site && pnpm install --frozen-lockfile --silent && pnpm exec astro build --silent --outDir "$(mktemp -d)")
 
 if [[ "${1:-}" != "--quick" ]]; then
   step "test (linux, docker)"

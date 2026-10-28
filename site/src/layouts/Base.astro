@@ -1,0 +1,92 @@
+---
+import strings from "../strings.json";
+import { BASE, OG, version } from "../site.js";
+
+const { lang, name, doc = false } = Astro.props;
+const s = strings[lang];
+const [title, description] = s.pages[name];
+const file = name === "index" ? "" : `${name}.html`;
+const [ogImage, ogLocale] = OG[lang];
+const origin = Astro.site.origin;
+
+const nav = s.nav.map(([href, label]) => {
+  const url = href.startsWith("http") ? href : BASE[lang] + href;
+  return { url, label, current: file !== "" && url.endsWith(file) };
+});
+---
+<!doctype html>
+<html lang={lang}>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{title}</title>
+  <meta name="description" content={description}>
+  <link rel="alternate" hreflang="en" href={BASE.en + file}>
+  <link rel="alternate" hreflang="es" href={BASE.es + file}>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="repoke">
+  <meta property="og:title" content={title}>
+  <meta property="og:description" content={description}>
+  <meta property="og:url" content={origin + BASE[lang] + file}>
+  <meta property="og:locale" content={ogLocale}>
+  <meta property="og:image" content={`${origin}/${ogImage}`}>
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content={s.og_alt}>
+  <meta name="twitter:card" content="summary_large_image">
+  <script is:inline>
+    // Before the first paint: the saved theme, and the language (saved, else the browser's).
+    (function () {
+      var root = document.documentElement, theme, lang;
+      try { theme = localStorage.getItem("theme"); lang = localStorage.getItem("lang"); } catch (e) {}
+      if (theme === "light" || theme === "dark") root.dataset.theme = theme;
+      if (!lang) {
+        lang = (navigator.languages || [navigator.language || ""])
+          .map(function (l) { return String(l).slice(0, 2).toLowerCase(); })
+          .filter(function (l) { return l === "en" || l === "es"; })[0] || "en";
+      }
+      if (lang !== root.lang) {
+        var other = document.querySelector('link[rel="alternate"][hreflang="' + lang + '"]');
+        if (other) location.replace(other.getAttribute("href") + location.hash);
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="/style.css">
+  <script is:inline src="/site.js" defer></script>
+</head>
+<body data-copy={s.copy} data-copied={s.copied} data-copy-failed={s.copy_failed}>
+  <a class="skip" href="#main">{s.skip}</a>
+  <header class="top">
+    <a class="brand" href={BASE[lang]} aria-label={s.home_label}>
+      <img src="/logo.svg" alt="" width="66" height="44">
+      <span>repoke</span>
+    </a>
+    <div class="prefs">
+      <label class="visually-hidden" for="lang">{s.language}</label>
+      <select id="lang" class="pref">
+        <option value={BASE.en + file} lang="en" selected={lang === "en"}>English</option>
+        <option value={BASE.es + file} lang="es" selected={lang === "es"}>Español</option>
+      </select>
+      <label class="visually-hidden" for="theme">{s.theme}</label>
+      <select id="theme" class="pref">
+        <option value="system">{s.theme_system}</option>
+        <option value="light">{s.theme_light}</option>
+        <option value="dark">{s.theme_dark}</option>
+      </select>
+    </div>
+    <nav aria-label={s.nav_label}>
+      {nav.map((n) => <a href={n.url} aria-current={n.current ? "page" : undefined}>{n.label}</a>)}
+    </nav>
+  </header>
+
+  <main id="main" class={doc ? "doc" : undefined}>
+    <slot />
+  </main>
+
+  <footer>
+    <p>{s.footer} <a href={`https://github.com/paveldelpozo/repoke/releases/tag/v${version}`}>repoke {version}</a>.</p>
+    <p><a href="https://github.com/paveldelpozo/repoke">{s.source}</a> <span aria-hidden="true">·</span> <a href="https://github.com/paveldelpozo/repoke/releases">Releases</a> <span aria-hidden="true">·</span> <a href="https://crates.io/crates/repoke">crates.io</a> <span aria-hidden="true">·</span> <a href="https://github.com/paveldelpozo/repoke-plugins">{s.plugins}</a></p>
+  </footer>
+</body>
+</html>
