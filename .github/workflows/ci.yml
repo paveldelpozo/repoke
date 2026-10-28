@@ -1,9 +1,8 @@
 name: CI
 
+# Manual only: scripts/ci.sh runs the same checks locally and saves Actions minutes.
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   test:

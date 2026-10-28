@@ -37,9 +37,11 @@ Planned: fnm, nvm, pip, uv, cargo, rustup, mas, apt, dnf, pacman, winget, scoop 
 ## Development
 
 ```sh
-cargo test
-cargo clippy --all-targets -- -D warnings
+scripts/ci.sh           # what CI checks: fmt, clippy for macOS/Linux/Windows, tests
+scripts/ci.sh --quick   # same, without the Linux tests in Docker
 cargo run -- check
 ```
+
+The GitHub workflow is manual (`gh workflow run CI`) so pushes don't spend Actions minutes. To run the quick checks before every push, opt in to the bundled hook with `git config core.hooksPath .githooks`. Cross-target clippy needs `rustup target add x86_64-unknown-linux-gnu x86_64-pc-windows-msvc`.
 
 Each manager lives in `src/managers/<id>.rs` and implements the `Manager` trait in `src/manager.rs`. Output parsing is a pure function with tests over real captured output.

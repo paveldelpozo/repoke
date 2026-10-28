@@ -8,7 +8,8 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] `repoke list`: gestores soportados en el sistema, ruta y versión.
 - [x] `repoke check`: pendientes en paralelo, `--only`, `--exclude`, `--json`, códigos de salida 0/100/1/2.
 - [x] Proveedores brew (formulae y casks), npm global y pnpm global, con tests de parseo.
-- [x] CI en GitHub Actions (fmt, clippy, test en macOS, Linux y Windows).
+- [x] CI en local con `scripts/ci.sh`: fmt, clippy para macOS, Linux y Windows, tests en el host y en Linux con Docker si está arrancado. El workflow de GitHub queda solo manual (el presupuesto de Actions se agotó el 28-10).
+- [ ] Activar el hook de pre-push (`git config core.hooksPath .githooks`): pendiente de que Pavel lo confirme.
 
 ## Fase 2 · Actualizar
 
