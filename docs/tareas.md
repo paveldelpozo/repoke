@@ -142,7 +142,11 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] Web estática en `site/`: instalación (brew con `brew trust`, cargo, binarios), salida real de `repoke list`, una sección por palo, botones de copiar (sin los comentarios `#`) y cambio de tema. Revisada en escritorio y a 320, 390 y 768 px: sin desbordes y con objetivos de 44 px.
 - [x] Guía de plugins (`plugins.html`) generada en el build desde `docs/plugins.md` con un conversor propio en Python (`site/render.py`); el clasificador bloquea descargar `marked`.
 - [x] Desplegada en Dokploy (proyecto «repoke» → aplicación «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`), desde GitHub con `site/Dockerfile`, autodespliegue al tocar `site/**` o `docs/plugins.md`. Certificado de Let's Encrypt.
-- [ ] **La landing tiene que estar en español y en inglés** (pedido por Pavel el 28-10): versión en español con selector de idioma, y la guía de plugins también en los dos.
+- [x] Español e inglés (28-10): `/` y `/es/`, idioma del navegador en la primera visita y menú para cambiarlo (se recuerda). Tema con menú Sistema / Claro / Oscuro, aplicado antes de pintar.
+- [x] Todos los comandos documentados: referencia completa en `docs/commands.md` y `docs/es/commands.md` (página *Commands* / *Comandos*), guía de plugins traducida (`docs/es/plugins.md`), y en la portada el modo programado, el MCP y una tabla con todos los comandos.
+- [x] `scripts/check-docs.py` en la CI: falla si `repoke --help` tiene un comando u opción que no está en las dos referencias. **Cada función nueva actualiza la landing.**
+- [ ] Averiguar por qué Dokploy no redespliega solo al hacer push (el despliegue del 28-10 hubo que lanzarlo a mano por la API).
+- [ ] **Paso final: convertir la landing a Astro** (Pavel, 28-10). A partir de ahora, cualquier landing nueva se hace en Astro salvo que él diga lo contrario.
 - [ ] Imagen para compartir en redes (Open Graph) a partir del logo.
 
 ## Preguntas abiertas
