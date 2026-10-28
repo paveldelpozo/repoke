@@ -89,8 +89,8 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] `scripts/release.sh <versión> [--dry-run] [--crate]`, en local como en hvf: CI, subida de versión, binarios de macOS (arm64 e Intel), Linux musl (x86_64 y arm64, con cargo-zigbuild) y Windows (mingw), archivos con `.sha256`, etiqueta, release de GitHub con notas desde el log, fórmula del tap y, con `--crate`, `cargo publish`. Sin todos los objetivos no publica, porque `self-update` busca el suyo.
 - [x] `repoke self-update [--check] [--yes] [--json]`: con Homebrew o cargo lanza `brew upgrade repoke` o `cargo install repoke --locked`; si es un binario, descarga el de su objetivo, comprueba el SHA-256 y lo cambia de forma atómica (con vuelta atrás). `GITHUB_TOKEN` permite probarlo con el repositorio privado.
 - [x] Aviso de versión nueva como mucho una vez al día, solo en terminal y nunca con `--json` ni en la tarea programada (`REPOKE_NO_UPDATE_CHECK` lo apaga).
-- [x] Dry-run en el Mac: binarios de macOS y Windows generados y verificados; los de Linux necesitan zig y cargo-zigbuild.
-- [ ] Instalar zig y cargo-zigbuild para los binarios de Linux (pendiente del permiso de Pavel).
+- [x] Dry-run en el Mac: los cinco binarios generados y verificados con `file`, checksum comprobado con `shasum -c` y fórmula pasada por `brew style`.
+- [x] zig 0.17 y cargo-zigbuild 0.24 instalados (28-10, con permiso de Pavel): el dry-run genera los cinco objetivos; los de Linux son estáticos.
 - [ ] Crear el repositorio del tap `paveldelpozo/homebrew-tap` (pendiente de Pavel).
 - [ ] Primera release `v0.1.0` (privada mientras el repositorio lo sea).
 - [ ] `cargo login` y publicación en crates.io, al abrir el repositorio.
