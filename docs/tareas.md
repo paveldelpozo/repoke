@@ -131,7 +131,7 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] `omz`: oh-my-zsh, probado en el Mac de Pavel.
 - [x] `vscode` (Python): extensiones con una versión **estable** más nueva en el Marketplace (las pre-release se ignoran y solo se pide el historial completo de las extensiones cuya última versión es pre-release), más `installed` e `install` para `export` e `init`. Probado con las 57 extensiones de Pavel: 4 pendientes, en unos 4 segundos.
 - [x] En repoke, `plugin search`, `plugin install <id>` (enseña el código y pregunta; `--yes`, `--force`) y `plugin remove <id>` (solo borra lo que instaló). `REPOKE_PLUGIN_INDEX` para otro índice.
-- [ ] Publicar `paveldelpozo/repoke-plugins` en GitHub (el clasificador bloquea que lo cree el agente: lo crea Pavel).
+- [x] `paveldelpozo/repoke-plugins` publicado (28-10, lo creó Pavel). Prueba de punta a punta: `plugin search` e `install vscode` desde el índice real de GitHub, y `check` con las 4 extensiones pendientes.
 - [ ] tpm, zinit, antidote, lazy.nvim, vim-plug y componentes de gcloud: Pavel no tiene ninguno instalado, así que quedan pendientes hasta poder probarlos en una máquina que los tenga.
 - [ ] Se quedan en el núcleo, por ser gestores de paquetes: mas, rustup.
 
