@@ -4,11 +4,11 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 
 ## Estado al cierre de la sesión del 28-10-2026
 
-Publicado: **v0.5.0** (28-10 por la noche) en GitHub (5 binarios), crates.io, el tap `paveldelpozo/tap` y el plugin de Claude Code; landing bilingüe en https://repoke.paveldelpozo.es (Dokploy, proyecto «repoke» → «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`, se redespliega sola); plugins oficiales en `paveldelpozo/repoke-plugins` (`omz`, `vscode`) con el índice comunitario montado (release `files`, Discussions, cifras diarias). En el Mac de Pavel: repoke instalado con cargo desde el código local, plugins `omz` y `vscode`, `[brew] greedy = true`, el modo programado a las 03:00 y las cifras de plugins a las 04:30.
+Publicado: **v0.6.0** (29-10) en GitHub (5 binarios), crates.io, el tap `paveldelpozo/tap` y el plugin de Claude Code; landing bilingüe en https://repoke.paveldelpozo.es (Dokploy, proyecto «repoke» → «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`, se redespliega sola); plugins oficiales en `paveldelpozo/repoke-plugins` (`omz`, `vscode`) con el índice comunitario montado (release `files`, Discussions, cifras diarias). En el Mac de Pavel: repoke instalado con cargo desde el código local, plugins `omz` y `vscode`, `[brew] greedy = true`, el modo programado a las 03:00 y las cifras de plugins a las 04:30.
 
 Lo siguiente, por orden (actualizado el 29-10):
 
-1. **Sin publicar:** `f49238f` (plugins de la comunidad en `plugin search` e `install`). Por el `feat:` será la **v0.6.0**; la lanza Pavel con `! scripts/release.sh --crate`.
+1. **v0.6.0 publicada** (29-10, la lanzó Pavel): plugins de la comunidad con descargas y votos, versión actual en dnf, resumen de pacman y modo programado sin systemd.
 2. **Pavel, 29-10 por la mañana:** `repoke schedule status` para ver cómo fue la primera ejecución programada (y `~/Library/Logs/repoke/last-run.log` si algo falló), y `~/Library/Logs/repoke-plugins/stats.log` para la primera de las cifras.
 3. **Pruebas que solo puede hacer Pavel:** las preguntas interactivas de `export --encrypt` e `init` en una terminal real; un cask que pida contraseña (`.pkg`); `[node] remove_old = true` en real; `softwareupdate` el día que Apple publique algo.
 4. **Un compañero de Pavel, como beta-tester:** `brew install` desde el tap tras `brew trust paveldelpozo/tap`.
