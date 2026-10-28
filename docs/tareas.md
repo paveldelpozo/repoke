@@ -11,7 +11,7 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] CI en local con `scripts/ci.sh`: fmt, clippy para macOS, Linux y Windows, tests en el host y en Linux con Docker si está arrancado. El workflow de GitHub queda solo manual (el presupuesto de Actions se agotó el 28-10).
 - [ ] Activar el hook de pre-push (`git config core.hooksPath .githooks`): pendiente de que Pavel lo confirme.
 
-## Fase 2 · Actualizar (hecha, falta probar una actualización real)
+## Fase 2 · Actualizar (hecha)
 
 - [x] `repoke upgrade` interactivo: lista con todo marcado (espacio marca, → todo, ← nada); Esc cancela con código 130.
 - [x] Modo automático: `--yes`, `--dry-run`, `--only`, `--exclude`, `--hold`, salida JSON por líneas (un evento por paso).
@@ -24,7 +24,7 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
   - npm instalaba `@latest`, que resolvió a npm 12.2.1 (exige node ≥ 22.22.2, Pavel tiene 22.13.1), y como npm instala todo o nada, cayeron los 4 globales. Ahora se instala la versión exacta que mostró `outdated` y, si falla un lote, se reintenta paquete a paquete.
   - pnpm se rechaza a sí mismo con `add -g` (ERR_PNPM_GLOBAL_PNPM_INSTALL): ahora usa `pnpm self-update <versión>`.
   - La línea con la selección se resume ("6 packages") y los avisos `[WARN]` / `npm warn` no entran en el mensaje de error.
-- [ ] Repetir la prueba real tras las correcciones.
+- [x] Repetir la prueba real tras las correcciones: Pavel confirma que funciona (28-10).
 - [ ] Antes de instalar un global de npm o pnpm, comparar su `engines.node` con la versión de node en uso y avisar, en vez de dejar que falle.
 - [ ] Algunos casks de brew piden contraseña con sudo por su cuenta: el aviso queda tapado por el spinner. Detectar los casks y pedir `sudo -v` antes, o mostrar su salida tal cual.
 - [ ] Timeouts por gestor en la configuración.
@@ -63,8 +63,8 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 ## Fase 6 · Distribución
 
 - [ ] Releases con binarios para macOS (arm64/x86_64), Linux y Windows.
-- [ ] Tap de Homebrew propio.
-- [ ] Publicar en crates.io (`cargo install repoke`).
+- [ ] Release final publicada en **crates.io** (`cargo install repoke`) y en **Homebrew**: primero un tap propio (`brew install paveldelpozo/tap/repoke`) y, cuando cumpla los requisitos de popularidad, la fórmula en homebrew-core.
+- [ ] Automatizar en `scripts/release.sh` la publicación en los dos sitios (`cargo publish` y actualizar la fórmula del tap con la URL y el sha256 nuevos).
 - [ ] Elegir licencia antes de abrir el repositorio.
 - [ ] `repoke self-update`, cuando el repositorio sea público (`upgrade` ya es el de los paquetes). Según cómo se instaló:
   - Con Homebrew o con cargo: lo deja en manos de ese gestor (`brew upgrade repoke`, `cargo install repoke`), para no desincronizarlo. Con brew, además, `repoke upgrade` ya lo incluye como un paquete más.
@@ -103,6 +103,7 @@ Herramientas que no son gestores de paquetes pero se actualizan solas. Son los p
 ## Landing
 
 - [ ] Landing del proyecto. El icono parte de la idea de un **repóker de ases** (juego de palabras con el nombre). El logo final hay que pedírselo a Pavel o confirmarlo con él antes de usarlo.
+- [ ] Sección de instalación con todas las opciones: `brew install`, `cargo install` y binario descargado de las releases de GitHub.
 - [ ] Apartado de documentación para plugins (ver fase 8).
 - [ ] Desplegar en el Dokploy personal; antes, pedir el dominio y comprobar con `dig` que apunta al servidor.
 
