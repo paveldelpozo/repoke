@@ -30,17 +30,25 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [ ] Timeouts por gestor en la configuración.
 - [ ] Con `--refresh`, el spinner de npm y pnpm dice "refreshing" un instante aunque no tengan índice que refrescar.
 
-## Fase 3 · Más gestores
+## Fase 3 · Más gestores (hecha en código; falta probar los de Linux y Windows)
 
-- [ ] fnm: nueva LTS de node y, opcionalmente, migrar los globales de la versión anterior.
-- [ ] nvm: es una función de shell, se detecta por `$NVM_DIR` o `~/.nvm`, no por el PATH.
-- [ ] pip: solo paquetes `--user`. El Python de Homebrew es "externally managed" (PEP 668): avisar en vez de usar `--break-system-packages`.
-- [ ] uv (`uv self update`, `uv tool upgrade --all`), pipx.
-- [ ] cargo (`cargo install-update` si está), rustup.
-- [ ] macOS: mas, `softwareupdate` (solo bajo petición explícita).
-- [ ] Linux: apt, dnf, pacman, zypper, snap, flatpak.
-- [ ] Windows: winget, scoop, choco.
-- [ ] Otros: yarn y bun globales, deno, gem, composer global, volta, mise, asdf.
+- [x] Núcleo: un paso puede tener varios comandos; cada gestor decide cómo localizarse (`locate`) y cómo invocarse (`invocation`), para nvm, que es una función de shell.
+- [x] fnm: cada línea mayor instalada de node es un "paquete" que sube a la última de su misma línea (nunca salta de mayor). Mueve el `default` si es de esa línea y reinstala los globales **desde la versión en uso**, que es la `default`, no la más alta instalada.
+- [x] nvm: igual que fnm, con `--reinstall-packages-from` y `alias default`. Se detecta por `$NVM_DIR` o `~/.nvm`.
+- [x] pip: solo `--user`, sin `--break-system-packages`.
+- [x] uv: herramientas y `uv self update` (solo si se instaló con el instalador propio).
+- [x] cargo: crates del registro, consultando `cargo search`; ignora las instalaciones desde ruta o git.
+- [x] rustup: toolchains y rustup.
+- [x] mas, gem (salta el Ruby del sistema en macOS), composer global (mueve la restricción con `global require`), mise.
+- [x] Linux: apt (simulación sin root), dnf, pacman (siempre `-Syu` completo, usa `checkupdates` si está), zypper, snap, flatpak.
+- [x] Windows: winget, scoop, choco. winget y scoop no tienen JSON: se leen sus tablas por la posición de las columnas.
+- [x] Probados de verdad en el Mac de Pavel (28-10): brew, npm, pnpm, fnm, pip, uv, cargo, rustup, composer.
+- [ ] Probar apt, dnf, pacman, zypper y flatpak en contenedores Docker (`scripts/ci.sh` ya tiene el paso; falta arrancar Docker y añadir imágenes por distro).
+- [ ] Probar winget, scoop y choco en un Windows real; la salida de winget cambia con el idioma y la versión.
+- [ ] Probar mas, nvm, gem y mise en una máquina que los tenga.
+- [ ] Pendientes: yarn global (solo yarn 1), bun, deno, volta, asdf, `softwareupdate` de macOS (solo bajo petición explícita).
+- [ ] cargo consulta crates.io crate a crate; con muchos crates instalados será lento. Valorar la API de crates.io en paralelo o `cargo install-update` si está.
+- [ ] fnm y nvm: las versiones viejas se quedan instaladas. Ofrecer limpiarlas cuando la nueva funcione.
 
 ## Fase 4 · `init` y `export`
 

@@ -2,7 +2,7 @@
 
 Finds the package managers installed on your system, shows what is outdated and updates what you choose: everything at once, one manager or single packages. It works interactively in a terminal and unattended for scripts, cron and AI agents.
 
-> Status: early development, supporting brew, npm and pnpm.
+> Status: early development.
 
 ## Usage
 
@@ -47,13 +47,34 @@ repoke never waits for input when stdin is not a terminal: a manager that tries 
 
 ## Supported managers
 
-| Id   | Manager        | OS            | check | upgrade |
-|------|----------------|---------------|-------|---------|
-| brew | Homebrew       | macOS, Linux  | yes   | yes     |
-| npm  | npm globals    | all           | yes   | yes     |
-| pnpm | pnpm globals   | all           | yes   | yes     |
+"Verified" means checked against the real tool; the rest are built from documented output formats and covered by parser tests, and still need a run on a real system.
 
-Planned: fnm, nvm, pip, uv, cargo, rustup, mas, apt, dnf, pacman, winget, scoop and more. See [docs/tareas.md](docs/tareas.md).
+| Id       | Manager                     | OS            | Verified | Notes |
+|----------|-----------------------------|---------------|----------|-------|
+| brew     | Homebrew formulae and casks | macOS, Linux  | macOS    | `--refresh` runs `brew update` |
+| mas      | Mac App Store               | macOS         |          | |
+| apt      | APT                         | Linux         |          | needs sudo; `--refresh` runs `apt-get update` |
+| dnf      | DNF                         | Linux         |          | needs sudo |
+| pacman   | pacman                      | Linux         |          | needs sudo; always a full `-Syu`, Arch has no partial upgrades |
+| zypper   | zypper                      | Linux         |          | needs sudo |
+| snap     | Snap                        | Linux         |          | needs sudo |
+| flatpak  | Flatpak                     | Linux         |          | |
+| winget   | WinGet                      | Windows       |          | |
+| scoop    | Scoop                       | Windows       |          | |
+| choco    | Chocolatey                  | Windows       |          | run from an elevated shell |
+| npm      | npm globals                 | all           | macOS    | installs the exact version listed |
+| pnpm     | pnpm globals                | all           | macOS    | updates itself with `self-update` |
+| fnm      | Node.js versions via fnm    | all           | macOS    | one entry per major line; moves `default` and reinstalls globals |
+| nvm      | Node.js versions via nvm    | macOS, Linux  |          | same as fnm, via `--reinstall-packages-from` |
+| pip      | pip `--user` packages       | all           | macOS    | never forces an externally managed Python (PEP 668) |
+| uv       | uv tools and uv itself      | all           | macOS    | |
+| cargo    | crates from `cargo install` | all           | macOS    | registry crates only |
+| rustup   | Rust toolchains and rustup  | all           | macOS    | |
+| gem      | RubyGems                    | all           |          | skips the system Ruby on macOS |
+| composer | Composer globals            | all           | macOS    | |
+| mise     | mise tools                  | all           |          | |
+
+Planned: yarn, bun, deno, volta, asdf, `softwareupdate` (opt in). See [docs/tareas.md](docs/tareas.md).
 
 ## Development
 

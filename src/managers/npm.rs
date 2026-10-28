@@ -25,7 +25,7 @@ impl Manager for Npm {
         parse_outdated(&json)
     }
 
-    fn upgrade_steps(&self, packages: &[Package]) -> Vec<Step> {
+    fn upgrade_steps(&self, _bin: &Path, packages: &[Package]) -> Vec<Step> {
         vec![install("install", packages)]
     }
 
@@ -44,15 +44,16 @@ impl Manager for Npm {
 /// `update -g` stays within the current major, so globals are reinstalled at the version
 /// `outdated` showed. `@latest` could resolve to a newer release that the running Node rejects.
 pub(super) fn install(verb: &str, packages: &[Package]) -> Step {
-    let mut args = vec![verb.to_string(), "--global".to_string()];
-    args.extend(packages.iter().map(|p| match p.latest.as_str() {
+    let specs = packages.iter().map(|p| match p.latest.as_str() {
         "" => format!("{}@latest", p.name),
         version => format!("{}@{version}", p.name),
-    }));
-    Step {
-        args,
-        packages: packages.to_vec(),
-    }
+    });
+    Step::new(
+        [verb.to_string(), "--global".to_string()]
+            .into_iter()
+            .chain(specs),
+        packages,
+    )
 }
 
 #[derive(Deserialize)]
@@ -124,7 +125,7 @@ mod tests {
             ],
         );
         assert_eq!(
-            step.args,
+            step.commands[0],
             [
                 "install",
                 "--global",

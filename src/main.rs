@@ -106,7 +106,7 @@ fn list(json: bool) -> ExitCode {
     let progress = progress::Progress::new(json);
     let bar = progress.spinner("", "looking for package managers");
     let detected: Vec<Detected> = check::parallel(managers::all(), |m| {
-        let path = manager::locate(m.binary());
+        let path = m.locate();
         Detected {
             id: m.id(),
             name: m.name(),
@@ -120,12 +120,15 @@ fn list(json: bool) -> ExitCode {
     if json {
         print_json(&detected);
     } else {
+        let id_width = detected.iter().map(|d| d.id.len()).max().unwrap_or(0);
+        let name_width = detected.iter().map(|d| d.name.len()).max().unwrap_or(0);
         for d in &detected {
-            match &d.version {
-                Some(version) => println!("{:<6} {:<15} {version}", d.id, d.name),
-                None if d.installed => println!("{:<6} {:<15} installed", d.id, d.name),
-                None => println!("{:<6} {:<15} not found", d.id, d.name),
-            }
+            let state = match &d.version {
+                Some(version) => version.as_str(),
+                None if d.installed => "installed",
+                None => "not found",
+            };
+            println!("{:<id_width$}  {:<name_width$}  {state}", d.id, d.name);
         }
     }
     ExitCode::SUCCESS

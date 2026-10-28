@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::slice;
 
 use crate::manager::{Manager, Package, Step, capture};
 
@@ -23,7 +24,7 @@ impl Manager for Pnpm {
     }
 
     /// pnpm refuses `add --global pnpm` (ERR_PNPM_GLOBAL_PNPM_INSTALL) and wants `self-update`.
-    fn upgrade_steps(&self, packages: &[Package]) -> Vec<Step> {
+    fn upgrade_steps(&self, _bin: &Path, packages: &[Package]) -> Vec<Step> {
         let (own, others): (Vec<Package>, Vec<Package>) =
             packages.iter().cloned().partition(|p| p.name == "pnpm");
         let mut steps = Vec::new();
@@ -31,10 +32,7 @@ impl Manager for Pnpm {
             steps.push(super::npm::install("add", &others));
         }
         for p in own {
-            steps.push(Step {
-                args: vec!["self-update".to_string(), p.latest.clone()],
-                packages: vec![p],
-            });
+            steps.push(Step::new(["self-update", &p.latest], slice::from_ref(&p)));
         }
         steps
     }
@@ -51,8 +49,11 @@ mod tests {
             current: "1.0.0".into(),
             latest: latest.into(),
         };
-        let steps = Pnpm.upgrade_steps(&[package("pnpm", "12.15.0"), package("eslint", "10.13.0")]);
-        let args: Vec<_> = steps.iter().map(|s| s.args.join(" ")).collect();
+        let steps = Pnpm.upgrade_steps(
+            Path::new("pnpm"),
+            &[package("pnpm", "12.15.0"), package("eslint", "10.13.0")],
+        );
+        let args: Vec<_> = steps.iter().map(|s| s.commands[0].join(" ")).collect();
         assert_eq!(args, ["add --global eslint@10.13.0", "self-update 12.15.0"]);
     }
 }

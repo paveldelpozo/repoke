@@ -130,17 +130,19 @@ pub fn run(args: &UpgradeArgs, config: &Config) -> Result<ExitCode, String> {
             continue;
         }
 
-        for step in m.upgrade_steps(packages) {
+        for step in m.upgrade_steps(&found.path, packages) {
             if args.dry_run {
                 runner.tally.planned += step.packages.len();
-                emit(
-                    args.json,
-                    &Event::Planned {
-                        manager,
-                        command: &command_line(found, &step, root).1,
-                        packages: &step.packages,
-                    },
-                );
+                for command in &step.commands {
+                    emit(
+                        runner.json,
+                        &Event::Planned {
+                            manager,
+                            command: &command_line(found, command, root).1,
+                            packages: &step.packages,
+                        },
+                    );
+                }
                 continue;
             }
             match runner.attempt(found, &step, root) {
@@ -154,7 +156,7 @@ pub fn run(args: &UpgradeArgs, config: &Config) -> Result<ExitCode, String> {
                         },
                     );
                     for package in &step.packages {
-                        for single in m.upgrade_steps(slice::from_ref(package)) {
+                        for single in m.upgrade_steps(&found.path, slice::from_ref(package)) {
                             let outcome = runner.attempt(found, &single, root);
                             runner.record(manager, &single.packages, outcome);
                         }
@@ -181,23 +183,27 @@ struct Runner<'a> {
 }
 
 impl Runner<'_> {
+    /// Runs the step's commands in order and stops at the first one that fails.
     fn attempt(&self, found: &Found, step: &Step, root: bool) -> Result<(), String> {
         let manager = found.manager.id();
-        let (command, shown) = command_line(found, step, root);
-        emit(
-            self.json,
-            &Event::Running {
-                manager,
-                command: &shown,
-                packages: &step.packages,
-            },
-        );
-        let bar = self
-            .progress
-            .spinner(manager, &format!("upgrading {}", names(&step.packages)));
-        let outcome = execute(&command, &bar);
-        bar.finish_and_clear();
-        outcome
+        for args in &step.commands {
+            let (command, shown) = command_line(found, args, root);
+            emit(
+                self.json,
+                &Event::Running {
+                    manager,
+                    command: &shown,
+                    packages: &step.packages,
+                },
+            );
+            let bar = self
+                .progress
+                .spinner(manager, &format!("upgrading {}", names(&step.packages)));
+            let outcome = execute(&command, &bar);
+            bar.finish_and_clear();
+            outcome?;
+        }
+        Ok(())
     }
 
     fn record(&mut self, manager: &str, packages: &[Package], outcome: Result<(), String>) {
@@ -221,18 +227,17 @@ impl Runner<'_> {
     }
 }
 
-/// The command to run and how to show it, with the binary's name instead of its full path.
-fn command_line(found: &Found, step: &Step, root: bool) -> (Vec<String>, String) {
-    let path = found.path.display().to_string();
-    let mut command = Vec::new();
-    if root {
-        // -n never prompts: interactive runs ask for the password up front with `sudo -v`.
-        command.extend(["sudo".to_string(), "-n".to_string()]);
-    }
-    command.push(path.clone());
-    command.extend(step.args.iter().cloned());
-    let shown = command.join(" ").replacen(&path, found.manager.binary(), 1);
-    (command, shown)
+/// The full command to run, and how to show it: with the manager's name, not its path or wrapper.
+fn command_line(found: &Found, args: &[String], root: bool) -> (Vec<String>, String) {
+    // -n never prompts: interactive runs ask for the password up front with `sudo -v`.
+    let sudo: &[&str] = if root { &["sudo", "-n"] } else { &[] };
+    let mut command: Vec<String> = sudo.iter().map(|s| s.to_string()).collect();
+    let mut shown = command.clone();
+    command.extend(found.manager.invocation(&found.path));
+    command.extend(args.iter().cloned());
+    shown.push(found.manager.binary().to_string());
+    shown.extend(args.iter().cloned());
+    (command, shown.join(" "))
 }
 
 fn authenticate(progress: &Progress) -> Result<(), String> {

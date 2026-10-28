@@ -28,13 +28,12 @@ impl Manager for Brew {
         parse_outdated(&json)
     }
 
-    fn upgrade_steps(&self, packages: &[Package]) -> Vec<Step> {
-        let mut args = vec!["upgrade".to_string()];
-        args.extend(packages.iter().map(|p| p.name.clone()));
-        vec![Step {
-            args,
-            packages: packages.to_vec(),
-        }]
+    fn upgrade_steps(&self, _bin: &Path, packages: &[Package]) -> Vec<Step> {
+        let names = packages.iter().map(|p| p.name.clone());
+        vec![Step::new(
+            ["upgrade".to_string()].into_iter().chain(names),
+            packages,
+        )]
     }
 
     fn refresh(&self, bin: &Path) -> Result<(), String> {

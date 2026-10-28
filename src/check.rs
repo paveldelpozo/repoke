@@ -5,7 +5,7 @@ use std::thread;
 use serde::Serialize;
 
 use crate::config::{self, Config};
-use crate::manager::{self, Manager, Package};
+use crate::manager::{Manager, Package};
 use crate::progress::Progress;
 use crate::{EXIT_UPDATES, Selection, managers, print_json};
 
@@ -57,7 +57,7 @@ pub fn gather(
     }
     let found: Vec<Found> = select(&selection.only, &exclude)?
         .into_iter()
-        .filter_map(|m| manager::locate(m.binary()).map(|path| Found { manager: m, path }))
+        .filter_map(|m| m.locate().map(|path| Found { manager: m, path }))
         .collect();
     let hold: Vec<String> = config.hold.iter().chain(&selection.hold).cloned().collect();
 
