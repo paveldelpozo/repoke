@@ -3,13 +3,103 @@ use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-use serde::Serialize;
+use std::fmt;
+
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Package {
     pub name: String,
     pub current: String,
     pub latest: String,
+}
+
+/// A package as `export` records it and `init` installs it, written `kind:name==version` so a
+/// snapshot stays one readable line per package. `==` because names use `@` themselves
+/// (`python@3.12`, `@scope/pkg`). `kind` is the manager's own detail: a brew cask
+/// or tap, a flatpak remote, a scoop bucket, an App Store id, the default Node line.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(into = "String", try_from = "String")]
+pub struct Installed {
+    pub name: String,
+    pub version: Option<String>,
+    pub kind: Option<String>,
+}
+
+impl Installed {
+    pub fn new(name: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            version: None,
+            kind: None,
+        }
+    }
+
+    pub fn version(mut self, version: impl Into<String>) -> Self {
+        self.version = Some(version.into()).filter(|v| !v.is_empty());
+        self
+    }
+
+    pub fn kind(mut self, kind: impl Into<String>) -> Self {
+        self.kind = Some(kind.into());
+        self
+    }
+
+    pub fn is(&self, kind: &str) -> bool {
+        self.kind.as_deref() == Some(kind)
+    }
+}
+
+impl fmt::Display for Installed {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let Some(kind) = &self.kind {
+            write!(f, "{kind}:")?;
+        }
+        f.write_str(&self.name)?;
+        if let Some(version) = &self.version {
+            write!(f, "=={version}")?;
+        }
+        Ok(())
+    }
+}
+
+impl From<Installed> for String {
+    fn from(installed: Installed) -> Self {
+        installed.to_string()
+    }
+}
+
+impl TryFrom<String> for Installed {
+    type Error = String;
+
+    fn try_from(text: String) -> Result<Self, String> {
+        let (kind, rest) = match text.split_once(':') {
+            Some((kind, rest)) => (Some(kind.to_string()), rest),
+            None => (None, text.as_str()),
+        };
+        let (name, version) = match rest.split_once("==") {
+            Some((name, version)) => (name, Some(version.to_string())),
+            None => (rest, None),
+        };
+        if name.is_empty() {
+            return Err(format!("empty package name in '{text}'"));
+        }
+        Ok(Self {
+            name: name.to_string(),
+            version,
+            kind,
+        })
+    }
+}
+
+impl From<&Installed> for Package {
+    fn from(installed: &Installed) -> Self {
+        Self {
+            name: installed.name.clone(),
+            current: String::new(),
+            latest: installed.version.clone().unwrap_or_default(),
+        }
+    }
 }
 
 /// Commands run in order for some packages, which are reported together as upgraded or failed.
@@ -26,6 +116,26 @@ impl Step {
             commands: vec![args.into_iter().map(Into::into).collect()],
             packages: packages.to_vec(),
         }
+    }
+
+    pub fn install<S: Into<String>>(
+        args: impl IntoIterator<Item = S>,
+        packages: &[Installed],
+    ) -> Self {
+        Self {
+            commands: vec![args.into_iter().map(Into::into).collect()],
+            packages: packages.iter().map(Package::from).collect(),
+        }
+    }
+
+    /// `args` followed by every package name, as one step; none when there is nothing to install.
+    pub fn install_all(args: &[&str], packages: &[Installed]) -> Vec<Self> {
+        if packages.is_empty() {
+            return Vec::new();
+        }
+        let names = packages.iter().map(|p| p.name.clone());
+        let args = args.iter().map(|a| a.to_string()).chain(names);
+        vec![Self::install(args, packages)]
     }
 }
 
@@ -62,6 +172,36 @@ pub trait Manager: Sync {
     fn needs_root(&self, _bin: &Path) -> bool {
         false
     }
+
+    /// What the user installed on purpose, leaving out dependencies, for `export`.
+    fn installed(&self, _bin: &Path) -> Result<Vec<Installed>, String> {
+        Err("export is not supported for this manager yet".into())
+    }
+
+    fn install_steps(&self, _bin: &Path, _packages: &[Installed]) -> Vec<Step> {
+        Vec::new()
+    }
+
+    /// Config files, relative to the home directory, that `export` can carry over. Files holding
+    /// credentials (`~/.cargo/credentials.toml`, composer's `auth.json`) are left out on purpose.
+    fn config_files(&self) -> &'static [&'static str] {
+        &[]
+    }
+}
+
+/// Trimmed, non-empty lines of a command that must exit 0.
+pub fn lines<I, S>(program: impl AsRef<OsStr>, args: I) -> Result<Vec<String>, String>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
+    Ok(capture(program, args)?
+        .expect(&[0])?
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .map(String::from)
+        .collect())
 }
 
 /// First token that looks like a version: `pip 26.2.2 from /opt/...` gives `26.2.2`.
@@ -148,6 +288,30 @@ pub fn writable(path: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn installed_round_trips_through_its_text_form() {
+        for text in [
+            "git",
+            "python@3.10",
+            "cask:visual-studio-code",
+            "@google/gemini-cli==0.66.0",
+            "default:node@22==22.23.4",
+            "flathub:org.mozilla.firefox",
+        ] {
+            let installed = Installed::try_from(text.to_string()).unwrap();
+            assert_eq!(installed.to_string(), text);
+        }
+        let scoped = Installed::try_from("@google/gemini-cli==0.66.0".to_string()).unwrap();
+        assert_eq!(scoped.name, "@google/gemini-cli");
+        assert_eq!(scoped.version.as_deref(), Some("0.66.0"));
+        let versioned = Installed::try_from("python@3.10".to_string()).unwrap();
+        assert_eq!(
+            (versioned.name.as_str(), versioned.version),
+            ("python@3.10", None)
+        );
+        assert!(Installed::try_from("cask:".to_string()).is_err());
+    }
 
     #[test]
     fn finds_the_version_in_banners() {

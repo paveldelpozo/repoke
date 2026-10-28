@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use crate::manager::{self, Manager, Package, Step, capture, writable};
+use crate::manager::{self, Installed, Manager, Package, Step, capture, lines, writable};
 
 pub struct Gem;
 
@@ -40,6 +40,29 @@ impl Manager for Gem {
             && capture(bin, ["environment", "gemdir"])
                 .and_then(|o| o.expect(&[0]))
                 .is_ok_and(|dir| !writable(Path::new(dir.trim())))
+    }
+
+    /// Gems that only exist as a Ruby default (`default: 13.0.6`) are part of Ruby itself.
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        Ok(lines(bin, ["list", "--local"])?
+            .iter()
+            .filter_map(|line| {
+                let (name, versions) = line.split_once(" (")?;
+                let version = versions
+                    .trim_end_matches(')')
+                    .split(", ")
+                    .find(|v| !v.starts_with("default:"))?;
+                Some(Installed::new(name).version(version))
+            })
+            .collect())
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        Step::install_all(&["install"], packages)
+    }
+
+    fn config_files(&self) -> &'static [&'static str] {
+        &[".gemrc"]
     }
 }
 

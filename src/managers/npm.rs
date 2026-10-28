@@ -3,7 +3,7 @@ use std::path::Path;
 
 use serde::Deserialize;
 
-use crate::manager::{Manager, Package, Step, capture, writable};
+use crate::manager::{Installed, Manager, Package, Step, capture, writable};
 
 pub struct Npm;
 
@@ -38,6 +38,19 @@ impl Manager for Npm {
             Ok(prefix) => !writable(&Path::new(prefix.trim()).join("lib/node_modules")),
             Err(_) => false,
         }
+    }
+
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        let json = capture(bin, ["ls", "--global", "--depth=0", "--json"])?.expect(&[0])?;
+        parse_globals(&json)
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        Step::install_all(&["install", "--global"], packages)
+    }
+
+    fn config_files(&self) -> &'static [&'static str] {
+        &[".npmrc"]
     }
 }
 
@@ -77,6 +90,34 @@ pub(super) fn parse_outdated(json: &str) -> Result<Vec<Package>, String> {
             latest: entry.latest.unwrap_or_default(),
         })
         .collect())
+}
+
+#[derive(Deserialize)]
+pub(super) struct Globals {
+    #[serde(default)]
+    dependencies: BTreeMap<String, Dependency>,
+}
+
+#[derive(Deserialize)]
+struct Dependency {
+    version: Option<String>,
+}
+
+impl Globals {
+    /// npm and corepack ship with Node itself; pnpm lists itself when it was added globally.
+    pub(super) fn packages(self) -> Vec<Installed> {
+        self.dependencies
+            .into_iter()
+            .filter(|(name, _)| !matches!(name.as_str(), "npm" | "corepack" | "pnpm"))
+            .map(|(name, dep)| Installed::new(name).version(dep.version.unwrap_or_default()))
+            .collect()
+    }
+}
+
+pub(super) fn parse_globals(json: &str) -> Result<Vec<Installed>, String> {
+    serde_json::from_str::<Globals>(json)
+        .map(Globals::packages)
+        .map_err(|e| format!("unexpected npm output: {e}"))
 }
 
 #[cfg(test)]

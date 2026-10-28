@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::manager::{Manager, Package, Step, capture};
+use crate::manager::{Installed, Manager, Package, Step, capture, lines};
 
 pub struct Flatpak;
 
@@ -33,6 +33,32 @@ impl Manager for Flatpak {
             args.into_iter().map(String::from).chain(ids),
             packages,
         )]
+    }
+
+    /// The remote each app came from goes in `kind`.
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        Ok(
+            lines(bin, ["list", "--app", "--columns=application,origin"])?
+                .iter()
+                .filter_map(|line| {
+                    let (app, origin) = line.split_once('\t')?;
+                    Some(Installed::new(app.trim()).kind(origin.trim()))
+                })
+                .collect(),
+        )
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        packages
+            .iter()
+            .map(|p| {
+                let remote = p.kind.as_deref().unwrap_or("flathub");
+                Step::install(
+                    ["install", "-y", "--noninteractive", remote, &p.name],
+                    std::slice::from_ref(p),
+                )
+            })
+            .collect()
     }
 }
 

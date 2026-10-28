@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::manager::{Manager, Package, Step, capture};
+use crate::manager::{Installed, Manager, Package, Step, capture, lines};
 
 pub struct Uv;
 
@@ -48,6 +48,31 @@ impl Manager for Uv {
             steps.push(Step::new(["self", "update"], &own));
         }
         steps
+    }
+
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        Ok(lines(bin, ["tool", "list"])?
+            .iter()
+            .filter(|l| !l.starts_with('-'))
+            .filter_map(|l| {
+                let mut tokens = l.split_whitespace();
+                let name = tokens.next()?;
+                let version = tokens.next().unwrap_or_default().trim_start_matches('v');
+                Some(Installed::new(name).version(version))
+            })
+            .collect())
+    }
+
+    /// `uv tool install` takes one tool at a time.
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        packages
+            .iter()
+            .map(|p| Step::install(["tool", "install", &p.name], std::slice::from_ref(p)))
+            .collect()
+    }
+
+    fn config_files(&self) -> &'static [&'static str] {
+        &[".config/uv/uv.toml"]
     }
 }
 

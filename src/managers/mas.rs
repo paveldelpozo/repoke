@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::manager::{Manager, Package, Step, capture};
+use crate::manager::{Installed, Manager, Package, Step, capture, lines};
 
 pub struct Mas;
 
@@ -44,6 +44,29 @@ impl Manager for Mas {
             ["upgrade".to_string()].into_iter().chain(ids),
             packages,
         )]
+    }
+
+    /// Apps are named for people; the App Store id they install by goes in `kind`.
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        Ok(lines(bin, ["list"])?
+            .iter()
+            .filter_map(|line| {
+                let (id, rest) = line.split_once(char::is_whitespace)?;
+                let open = rest.rfind('(')?;
+                let version = rest[open + 1..].trim_end_matches(')').trim();
+                Some(
+                    Installed::new(rest[..open].trim())
+                        .version(version)
+                        .kind(id),
+                )
+            })
+            .collect())
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        let ids = packages.iter().filter_map(|p| p.kind.clone());
+        let args = ["install".to_string()].into_iter().chain(ids);
+        vec![Step::install(args, packages)]
     }
 }
 

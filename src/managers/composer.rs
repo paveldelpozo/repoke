@@ -2,7 +2,7 @@ use std::path::Path;
 
 use serde::Deserialize;
 
-use crate::manager::{Manager, Package, Step, capture};
+use crate::manager::{Installed, Manager, Package, Step, capture};
 
 pub struct Composer;
 
@@ -46,6 +46,32 @@ impl Manager for Composer {
             packages,
         )]
     }
+
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        let args = [
+            "global",
+            "show",
+            "--direct",
+            "--format=json",
+            "--no-interaction",
+        ];
+        let report: Shown = serde_json::from_str(&capture(bin, args)?.expect(&[0])?)
+            .map_err(|e| format!("unexpected composer output: {e}"))?;
+        Ok(report
+            .installed
+            .into_iter()
+            .map(|e| Installed::new(e.name).version(e.version.trim_start_matches('v')))
+            .collect())
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        Step::install_all(&["global", "require", "--no-interaction"], packages)
+    }
+
+    /// Not `auth.json`, which holds registry tokens.
+    fn config_files(&self) -> &'static [&'static str] {
+        &[".composer/config.json", ".config/composer/config.json"]
+    }
 }
 
 #[derive(Deserialize)]
@@ -73,6 +99,18 @@ fn parse_outdated(json: &str) -> Result<Vec<Package>, String> {
             latest: e.latest.trim_start_matches('v').to_string(),
         })
         .collect())
+}
+
+#[derive(Deserialize)]
+struct Shown {
+    #[serde(default)]
+    installed: Vec<ShownEntry>,
+}
+
+#[derive(Deserialize)]
+struct ShownEntry {
+    name: String,
+    version: String,
 }
 
 #[cfg(test)]

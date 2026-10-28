@@ -1,0 +1,159 @@
+# Tools `repoke init` offers on a fresh machine. `via` maps a manager id to the package name it
+# uses; `brew-cask` is a Homebrew cask. The first manager present on the machine, in the order of
+# `repoke list`, is the one used.
+
+[[tool]]
+id = "git"
+category = "Git"
+description = "Version control"
+via = { brew = "git", apt = "git", dnf = "git", pacman = "git", zypper = "git", winget = "Git.Git", scoop = "git", choco = "git" }
+
+[[tool]]
+id = "gh"
+category = "Git"
+description = "GitHub from the command line"
+via = { brew = "gh", dnf = "gh", pacman = "github-cli", winget = "GitHub.cli", scoop = "gh", choco = "gh" }
+
+[[tool]]
+id = "lazygit"
+category = "Git"
+description = "Terminal UI for git"
+via = { brew = "lazygit", pacman = "lazygit", winget = "JesseDuffield.lazygit", scoop = "lazygit" }
+
+[[tool]]
+id = "delta"
+category = "Git"
+description = "Syntax-highlighted diffs for git"
+via = { brew = "git-delta", dnf = "git-delta", pacman = "git-delta", winget = "dandavison.delta", scoop = "delta" }
+
+[[tool]]
+id = "zsh"
+category = "Shell"
+description = "Z shell"
+via = { brew = "zsh", apt = "zsh", dnf = "zsh", pacman = "zsh", zypper = "zsh" }
+
+[[tool]]
+id = "starship"
+category = "Shell"
+description = "Cross-shell prompt"
+via = { brew = "starship", pacman = "starship", winget = "Starship.Starship", scoop = "starship" }
+
+[[tool]]
+id = "tmux"
+category = "Shell"
+description = "Terminal multiplexer"
+via = { brew = "tmux", apt = "tmux", dnf = "tmux", pacman = "tmux", zypper = "tmux" }
+
+[[tool]]
+id = "zoxide"
+category = "Shell"
+description = "cd that learns your most used folders"
+via = { brew = "zoxide", apt = "zoxide", dnf = "zoxide", pacman = "zoxide", winget = "ajeetdsouza.zoxide", scoop = "zoxide" }
+
+[[tool]]
+id = "fzf"
+category = "Shell"
+description = "Fuzzy finder"
+via = { brew = "fzf", apt = "fzf", dnf = "fzf", pacman = "fzf", zypper = "fzf", winget = "junegunn.fzf", scoop = "fzf" }
+
+[[tool]]
+id = "ripgrep"
+category = "Files"
+description = "Fast recursive search (rg)"
+via = { brew = "ripgrep", apt = "ripgrep", dnf = "ripgrep", pacman = "ripgrep", zypper = "ripgrep", winget = "BurntSushi.ripgrep.MSVC", scoop = "ripgrep", choco = "ripgrep" }
+
+[[tool]]
+id = "fd"
+category = "Files"
+description = "Simple, fast find"
+via = { brew = "fd", apt = "fd-find", dnf = "fd-find", pacman = "fd", winget = "sharkdp.fd", scoop = "fd" }
+
+[[tool]]
+id = "bat"
+category = "Files"
+description = "cat with syntax highlighting"
+via = { brew = "bat", apt = "bat", dnf = "bat", pacman = "bat", winget = "sharkdp.bat", scoop = "bat" }
+
+[[tool]]
+id = "eza"
+category = "Files"
+description = "Modern ls"
+via = { brew = "eza", pacman = "eza", winget = "eza-community.eza", scoop = "eza" }
+
+[[tool]]
+id = "jq"
+category = "Files"
+description = "JSON processor"
+via = { brew = "jq", apt = "jq", dnf = "jq", pacman = "jq", zypper = "jq", winget = "jqlang.jq", scoop = "jq", choco = "jq" }
+
+[[tool]]
+id = "btop"
+category = "System"
+description = "Resource monitor"
+via = { brew = "btop", apt = "btop", dnf = "btop", pacman = "btop", scoop = "btop" }
+
+[[tool]]
+id = "neovim"
+category = "Editors"
+description = "Vim-based editor"
+via = { brew = "neovim", apt = "neovim", dnf = "neovim", pacman = "neovim", zypper = "neovim", winget = "Neovim.Neovim", scoop = "neovim" }
+
+[[tool]]
+id = "vscode"
+category = "Editors"
+description = "Visual Studio Code"
+via = { brew-cask = "visual-studio-code", flatpak = "com.visualstudio.code", winget = "Microsoft.VisualStudioCode" }
+
+[[tool]]
+id = "fnm"
+category = "Languages"
+description = "Node.js version manager"
+via = { brew = "fnm", winget = "Schniz.fnm", scoop = "fnm" }
+
+[[tool]]
+id = "pnpm"
+category = "Languages"
+description = "Node.js package manager"
+via = { brew = "pnpm", winget = "pnpm.pnpm", scoop = "pnpm", npm = "pnpm" }
+
+[[tool]]
+id = "uv"
+category = "Languages"
+description = "Python package and project manager"
+via = { brew = "uv", pacman = "uv", winget = "astral-sh.uv", scoop = "uv" }
+
+[[tool]]
+id = "rustup"
+category = "Languages"
+description = "Rust toolchain installer"
+via = { brew = "rustup", pacman = "rustup", winget = "Rustlang.Rustup", scoop = "rustup" }
+
+[[tool]]
+id = "go"
+category = "Languages"
+description = "Go"
+via = { brew = "go", apt = "golang-go", dnf = "golang", pacman = "go", winget = "GoLang.Go", scoop = "go" }
+
+[[tool]]
+id = "awscli"
+category = "Cloud"
+description = "AWS command line"
+via = { brew = "awscli", pacman = "aws-cli", winget = "Amazon.AWSCLI", scoop = "aws" }
+
+[[tool]]
+id = "kubectl"
+category = "Cloud"
+description = "Kubernetes command line"
+via = { brew = "kubernetes-cli", pacman = "kubectl", winget = "Kubernetes.kubectl", scoop = "kubectl" }
+
+[[tool]]
+id = "firefox"
+category = "Apps"
+description = "Firefox browser"
+via = { brew-cask = "firefox", pacman = "firefox", flatpak = "org.mozilla.firefox", winget = "Mozilla.Firefox" }
+
+[[tool]]
+id = "vlc"
+category = "Apps"
+description = "Media player"
+via = { brew-cask = "vlc", apt = "vlc", pacman = "vlc", flatpak = "org.videolan.VLC", winget = "VideoLAN.VLC" }

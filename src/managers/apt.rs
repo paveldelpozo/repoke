@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::manager::{Manager, Package, Step, capture, needs_sudo};
+use crate::manager::{Installed, Manager, Package, Step, capture, lines, needs_sudo};
 
 pub struct Apt;
 
@@ -48,6 +48,17 @@ impl Manager for Apt {
             args.into_iter().map(String::from).chain(names),
             packages,
         )]
+    }
+
+    fn installed(&self, _bin: &Path) -> Result<Vec<Installed>, String> {
+        Ok(lines("apt-mark", ["showmanual"])?
+            .into_iter()
+            .map(Installed::new)
+            .collect())
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        Step::install_all(&["install", "-y"], packages)
     }
 }
 

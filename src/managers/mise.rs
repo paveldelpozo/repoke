@@ -3,7 +3,7 @@ use std::path::Path;
 
 use serde::Deserialize;
 
-use crate::manager::{Manager, Package, Step, capture};
+use crate::manager::{Installed, Manager, Package, Step, capture};
 
 pub struct Mise;
 
@@ -31,6 +31,37 @@ impl Manager for Mise {
             packages,
         )]
     }
+
+    /// The active version of each tool; with several, the last one listed.
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        let json = capture(bin, ["ls", "--json"])?.expect(&[0])?;
+        let tools: BTreeMap<String, Vec<Listed>> =
+            serde_json::from_str(&json).map_err(|e| format!("unexpected mise output: {e}"))?;
+        Ok(tools
+            .into_iter()
+            .filter_map(|(name, versions)| {
+                let chosen = versions.iter().find(|v| v.active).or(versions.last())?;
+                Some(Installed::new(name).version(chosen.version.clone()))
+            })
+            .collect())
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        packages
+            .iter()
+            .map(|p| {
+                let spec = match &p.version {
+                    Some(version) => format!("{}@{version}", p.name),
+                    None => p.name.clone(),
+                };
+                Step::install(["use", "--global", &spec], std::slice::from_ref(p))
+            })
+            .collect()
+    }
+
+    fn config_files(&self) -> &'static [&'static str] {
+        &[".config/mise/config.toml"]
+    }
 }
 
 #[derive(Deserialize)]
@@ -53,6 +84,13 @@ fn parse_outdated(json: &str) -> Result<Vec<Package>, String> {
             latest: e.latest,
         })
         .collect())
+}
+
+#[derive(Deserialize)]
+struct Listed {
+    version: String,
+    #[serde(default)]
+    active: bool,
 }
 
 #[cfg(test)]

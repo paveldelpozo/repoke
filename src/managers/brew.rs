@@ -2,7 +2,9 @@ use std::path::Path;
 
 use serde::Deserialize;
 
-use crate::manager::{Manager, Package, Step, capture};
+use std::slice;
+
+use crate::manager::{Installed, Manager, Package, Step, capture, lines};
 
 pub struct Brew;
 
@@ -38,6 +40,44 @@ impl Manager for Brew {
 
     fn refresh(&self, bin: &Path) -> Result<(), String> {
         capture(bin, ["update"])?.expect(&[0]).map(drop)
+    }
+
+    /// Official `homebrew/*` taps come with Homebrew and are left out.
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        let mut packages: Vec<Installed> = lines(bin, ["tap"])?
+            .into_iter()
+            .filter(|tap| !tap.starts_with("homebrew/"))
+            .map(|tap| Installed::new(tap).kind("tap"))
+            .collect();
+        packages.extend(
+            lines(bin, ["leaves", "--installed-on-request"])?
+                .into_iter()
+                .map(Installed::new),
+        );
+        packages.extend(
+            lines(bin, ["list", "--cask", "-1"])?
+                .into_iter()
+                .map(|cask| Installed::new(cask).kind("cask")),
+        );
+        Ok(packages)
+    }
+
+    /// Taps first, so the formulae and casks that come from them resolve.
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        let of = |kind: Option<&str>| -> Vec<Installed> {
+            packages
+                .iter()
+                .filter(|p| p.kind.as_deref() == kind)
+                .cloned()
+                .collect()
+        };
+        let mut steps: Vec<Step> = of(Some("tap"))
+            .iter()
+            .map(|tap| Step::install(["tap", &tap.name], slice::from_ref(tap)))
+            .collect();
+        steps.extend(Step::install_all(&["install"], &of(None)));
+        steps.extend(Step::install_all(&["install", "--cask"], &of(Some("cask"))));
+        steps
     }
 }
 

@@ -25,9 +25,14 @@ mod zypper;
 
 use crate::manager::Manager;
 
-/// System package managers first, then language and tool managers.
+/// The managers supported on this OS, system package managers first.
 pub fn all() -> Vec<&'static dyn Manager> {
-    let managers: [&'static dyn Manager; 22] = [
+    every().into_iter().filter(|m| m.supported()).collect()
+}
+
+/// Every manager repoke knows, whatever the OS.
+pub fn every() -> [&'static dyn Manager; 22] {
+    [
         &brew::Brew,
         &mas::Mas,
         &apt::Apt,
@@ -50,6 +55,5 @@ pub fn all() -> Vec<&'static dyn Manager> {
         &gem::Gem,
         &composer::Composer,
         &mise::Mise,
-    ];
-    managers.into_iter().filter(|m| m.supported()).collect()
+    ]
 }

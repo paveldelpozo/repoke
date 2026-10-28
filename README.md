@@ -18,11 +18,26 @@ repoke upgrade --yes              # upgrade everything pending without asking
 repoke upgrade --yes --json --no-sudo --hold eslint
 ```
 
+### Moving to another machine
+
+```sh
+repoke export                         # asks, per manager, whether to include its config files
+repoke export --yes --config -o snap  # unattended: config included, secret values removed
+repoke init --from snap               # pick what to install (all preselected), then restore config
+repoke init --from snap --dry-run     # what would be installed and restored
+repoke init                           # fresh machine: pick tools from a catalog (ripgrep, fd, gh…)
+repoke init --tools ripgrep,fd --yes  # the same without the picker
+```
+
+`export` writes a folder with `repoke.toml`, one line per package (`cask:firefox`, `eslint==10.13.0`), and `files/` with the config files at their path under your home. It records only what you installed on purpose, not dependencies. Lines that look like secrets (`_authToken=…`, `password: …`, private keys) are found before saving: interactively you choose to remove their values, leave the file out or keep it; unattended, the values are always removed. `${VAR}` references are kept. A config that is a symlink into a git repository is recorded as coming from your dotfiles (with the repository's remote) instead of being copied.
+
+`init --from` skips managers the machine doesn't have for its OS, installs only what is missing, runs Homebrew first (it often installs the other managers) and offers to install a still-missing manager with Homebrew. Config files are compared first: missing ones are restored, equal ones left alone, and different ones are kept unless you choose the snapshot's copy (or pass `--overwrite`), with yours backed up as `<file>.repoke-<date>.bak`. Removed secret values are filled back from the file already on the machine, so restoring never swaps a real token for the placeholder.
+
 `--only`, `--exclude`, `--hold` and `--refresh` (runs `brew update` first) work with both `check` and `upgrade`. In a terminal, spinners on stderr show what each manager is doing; with `--json` or when piped there are none.
 
 ### Unattended use
 
-`upgrade` without `--yes` refuses to run outside a terminal (exit 2) instead of waiting for input. With `--json` it prints one event per line (`check_failed`, `running`, `planned`, `upgraded`, `failed`, `skipped`, `retrying`, then `summary`). `upgraded` and `failed` carry `seconds`; `summary` has the totals, `elapsed_seconds` for the whole run and a per-manager breakdown. A manager that needs root is called with `sudo -n`, so it fails at once when there is no cached password; `--no-sudo` skips it instead.
+`upgrade` without `--yes` refuses to run outside a terminal (exit 2) instead of waiting for input. With `--json` it prints one event per line (`check_failed`, `running`, `planned`, `done`, `failed`, `skipped`, `retrying`, then `summary`). `done` and `failed` carry `action` (`upgrade` or `install`) and `seconds`; `summary` has the totals, `elapsed_seconds` for the whole run and a per-manager breakdown. `init` adds a `config` event per config file. A manager that needs root is called with `sudo -n`, so it fails at once when there is no cached password; `--no-sudo` skips it instead.
 
 ### Configuration
 

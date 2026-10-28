@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::manager::{self, Manager, Package, Step, capture, needs_sudo};
+use crate::manager::{self, Installed, Manager, Package, Step, capture, lines, needs_sudo};
 
 pub struct Pacman;
 
@@ -39,6 +39,18 @@ impl Manager for Pacman {
     /// Arch only supports full upgrades, so any selection runs `-Syu` for everything.
     fn upgrade_steps(&self, _bin: &Path, packages: &[Package]) -> Vec<Step> {
         vec![Step::new(["-Syu", "--noconfirm"], packages)]
+    }
+
+    /// Explicitly installed packages from the repos; AUR ones (`-m`) need an AUR helper.
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        Ok(lines(bin, ["-Qqen"])?
+            .into_iter()
+            .map(Installed::new)
+            .collect())
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        Step::install_all(&["-S", "--needed", "--noconfirm"], packages)
     }
 }
 

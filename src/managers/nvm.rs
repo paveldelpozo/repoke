@@ -2,7 +2,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 
 use super::node_versions::{self, Version};
-use crate::manager::{Manager, Package, Step, capture};
+use crate::manager::{Installed, Manager, Package, Step, capture};
 
 /// nvm is a shell function, so every call sources nvm.sh in a fresh bash first.
 const SCRIPT: &str = r#". "$0" --no-use && nvm "$@""#;
@@ -79,6 +79,28 @@ impl Manager for Nvm {
                     commands,
                     packages: vec![p.clone()],
                 }
+            })
+            .collect()
+    }
+
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        let (installed, default) = parse_ls(&run(bin, &["ls", "--no-colors"])?);
+        Ok(node_versions::lines(&installed, default))
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        packages
+            .iter()
+            .filter_map(|p| {
+                let major = p.name.strip_prefix("node@")?.to_string();
+                let mut commands = vec![vec!["install".to_string(), major.clone()]];
+                if p.is("default") {
+                    commands.push(vec!["alias".to_string(), "default".to_string(), major]);
+                }
+                Some(Step {
+                    commands,
+                    packages: vec![Package::from(p)],
+                })
             })
             .collect()
     }

@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::manager::{Manager, Package, Step, capture};
+use crate::manager::{Installed, Manager, Package, Step, capture, lines};
 
 pub struct Rustup;
 
@@ -39,6 +39,43 @@ impl Manager for Rustup {
         }
         steps
     }
+
+    /// Toolchains without the host triple (`stable`, not `stable-aarch64-apple-darwin`), so they
+    /// install on any machine.
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        Ok(lines(bin, ["toolchain", "list"])?
+            .iter()
+            .map(|line| {
+                let (toolchain, notes) = line.split_once(' ').unwrap_or((line, ""));
+                let installed = Installed::new(without_host(toolchain));
+                if notes.contains("default") {
+                    installed.kind("default")
+                } else {
+                    installed
+                }
+            })
+            .collect())
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        packages
+            .iter()
+            .map(|p| {
+                let mut commands = vec![vec![
+                    "toolchain".to_string(),
+                    "install".to_string(),
+                    p.name.clone(),
+                ]];
+                if p.is("default") {
+                    commands.push(vec!["default".to_string(), p.name.clone()]);
+                }
+                Step {
+                    commands,
+                    packages: vec![Package::from(p)],
+                }
+            })
+            .collect()
+    }
 }
 
 /// `stable-aarch64-apple-darwin - update available: 1.98.1 (48a229cea 2026-09-01) -> 1.99.1 (…)`
@@ -55,6 +92,26 @@ fn parse_check(text: &str) -> Vec<Package> {
             })
         })
         .collect()
+}
+
+const ARCHES: [&str; 9] = [
+    "x86_64",
+    "aarch64",
+    "i686",
+    "armv7",
+    "arm",
+    "riscv64",
+    "powerpc64le",
+    "s390x",
+    "loongarch64",
+];
+
+fn without_host(toolchain: &str) -> &str {
+    ARCHES
+        .iter()
+        .filter_map(|arch| toolchain.find(&format!("-{arch}")))
+        .min()
+        .map_or(toolchain, |i| &toolchain[..i])
 }
 
 #[cfg(test)]

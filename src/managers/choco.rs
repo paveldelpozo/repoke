@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::manager::{Manager, Package, Step, capture};
+use crate::manager::{Installed, Manager, Package, Step, capture, lines};
 
 pub struct Choco;
 
@@ -36,6 +36,30 @@ impl Manager for Choco {
                 .chain(flags),
             packages,
         )]
+    }
+
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        Ok(lines(bin, ["list", "--limit-output"])?
+            .iter()
+            .filter_map(|line| {
+                let (name, version) = line.split_once('|')?;
+                (!name.eq_ignore_ascii_case("chocolatey"))
+                    .then(|| Installed::new(name).version(version))
+            })
+            .collect())
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        let names = packages.iter().map(|p| p.name.clone());
+        let args = ["install".to_string()]
+            .into_iter()
+            .chain(names)
+            .chain(["-y".to_string(), "--no-progress".to_string()]);
+        if packages.is_empty() {
+            Vec::new()
+        } else {
+            vec![Step::install(args, packages)]
+        }
     }
 }
 

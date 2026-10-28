@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
-use crate::manager::{self, Manager, Package, Step, capture};
+use crate::manager::{self, Installed, Manager, Package, Step, capture};
 
 /// Only `--user` packages: a Homebrew or distro Python is "externally managed" (PEP 668), and
 /// forcing it with `--break-system-packages` is how a system Python gets broken.
@@ -50,6 +50,39 @@ impl Manager for Pip {
             packages,
         )]
     }
+
+    /// `--not-required` leaves out what was only pulled in as a dependency.
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        let args = [
+            "list",
+            "--user",
+            "--not-required",
+            "--format",
+            "json",
+            "--disable-pip-version-check",
+        ];
+        let entries: Vec<Listed> = serde_json::from_str(&capture(bin, args)?.expect(&[0])?)
+            .map_err(|e| format!("unexpected pip output: {e}"))?;
+        Ok(entries
+            .into_iter()
+            .map(|e| Installed::new(e.name).version(e.version))
+            .collect())
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        Step::install_all(
+            &["install", "--user", "--disable-pip-version-check"],
+            packages,
+        )
+    }
+
+    fn config_files(&self) -> &'static [&'static str] {
+        &[
+            ".config/pip/pip.conf",
+            "Library/Application Support/pip/pip.conf",
+            ".pip/pip.conf",
+        ]
+    }
 }
 
 #[derive(Deserialize)]
@@ -70,6 +103,12 @@ fn parse_outdated(json: &str) -> Result<Vec<Package>, String> {
             latest: e.latest_version,
         })
         .collect())
+}
+
+#[derive(Deserialize)]
+struct Listed {
+    name: String,
+    version: String,
 }
 
 #[cfg(test)]

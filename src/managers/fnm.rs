@@ -1,10 +1,7 @@
-use std::collections::BTreeMap;
 use std::path::Path;
 
-use serde::Deserialize;
-
 use super::node_versions::{self, Version};
-use crate::manager::{Manager, Package, Step, capture};
+use crate::manager::{Installed, Manager, Package, Step, capture};
 
 pub struct Fnm;
 
@@ -68,6 +65,29 @@ impl Manager for Fnm {
             })
             .collect()
     }
+
+    /// The newest installed version of each major line; the default line is marked.
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        let (installed, default) = parse_list(&capture(bin, ["list"])?.expect(&[0])?);
+        Ok(node_versions::lines(&installed, default))
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        packages
+            .iter()
+            .filter_map(|p| {
+                let major = p.name.strip_prefix("node@")?.to_string();
+                let mut commands = vec![vec!["install".to_string(), major.clone()]];
+                if p.is("default") {
+                    commands.push(vec!["default".to_string(), major]);
+                }
+                Some(Step {
+                    commands,
+                    packages: vec![Package::from(p)],
+                })
+            })
+            .collect()
+    }
 }
 
 /// Lines look like `* v22.13.1 default, lts-latest`.
@@ -85,27 +105,13 @@ fn parse_list(text: &str) -> (Vec<Version>, Option<Version>) {
     (installed, default)
 }
 
-#[derive(Deserialize)]
-struct Globals {
-    #[serde(default)]
-    dependencies: BTreeMap<String, serde_json::Value>,
-}
-
 fn globals(bin: &Path, version: &str) -> Vec<String> {
     let using = format!("--using={version}");
     let args = [&using, "npm", "ls", "--global", "--depth=0", "--json"];
-    let Ok(json) = capture(bin, ["exec"].into_iter().chain(args)).and_then(|o| o.expect(&[0]))
-    else {
-        return Vec::new();
-    };
-    serde_json::from_str::<Globals>(&json)
-        .map(|g| {
-            g.dependencies
-                .into_keys()
-                // Both ship with Node itself.
-                .filter(|name| name != "npm" && name != "corepack")
-                .collect()
-        })
+    capture(bin, ["exec"].into_iter().chain(args))
+        .and_then(|o| o.expect(&[0]))
+        .and_then(|json| super::npm::parse_globals(&json))
+        .map(|globals| globals.into_iter().map(|g| g.name).collect())
         .unwrap_or_default()
 }
 

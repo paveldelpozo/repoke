@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::manager::{Manager, Package, Step, capture, needs_sudo};
+use crate::manager::{Installed, Manager, Package, Step, capture, lines, needs_sudo};
 
 pub struct Dnf;
 
@@ -40,6 +40,22 @@ impl Manager for Dnf {
                 .chain(names),
             packages,
         )]
+    }
+
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        let args = [
+            "repoquery",
+            "--userinstalled",
+            "--queryformat",
+            "%{name}\\n",
+        ];
+        let mut names = lines(bin, args)?;
+        names.dedup();
+        Ok(names.into_iter().map(Installed::new).collect())
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        Step::install_all(&["install", "-y"], packages)
     }
 }
 

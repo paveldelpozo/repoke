@@ -1,8 +1,13 @@
+mod catalog;
 mod check;
 mod config;
+mod export;
+mod init;
 mod manager;
 mod managers;
 mod progress;
+mod run;
+mod snapshot;
 mod upgrade;
 
 use std::path::PathBuf;
@@ -41,16 +46,26 @@ enum Command {
     },
     /// Upgrade pending packages, picking them in a list or all at once with --yes
     Upgrade(UpgradeArgs),
+    /// Save what is installed, and optionally its config, to a folder another machine can restore
+    Export(ExportArgs),
+    /// Install a saved snapshot (--from) or pick tools from a catalog, on a new machine
+    Init(InitArgs),
 }
 
 #[derive(Args)]
-struct Selection {
+struct Managers {
     /// Only these managers (comma separated ids, see `repoke list`)
     #[arg(long, value_delimiter = ',')]
     only: Vec<String>,
     /// Skip these managers
     #[arg(long, value_delimiter = ',')]
     exclude: Vec<String>,
+}
+
+#[derive(Args)]
+struct Selection {
+    #[command(flatten)]
+    managers: Managers,
     /// Leave these packages alone, as `name` or `manager:name`
     #[arg(long, value_delimiter = ',')]
     hold: Vec<String>,
@@ -77,6 +92,58 @@ struct UpgradeArgs {
     json: bool,
 }
 
+#[derive(Args)]
+struct ExportArgs {
+    #[command(flatten)]
+    managers: Managers,
+    /// Folder to write (default: repoke-<host>-<date>)
+    #[arg(long, short)]
+    output: Option<PathBuf>,
+    /// Include every manager's config files without asking
+    #[arg(long, conflicts_with = "no_config")]
+    config: bool,
+    /// Leave all config files out
+    #[arg(long)]
+    no_config: bool,
+    /// Don't ask anything: config only with --config, and secret-looking values are removed
+    #[arg(long, short)]
+    yes: bool,
+    /// Replace a snapshot already in the output folder
+    #[arg(long)]
+    force: bool,
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Args)]
+struct InitArgs {
+    #[command(flatten)]
+    managers: Managers,
+    /// Snapshot folder written by `repoke export`
+    #[arg(long)]
+    from: Option<PathBuf>,
+    /// Catalog tools to install without the picker (comma separated ids, see the picker)
+    #[arg(long, value_delimiter = ',', conflicts_with = "from")]
+    tools: Vec<String>,
+    /// Install everything without asking; required outside a terminal
+    #[arg(long, short)]
+    yes: bool,
+    /// Show what would be installed and restored, change nothing
+    #[arg(long)]
+    dry_run: bool,
+    /// Skip managers that need root instead of calling sudo
+    #[arg(long)]
+    no_sudo: bool,
+    /// Don't restore config files
+    #[arg(long)]
+    no_config: bool,
+    /// Replace config files that differ without asking (yours are backed up first)
+    #[arg(long)]
+    overwrite: bool,
+    #[arg(long)]
+    json: bool,
+}
+
 #[derive(Serialize)]
 struct Detected {
     id: &'static str,
@@ -98,6 +165,8 @@ fn main() -> ExitCode {
     let outcome = config::load().and_then(|config| match &command {
         Command::Check { json, selection } => check::run(selection, &config, *json),
         Command::Upgrade(args) => upgrade::run(args, &config),
+        Command::Export(args) => export::run(args, &config),
+        Command::Init(args) => init::run(args, &config),
         Command::List { .. } => unreachable!("handled above"),
     });
     outcome.unwrap_or_else(|e| {

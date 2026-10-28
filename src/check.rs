@@ -7,7 +7,7 @@ use serde::Serialize;
 use crate::config::{self, Config};
 use crate::manager::{Manager, Package};
 use crate::progress::Progress;
-use crate::{EXIT_UPDATES, Selection, managers, print_json};
+use crate::{EXIT_UPDATES, Managers, Selection, managers, print_json};
 
 pub struct Found {
     pub manager: &'static dyn Manager,
@@ -50,15 +50,7 @@ pub fn gather(
     config: &Config,
     progress: &Progress,
 ) -> Result<Vec<(Found, CheckResult)>, String> {
-    // An explicit --only wins over the managers the config file excludes.
-    let mut exclude = selection.exclude.clone();
-    if selection.only.is_empty() {
-        exclude.extend(config.exclude.iter().cloned());
-    }
-    let found: Vec<Found> = select(&selection.only, &exclude)?
-        .into_iter()
-        .filter_map(|m| m.locate().map(|path| Found { manager: m, path }))
-        .collect();
+    let found = find(&selection.managers, config)?;
     let hold: Vec<String> = config.hold.iter().chain(&selection.hold).cloned().collect();
 
     Ok(parallel(found, |found| {
@@ -93,7 +85,25 @@ pub fn gather(
     }))
 }
 
-fn select(only: &[String], exclude: &[String]) -> Result<Vec<&'static dyn Manager>, String> {
+/// The selected managers that are installed here.
+pub fn find(managers: &Managers, config: &Config) -> Result<Vec<Found>, String> {
+    Ok(select(managers, config)?
+        .into_iter()
+        .filter_map(|m| m.locate().map(|path| Found { manager: m, path }))
+        .collect())
+}
+
+/// The selected managers supported on this OS, installed or not.
+pub fn select(managers: &Managers, config: &Config) -> Result<Vec<&'static dyn Manager>, String> {
+    // An explicit --only wins over the managers the config file excludes.
+    let mut exclude = managers.exclude.clone();
+    if managers.only.is_empty() {
+        exclude.extend(config.exclude.iter().cloned());
+    }
+    by_id(&managers.only, &exclude)
+}
+
+fn by_id(only: &[String], exclude: &[String]) -> Result<Vec<&'static dyn Manager>, String> {
     let all = managers::all();
     if let Some(unknown) = only
         .iter()

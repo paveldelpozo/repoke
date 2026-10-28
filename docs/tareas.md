@@ -52,16 +52,22 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [ ] cargo consulta crates.io crate a crate; con muchos crates instalados será lento. Valorar la API de crates.io en paralelo o `cargo install-update` si está.
 - [ ] fnm y nvm: las versiones viejas se quedan instaladas. Ofrecer limpiarlas cuando la nueva funcione.
 
-## Fase 4 · `init` y `export`
+## Fase 4 · `init` y `export` (hecha)
 
-- [ ] `repoke init` interactivo: elegir de un catálogo qué gestores y paquetes instalar en un equipo nuevo, incluida la instalación de los propios gestores (brew, fnm…).
-- [ ] `repoke export`: foto del equipo actual a `repoke.toml`.
-- [ ] `repoke init --from repoke.toml --yes`: reproducir esa foto sin preguntas.
-- [ ] Configuración en el backup: `export` pregunta gestor por gestor si incluir su configuración y enseña qué ficheros son. Cada gestor declara los suyos (npm `~/.npmrc`, pip `pip.conf`, zsh `~/.zshrc`, oh-my-zsh `custom/`…). Formato: directorio o `.tar.gz` con `repoke.toml` y `files/`, rutas relativas a `~`.
-- [ ] Secretos: por defecto no se incluye ninguna configuración. Buscar patrones (`_authToken`, `password`, `token`, claves privadas) y ofrecer quitar el valor, excluir el fichero o cifrar el backup con contraseña.
-- [ ] Restaurar sin pisar: `init --from` enseña qué ficheros ya existen y en qué cambian, pregunta antes de sobrescribir y guarda una copia `.bak` del original.
-- [ ] Dotfiles: detectar los enlaces simbólicos que apuntan a un repositorio de dotfiles (Pavel tiene `~/.oh-my-zsh -> ~/.dotfiles/...`) y apuntarlos como "viene de ahí" en vez de copiarlos.
-- [ ] Cambio de sistema operativo: saltar y avisar de los gestores que no existen en el destino.
+- [x] Motor común (`src/run.rs`) para `upgrade` e `init`: spinners, sudo, reintento paquete a paquete, informe y resumen.
+- [x] Cada gestor sabe listar lo que se instaló a propósito (`installed`), instalar (`install_steps`) y decir sus ficheros de configuración (`config_files`). zypper aún no exporta.
+- [x] `repoke export`: carpeta con `repoke.toml` (`kind:nombre==versión`, porque brew usa `@` en `python@3.12`) y `files/`. Pregunta gestor a gestor si incluir su configuración; `--config`, `--no-config`, `--yes`, `-o`, `--force`, `--json`.
+- [x] Secretos: detecta `_authToken`, `password`, `token`, claves privadas… y deja las referencias `${VAR}`. En interactivo, quitar valores, dejar el fichero fuera o guardarlo tal cual; en desatendido, siempre quita los valores. Se copia con los mismos permisos.
+- [x] Dotfiles: un enlace a un repositorio git se apunta con su remoto en vez de copiarse.
+- [x] `repoke init --from`: salta los gestores de otro SO, instala solo lo que falta (todo marcado en la lista), Homebrew primero y ofrece instalar con brew el gestor que siga faltando.
+- [x] Restauración: compara, restaura lo que falta, deja lo igual, y lo distinto lo conserva salvo que elijas la copia de la foto (`--overwrite` sin preguntar), con copia `.repoke-<fecha>.bak`. Los valores de secretos borrados se rellenan con los del fichero que ya hay: nunca se pierde un token real.
+- [x] `repoke init` sin `--from`: catálogo de 26 herramientas (`src/catalog.toml`) con su nombre en cada gestor; usa el primero disponible. `--tools` para no usar la lista.
+- [x] Probado en el Mac de Pavel: exportación real (84 paquetes de brew, `.npmrc` con el token quitado y la referencia `${NODE_AUTH_TOKEN}` intacta), `init --from` de su propia foto sin nada que hacer, y restauración real en un `HOME` falso.
+- [ ] Probar las preguntas interactivas de `export` e `init` en una terminal real.
+- [ ] Cifrar el backup con contraseña como alternativa a quitar los secretos.
+- [ ] Node en el catálogo (`fnm install --lts`): el formato de catálogo aún no tiene cómo expresarlo.
+- [ ] Configuraciones que no son de un gestor (`~/.gitconfig`, `~/.zshrc`): vendrán con los plugins oficiales (fase 9).
+- [ ] Al restaurar en otra máquina, avisar de los paquetes que no existen allí (p. ej. taps privados) en vez de dejar que falle brew.
 
 ## Fase 5 · Modo programado
 

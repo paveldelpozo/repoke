@@ -1,7 +1,10 @@
 use std::path::Path;
 
+use serde::Deserialize;
+
 use super::table;
-use crate::manager::{Manager, Package, Step, capture};
+
+use crate::manager::{Installed, Manager, Package, Step, capture};
 
 pub struct Scoop;
 
@@ -38,6 +41,27 @@ impl Manager for Scoop {
             packages,
         )]
     }
+
+    /// Buckets first (as `bucket:<name>`), then apps with their bucket as `kind`.
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        parse_export(&capture(bin, ["export"])?.expect(&[0])?)
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        packages
+            .iter()
+            .map(|p| match p.kind.as_deref() {
+                Some("bucket") => {
+                    Step::install(["bucket", "add", &p.name], std::slice::from_ref(p))
+                }
+                Some(bucket) => Step::install(
+                    ["install", &format!("{bucket}/{}", p.name)],
+                    std::slice::from_ref(p),
+                ),
+                None => Step::install(["install", &p.name], std::slice::from_ref(p)),
+            })
+            .collect()
+    }
 }
 
 /// Columns: Name, Installed Version, Latest Version, Missing Dependencies, Info.
@@ -53,6 +77,50 @@ fn parse_status(text: &str) -> Vec<Package> {
             })
         })
         .collect()
+}
+
+#[derive(Deserialize)]
+struct Export {
+    #[serde(default)]
+    buckets: Vec<Bucket>,
+    #[serde(default)]
+    apps: Vec<App>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "PascalCase")]
+struct Bucket {
+    name: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "PascalCase")]
+struct App {
+    name: String,
+    #[serde(default)]
+    version: String,
+    #[serde(default)]
+    source: String,
+}
+
+/// `main` is scoop's own bucket and needs no `bucket add`.
+fn parse_export(json: &str) -> Result<Vec<Installed>, String> {
+    let export: Export =
+        serde_json::from_str(json).map_err(|e| format!("unexpected scoop export: {e}"))?;
+    let buckets = export
+        .buckets
+        .into_iter()
+        .filter(|b| b.name != "main")
+        .map(|b| Installed::new(b.name).kind("bucket"));
+    let apps = export.apps.into_iter().map(|a| {
+        let app = Installed::new(a.name).version(a.version);
+        if a.source.is_empty() || a.source == "main" {
+            app
+        } else {
+            app.kind(a.source)
+        }
+    });
+    Ok(buckets.chain(apps).collect())
 }
 
 #[cfg(test)]

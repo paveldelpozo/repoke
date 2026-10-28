@@ -1,7 +1,10 @@
 use std::path::Path;
 
+use serde::Deserialize;
+
 use super::table;
-use crate::manager::{Manager, Package, Step, capture};
+
+use crate::manager::{Installed, Manager, Package, Step, capture};
 
 pub struct Winget;
 
@@ -54,6 +57,47 @@ impl Manager for Winget {
             })
             .collect()
     }
+
+    /// `winget list` mixes in everything Windows installs; `export` keeps what winget can install.
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        let file = std::env::temp_dir().join(format!("repoke-winget-{}.json", std::process::id()));
+        let path = file.display().to_string();
+        let exported = capture(
+            bin,
+            [
+                "export",
+                "-o",
+                &path,
+                "--accept-source-agreements",
+                "--disable-interactivity",
+            ],
+        )
+        .and_then(|o| o.expect(&[0]))
+        .and_then(|_| std::fs::read_to_string(&file).map_err(|e| e.to_string()));
+        let _ = std::fs::remove_file(&file);
+        parse_export(&exported?)
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        packages
+            .iter()
+            .map(|p| {
+                Step::install(
+                    [
+                        "install",
+                        "--id",
+                        &p.name,
+                        "--exact",
+                        "--silent",
+                        "--accept-package-agreements",
+                        "--accept-source-agreements",
+                        "--disable-interactivity",
+                    ],
+                    std::slice::from_ref(p),
+                )
+            })
+            .collect()
+    }
 }
 
 /// Columns: Name, Id, Version, Available, Source. Packages are named by Id, which is what
@@ -71,6 +115,37 @@ fn parse_upgrade(text: &str) -> Vec<Package> {
             })
         })
         .collect()
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "PascalCase")]
+struct Export {
+    #[serde(default)]
+    sources: Vec<Source>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "PascalCase")]
+struct Source {
+    #[serde(default)]
+    packages: Vec<Exported>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "PascalCase")]
+struct Exported {
+    package_identifier: String,
+}
+
+fn parse_export(json: &str) -> Result<Vec<Installed>, String> {
+    let export: Export =
+        serde_json::from_str(json).map_err(|e| format!("unexpected winget export: {e}"))?;
+    Ok(export
+        .sources
+        .into_iter()
+        .flat_map(|s| s.packages)
+        .map(|p| Installed::new(p.package_identifier))
+        .collect())
 }
 
 #[cfg(test)]

@@ -1,7 +1,7 @@
 //! Shared by fnm and nvm: each installed major line of Node is one "package", upgraded to the
 //! newest release of that same line. Moving to a new major is left to the user.
 
-use crate::manager::Package;
+use crate::manager::{Installed, Package};
 
 pub type Version = [u64; 3];
 
@@ -29,6 +29,30 @@ pub fn outdated(installed: &[Version], remote: &[Version]) -> Vec<Package> {
                 current: show(*current),
                 latest: show(*latest),
             })
+        })
+        .collect()
+}
+
+/// For `export`: the newest installed version of each major line, the default's line marked.
+pub fn lines(installed: &[Version], default: Option<Version>) -> Vec<Installed> {
+    let mut newest: Vec<Version> = Vec::new();
+    for v in installed {
+        match newest.iter_mut().find(|n| n[0] == v[0]) {
+            Some(n) if *v > *n => *n = *v,
+            Some(_) => {}
+            None => newest.push(*v),
+        }
+    }
+    newest.sort_unstable();
+    newest
+        .into_iter()
+        .map(|v| {
+            let line = Installed::new(format!("node@{}", v[0])).version(show(v));
+            if default.is_some_and(|d| d[0] == v[0]) {
+                line.kind("default")
+            } else {
+                line
+            }
         })
         .collect()
 }

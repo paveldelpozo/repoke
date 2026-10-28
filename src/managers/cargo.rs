@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::manager::{Manager, Package, Step, capture};
+use crate::manager::{Installed, Manager, Package, Step, capture};
 
 pub struct Cargo;
 
@@ -41,6 +41,23 @@ impl Manager for Cargo {
             ["install".to_string()].into_iter().chain(specs),
             packages,
         )]
+    }
+
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        let list = capture(bin, ["install", "--list"])?.expect(&[0])?;
+        Ok(parse_installed(&list)
+            .into_iter()
+            .map(|(name, version)| Installed::new(name).version(version))
+            .collect())
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        Step::install_all(&["install"], packages)
+    }
+
+    /// Not `credentials.toml`, which holds the crates.io token.
+    fn config_files(&self) -> &'static [&'static str] {
+        &[".cargo/config.toml"]
     }
 }
 

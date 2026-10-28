@@ -1,7 +1,8 @@
 use std::path::Path;
 use std::slice;
 
-use crate::manager::{Manager, Package, Step, capture};
+use super::npm::Globals;
+use crate::manager::{Installed, Manager, Package, Step, capture};
 
 pub struct Pnpm;
 
@@ -35,6 +36,22 @@ impl Manager for Pnpm {
             steps.push(Step::new(["self-update", &p.latest], slice::from_ref(&p)));
         }
         steps
+    }
+
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        let json = capture(bin, ["ls", "--global", "--depth=0", "--json"])?.expect(&[0])?;
+        let roots: Vec<Globals> =
+            serde_json::from_str(&json).map_err(|e| format!("unexpected pnpm output: {e}"))?;
+        Ok(roots.into_iter().flat_map(Globals::packages).collect())
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        Step::install_all(&["add", "--global"], packages)
+    }
+
+    /// The global rc lives in the platform's config folder.
+    fn config_files(&self) -> &'static [&'static str] {
+        &[".config/pnpm/rc", "Library/Preferences/pnpm/rc"]
     }
 }
 

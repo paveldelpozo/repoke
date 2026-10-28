@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::manager::{Manager, Package, Step, capture, needs_sudo};
+use crate::manager::{Installed, Manager, Package, Step, capture, lines, needs_sudo};
 
 pub struct Snap;
 
@@ -37,6 +37,40 @@ impl Manager for Snap {
             ["refresh".to_string()].into_iter().chain(names),
             packages,
         )]
+    }
+
+    /// Base and system snaps (core, snapd, gnome runtimes) come with the apps that need them.
+    fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
+        Ok(lines(bin, ["list"])?
+            .iter()
+            .skip(1)
+            .filter_map(|line| {
+                let cells: Vec<&str> = line.split_whitespace().collect();
+                let (name, version, notes) = (cells.first()?, cells.get(1)?, cells.last()?);
+                if notes.contains("base") || notes.contains("snapd") || notes.contains("core") {
+                    return None;
+                }
+                let installed = Installed::new(*name).version(*version);
+                Some(if notes.contains("classic") {
+                    installed.kind("classic")
+                } else {
+                    installed
+                })
+            })
+            .collect())
+    }
+
+    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+        packages
+            .iter()
+            .map(|p| {
+                let mut args = vec!["install", p.name.as_str()];
+                if p.is("classic") {
+                    args.push("--classic");
+                }
+                Step::install(args, std::slice::from_ref(p))
+            })
+            .collect()
     }
 }
 
