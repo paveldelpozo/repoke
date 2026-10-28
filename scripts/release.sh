@@ -87,6 +87,7 @@ if ! $dry_run; then
   step "version $version"
   # Only the first `version =` line is the package's own.
   perl -0pi -e "s/^version = \"[^\"]*\"/version = \"$version\"/m" Cargo.toml
+  perl -pi -e "s/\"version\": \"[^\"]*\"/\"version\": \"$version\"/" integrations/claude-code/.claude-plugin/plugin.json
   cargo update --workspace --quiet
 fi
 

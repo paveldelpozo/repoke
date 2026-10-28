@@ -1,0 +1,17 @@
+{
+  "name": "repoke",
+  "owner": {
+    "name": "Pavel del Pozo",
+    "url": "https://github.com/paveldelpozo"
+  },
+  "metadata": {
+    "description": "repoke for Claude Code: check and upgrade every package manager on the machine"
+  },
+  "plugins": [
+    {
+      "name": "repoke",
+      "description": "Lets Claude check what is outdated across Homebrew, npm, pnpm, fnm, pip, uv, cargo, apt, winget and more, and upgrade it through repoke's MCP server",
+      "source": "./integrations/claude-code"
+    }
+  ]
+}

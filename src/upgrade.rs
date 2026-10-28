@@ -6,7 +6,7 @@ use inquire::InquireError;
 
 use crate::UpgradeArgs;
 use crate::check;
-use crate::config::Config;
+use crate::config::{self, Config};
 use crate::progress::Progress;
 use crate::run::{Action, EXIT_CANCELLED, Engine, Event, Options, choose};
 
@@ -38,8 +38,18 @@ pub fn run(args: &UpgradeArgs, config: &Config) -> Result<ExitCode, String> {
                 manager: result.name,
                 error,
             });
-        } else if !result.packages.is_empty() {
-            pending.push((found, result.packages));
+        } else {
+            // `held` matches `name` or `manager:name`, the same forms --package takes.
+            let packages: Vec<_> = result
+                .packages
+                .into_iter()
+                .filter(|p| {
+                    args.packages.is_empty() || config::held(&args.packages, result.id, &p.name)
+                })
+                .collect();
+            if !packages.is_empty() {
+                pending.push((found, packages));
+            }
         }
     }
 

@@ -56,6 +56,26 @@ repoke schedule remove
 
 The job is registered with the system scheduler: a launchd agent (`~/Library/LaunchAgents/repoke.schedule.plist`) on macOS, a systemd user timer (`repoke.timer`) on Linux, a `repoke` task in the Task Scheduler on Windows. Without systemd, `install` prints the crontab line to add instead. A run missed while the machine was asleep or off happens at the next wake or boot. It calls `repoke schedule run`, which runs `upgrade --yes --no-sudo` (or `check` with `--check-only`), keeps the output of the last run and a `history.jsonl` in `~/Library/Logs/repoke` (`~/.local/state/repoke` on Linux, `%LOCALAPPDATA%\repoke` on Windows) and sends a system notification when something was upgraded, failed or is pending. Schedulers start jobs with a bare `PATH`, so `install` saves yours, swapping fnm's per-shell folder for its `default` alias; run `install` again after changing your `PATH`.
 
+### With AI agents
+
+`repoke mcp` is an MCP server over stdio with four tools: `list_managers`, `check_updates`, `upgrade` and `schedule_status`. `upgrade` only previews unless it gets `dry_run: false`, and never uses sudo.
+
+Claude Code: the plugin adds the MCP server and a skill that tells Claude when and how to use it.
+
+```
+/plugin install repoke --marketplace paveldelpozo/repoke
+```
+
+Codex, in `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.repoke]
+command = "repoke"
+args = ["mcp"]
+```
+
+Any other MCP client: run `repoke mcp` as a stdio server. Without MCP, agents can call `repoke check --json` and `repoke upgrade --yes --no-sudo --json` directly; `--package` narrows an upgrade to single packages (`name` or `manager:name`).
+
 `--only`, `--exclude`, `--hold` and `--refresh` (runs `brew update` first) work with both `check` and `upgrade`. In a terminal, spinners on stderr show what each manager is doing; with `--json` or when piped there are none.
 
 ### Unattended use

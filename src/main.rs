@@ -5,6 +5,7 @@ mod export;
 mod init;
 mod manager;
 mod managers;
+mod mcp;
 mod progress;
 mod run;
 mod schedule;
@@ -55,6 +56,8 @@ enum Command {
     Init(InitArgs),
     /// Update repoke itself, through Homebrew or cargo when it was installed with them
     SelfUpdate(SelfUpdateArgs),
+    /// Serve repoke's tools to AI agents over MCP (stdio)
+    Mcp,
     /// Keep the machine up to date on a schedule, through the system scheduler
     Schedule {
         #[command(subcommand)]
@@ -145,6 +148,9 @@ struct UpgradeArgs {
     /// Skip managers that need root instead of calling sudo
     #[arg(long)]
     no_sudo: bool,
+    /// Only these packages, as `name` or `manager:name`
+    #[arg(long = "package", value_delimiter = ',')]
+    packages: Vec<String>,
     /// Print one JSON event per line
     #[arg(long)]
     json: bool,
@@ -231,7 +237,7 @@ fn notices_updates(command: &Command) -> bool {
         Command::Upgrade(args) => args.json,
         Command::Export(args) => args.json,
         Command::Init(args) => args.json,
-        Command::SelfUpdate(_) | Command::Schedule { .. } => true,
+        Command::SelfUpdate(_) | Command::Schedule { .. } | Command::Mcp => true,
     };
     !json && std::io::stdout().is_terminal() && std::io::stderr().is_terminal()
 }
@@ -239,6 +245,7 @@ fn notices_updates(command: &Command) -> bool {
 fn dispatch(command: &Command) -> ExitCode {
     let scheduled = match command {
         Command::List { json } => return list(*json),
+        Command::Mcp => Some(mcp::serve()),
         Command::Schedule { action } => Some(match action {
             ScheduleAction::Install(args) => schedule::install(args),
             ScheduleAction::Status { json } => schedule::status(*json),
@@ -259,7 +266,9 @@ fn dispatch(command: &Command) -> ExitCode {
         Command::Export(args) => export::run(args, &config),
         Command::Init(args) => init::run(args, &config),
         Command::SelfUpdate(args) => self_update::run(args),
-        Command::List { .. } | Command::Schedule { .. } => unreachable!("handled above"),
+        Command::List { .. } | Command::Schedule { .. } | Command::Mcp => {
+            unreachable!("handled above")
+        }
     });
     outcome.unwrap_or_else(|e| {
         eprintln!("repoke: {e}");

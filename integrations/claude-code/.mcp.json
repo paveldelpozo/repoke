@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "repoke": {
+      "command": "repoke",
+      "args": ["mcp"]
+    }
+  }
+}
