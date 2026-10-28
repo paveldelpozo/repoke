@@ -84,8 +84,7 @@ struct HistoryEntry {
 
 pub fn install(args: &ScheduleInstallArgs) -> Result<ExitCode, String> {
     let (hour, minute) = parse_at(&args.at)?;
-    let exe = env::current_exe().map_err(|e| format!("cannot find repoke's own path: {e}"))?;
-    let exe = fs::canonicalize(&exe).unwrap_or(exe);
+    let exe = scheduled_exe()?;
     if exe.components().any(|c| c.as_os_str() == "target") {
         eprintln!(
             "{}",
@@ -147,6 +146,16 @@ pub fn install(args: &ScheduleInstallArgs) -> Result<ExitCode, String> {
         .dim()
     );
     Ok(ExitCode::SUCCESS)
+}
+
+/// The path the job runs. Homebrew keeps the real file in a folder per version and deletes the
+/// old one on upgrade, so the job uses the `repoke` on the PATH when it is this same binary.
+fn scheduled_exe() -> Result<PathBuf, String> {
+    let exe = env::current_exe().map_err(|e| format!("cannot find repoke's own path: {e}"))?;
+    let real = fs::canonicalize(&exe).unwrap_or(exe);
+    Ok(manager::locate("repoke")
+        .filter(|on_path| fs::canonicalize(on_path).ok().as_ref() == Some(&real))
+        .unwrap_or(real))
 }
 
 pub fn remove(dry_run: bool) -> Result<ExitCode, String> {
