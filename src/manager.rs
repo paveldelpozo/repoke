@@ -12,13 +12,20 @@ pub struct Package {
     pub latest: String,
 }
 
+/// One command for `binary`, with the packages it covers so failures are reported per package.
+#[derive(Debug, PartialEq)]
+pub struct Step {
+    pub args: Vec<String>,
+    pub packages: Vec<Package>,
+}
+
 pub trait Manager: Sync {
     fn id(&self) -> &'static str;
     fn name(&self) -> &'static str;
     fn binary(&self) -> &'static str;
     fn outdated(&self, bin: &Path) -> Result<Vec<Package>, String>;
-    /// Arguments for `binary` that upgrade exactly these packages to their latest version.
-    fn upgrade_args(&self, packages: &[&str]) -> Vec<String>;
+    /// Commands that upgrade exactly these packages to the `latest` that `outdated` reported.
+    fn upgrade_steps(&self, packages: &[Package]) -> Vec<Step>;
 
     fn supported(&self) -> bool {
         true

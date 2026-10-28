@@ -2,7 +2,7 @@ use std::path::Path;
 
 use serde::Deserialize;
 
-use crate::manager::{Manager, Package, capture};
+use crate::manager::{Manager, Package, Step, capture};
 
 pub struct Brew;
 
@@ -28,10 +28,13 @@ impl Manager for Brew {
         parse_outdated(&json)
     }
 
-    fn upgrade_args(&self, packages: &[&str]) -> Vec<String> {
+    fn upgrade_steps(&self, packages: &[Package]) -> Vec<Step> {
         let mut args = vec!["upgrade".to_string()];
-        args.extend(packages.iter().map(|p| p.to_string()));
-        args
+        args.extend(packages.iter().map(|p| p.name.clone()));
+        vec![Step {
+            args,
+            packages: packages.to_vec(),
+        }]
     }
 
     fn refresh(&self, bin: &Path) -> Result<(), String> {

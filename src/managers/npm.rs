@@ -3,7 +3,7 @@ use std::path::Path;
 
 use serde::Deserialize;
 
-use crate::manager::{Manager, Package, capture, writable};
+use crate::manager::{Manager, Package, Step, capture, writable};
 
 pub struct Npm;
 
@@ -25,8 +25,8 @@ impl Manager for Npm {
         parse_outdated(&json)
     }
 
-    fn upgrade_args(&self, packages: &[&str]) -> Vec<String> {
-        install_latest("install", packages)
+    fn upgrade_steps(&self, packages: &[Package]) -> Vec<Step> {
+        vec![install("install", packages)]
     }
 
     /// A system Node (e.g. /usr/local) keeps globals in a root-owned prefix; fnm and nvm don't.
@@ -41,11 +41,18 @@ impl Manager for Npm {
     }
 }
 
-/// `update -g` stays within the current major, so globals are reinstalled at `@latest`.
-pub(super) fn install_latest(verb: &str, packages: &[&str]) -> Vec<String> {
+/// `update -g` stays within the current major, so globals are reinstalled at the version
+/// `outdated` showed. `@latest` could resolve to a newer release that the running Node rejects.
+pub(super) fn install(verb: &str, packages: &[Package]) -> Step {
     let mut args = vec![verb.to_string(), "--global".to_string()];
-    args.extend(packages.iter().map(|p| format!("{p}@latest")));
-    args
+    args.extend(packages.iter().map(|p| match p.latest.as_str() {
+        "" => format!("{}@latest", p.name),
+        version => format!("{}@{version}", p.name),
+    }));
+    Step {
+        args,
+        packages: packages.to_vec(),
+    }
 }
 
 #[derive(Deserialize)]
@@ -99,17 +106,33 @@ mod tests {
         assert!(parse_outdated("{}").unwrap().is_empty());
     }
 
+    fn package(name: &str, latest: &str) -> Package {
+        Package {
+            name: name.into(),
+            current: "0.0.1".into(),
+            latest: latest.into(),
+        }
+    }
+
     #[test]
-    fn installs_scoped_packages_at_latest() {
+    fn installs_the_reported_version() {
+        let step = install(
+            "install",
+            &[
+                package("@google/gemini-cli", "0.66.0"),
+                package("eslint", ""),
+            ],
+        );
         assert_eq!(
-            Npm.upgrade_args(&["@google/gemini-cli", "eslint"]),
+            step.args,
             [
                 "install",
                 "--global",
-                "@google/gemini-cli@latest",
+                "@google/gemini-cli@0.66.0",
                 "eslint@latest"
             ]
         );
+        assert_eq!(step.packages.len(), 2);
     }
 
     #[test]

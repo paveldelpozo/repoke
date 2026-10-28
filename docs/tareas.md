@@ -20,7 +20,12 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] `~/.config/repoke/config.toml` (o `REPOKE_CONFIG`) con `exclude` y `hold`; rechaza claves desconocidas.
 - [x] `--refresh` lanza `brew update` antes de consultar.
 - [x] Spinners en paralelo por gestor al consultar y, al actualizar, con la última línea de salida y el tiempo transcurrido. Solo por stderr y con terminal.
-- [ ] Probar `repoke upgrade` de verdad en el Mac de Pavel (por ahora solo se ha probado con `--dry-run`).
+- [x] Primera prueba real en el Mac de Pavel (28-10): brew bien, npm y pnpm fallaron. Corregido:
+  - npm instalaba `@latest`, que resolvió a npm 12.2.1 (exige node ≥ 22.22.2, Pavel tiene 22.13.1), y como npm instala todo o nada, cayeron los 4 globales. Ahora se instala la versión exacta que mostró `outdated` y, si falla un lote, se reintenta paquete a paquete.
+  - pnpm se rechaza a sí mismo con `add -g` (ERR_PNPM_GLOBAL_PNPM_INSTALL): ahora usa `pnpm self-update <versión>`.
+  - La línea con la selección se resume ("6 packages") y los avisos `[WARN]` / `npm warn` no entran en el mensaje de error.
+- [ ] Repetir la prueba real tras las correcciones.
+- [ ] Antes de instalar un global de npm o pnpm, comparar su `engines.node` con la versión de node en uso y avisar, en vez de dejar que falle.
 - [ ] Algunos casks de brew piden contraseña con sudo por su cuenta: el aviso queda tapado por el spinner. Detectar los casks y pedir `sudo -v` antes, o mostrar su salida tal cual.
 - [ ] Timeouts por gestor en la configuración.
 - [ ] Con `--refresh`, el spinner de npm y pnpm dice "refreshing" un instante aunque no tengan índice que refrescar.
