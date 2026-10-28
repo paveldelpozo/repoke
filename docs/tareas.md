@@ -2,6 +2,21 @@
 
 Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los hallazgos menores y las preguntas abiertas. Las decisiones y aprendizajes van al cerebro (`Proyectos/repoke`).
 
+## Estado al cierre de la sesión del 28-10-2026
+
+Publicado: **v0.2.1** en GitHub (5 binarios), crates.io, el tap `paveldelpozo/tap` y el plugin de Claude Code (activo en todos los perfiles de Pavel); landing bilingüe en https://repoke.paveldelpozo.es (Dokploy, proyecto «repoke» → «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`, se redespliega sola); plugins oficiales en `paveldelpozo/repoke-plugins` (`omz`, `vscode`). En el Mac de Pavel: repoke 0.2.1 instalado con cargo, plugins `omz` y `vscode`, `[brew] greedy = true` y el modo programado a las 03:00.
+
+Lo siguiente, por orden:
+
+1. **Pavel, 29-10 por la mañana:** `repoke schedule status` para ver cómo fue la primera ejecución programada (y `~/Library/Logs/repoke/last-run.log` si algo falló).
+2. **Pavel:** probar el plugin de Claude en una conversación nueva ("¿qué tengo desactualizado?") y `brew install` desde el tap tras `brew trust paveldelpozo/tap`.
+3. **Convertir la landing a Astro** (paso final pedido por Pavel; norma nueva: toda landing en Astro salvo que diga lo contrario). Conservar lo que hoy hace el build en Python: páginas en `/` y `/es/`, referencia y guía generadas desde `docs/`, versión leída de `Cargo.toml`, menús de idioma y tema, y `scripts/check-docs.py` en la CI.
+4. Imagen para compartir en redes (Open Graph) a partir del logo.
+5. Robustez: avisar del `engines.node` antes de instalar globales de npm/pnpm; aviso de contraseña de casks tapado por el spinner; bloqueo contra dos ejecuciones programadas; rotar `history.jsonl`.
+6. Probar en Linux (Docker) y Windows lo que solo tiene tests de parseo.
+
+Normas del proyecto: commits en Conventional Commits y en inglés, firmados con `paveldelpozo@gmail.com`; cada función nueva actualiza la landing y las referencias EN/ES (la CI lo vigila); tras cada cambio, `cargo install --path . --force`; releases con `scripts/release.sh --crate` (sin argumentos calcula la versión semántica).
+
 ## Fase 1 · Esqueleto y consulta (hecha)
 
 - [x] Proyecto Rust con clap y serde, trait `Manager` y un fichero por gestor.
