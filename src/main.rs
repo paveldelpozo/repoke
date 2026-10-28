@@ -39,11 +39,13 @@ struct Cli {
 enum Command {
     /// List the package managers repoke supports here and whether they are installed
     List {
+        /// Print JSON instead of text
         #[arg(long)]
         json: bool,
     },
     /// Show pending updates without changing anything; exits 100 when there are some
     Check {
+        /// Print JSON instead of text
         #[arg(long)]
         json: bool,
         #[command(flatten)]
@@ -77,6 +79,7 @@ enum ScheduleAction {
     Install(ScheduleInstallArgs),
     /// Show the schedule and how the last run went
     Status {
+        /// Print JSON instead of text
         #[arg(long)]
         json: bool,
     },
@@ -94,6 +97,7 @@ enum ScheduleAction {
 enum PluginAction {
     /// Show the plugins found and any problem with them
     List {
+        /// Print JSON instead of text
         #[arg(long)]
         json: bool,
     },
@@ -101,17 +105,22 @@ enum PluginAction {
     New(PluginNewArgs),
     /// Show the official plugins (github.com/paveldelpozo/repoke-plugins)
     Search {
+        /// Print JSON instead of text
         #[arg(long)]
         json: bool,
     },
     /// Download an official plugin, show its code and install it
     Install(PluginInstallArgs),
     /// Remove a plugin that `plugin install` installed
-    Remove { id: String },
+    Remove {
+        /// Plugin id
+        id: String,
+    },
 }
 
 #[derive(Args)]
 struct PluginInstallArgs {
+    /// Plugin id, as `repoke plugin search` lists it
     id: String,
     /// Install without showing the code or asking
     #[arg(long, short)]
@@ -141,6 +150,7 @@ struct SelfUpdateArgs {
     /// Update without asking
     #[arg(long, short)]
     yes: bool,
+    /// Print JSON instead of text
     #[arg(long)]
     json: bool,
 }
@@ -224,6 +234,7 @@ struct ExportArgs {
     /// Replace a snapshot already in the output folder
     #[arg(long)]
     force: bool,
+    /// Print JSON instead of text
     #[arg(long)]
     json: bool,
 }
@@ -253,6 +264,7 @@ struct InitArgs {
     /// Replace config files that differ without asking (yours are backed up first)
     #[arg(long)]
     overwrite: bool,
+    /// Print JSON instead of text
     #[arg(long)]
     json: bool,
 }

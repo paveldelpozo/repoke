@@ -1,0 +1,85 @@
+    <section class="intro">
+      <h1>Every package manager on your machine, one&nbsp;command.</h1>
+      <p class="lead">repoke finds Homebrew, npm, pnpm, pip, cargo, apt, winget and the rest of what you have installed, shows what is outdated and upgrades what you pick. In a terminal it asks first. In scripts, schedules and AI agents it runs without asking and answers in JSON.</p>
+
+      <div id="install" class="install">
+        <h2 class="label">Install</h2>
+        <pre><code>brew tap paveldelpozo/tap &amp;&amp; brew trust paveldelpozo/tap
+brew install repoke</code></pre>
+        <p class="or">or with Rust</p>
+        <pre><code>cargo install repoke</code></pre>
+        <p class="note">Or download the binary for macOS, Linux or Windows from the <a href="https://github.com/paveldelpozo/repoke/releases">releases</a>. <code>repoke self-update</code> keeps it current.</p>
+      </div>
+    </section>
+
+    <section id="managers">
+      <h2>{{spade}}It finds what you use</h2>
+      <p>Every manager repoke knows is looked for, and the ones that aren't there are skipped. This is <code>repoke list</code> on the Mac where repoke is written:</p>
+      <pre class="output" aria-label="Output of repoke list"><code>{{list_output}}</code></pre>
+      <div class="columns">
+        <div>
+          <h3>System</h3>
+          <p>Homebrew, Mac App Store, APT, DNF, pacman, zypper, Snap, Flatpak, WinGet, Scoop, Chocolatey</p>
+        </div>
+        <div>
+          <h3>Languages and tools</h3>
+          <p>npm and pnpm globals, Node through fnm or nvm, pip, uv, cargo, rustup, RubyGems, Composer, mise</p>
+        </div>
+      </div>
+      <p>The last two lines above are <a href="plugins.html">plugins</a>, which is how anything else gets in.</p>
+    </section>
+
+    <section id="usage">
+      <h2>{{heart}}Check first, upgrade what you choose</h2>
+      <pre><code>repoke check                    # what is outdated; nothing changes
+repoke upgrade                  # pick from a list, everything preselected
+repoke upgrade --dry-run        # the commands it would run
+repoke upgrade --hold eslint    # leave a package where it is</code></pre>
+      <p>Each package gets a line with its result and how long it took, and a failure shows the command with the end of its output. Managers run side by side while checking and one after another while upgrading. npm installs the exact version it listed, so a newer release can't break the Node you have. Node versions under fnm or nvm move to the newest release of their major line and take your global packages with them.</p>
+    </section>
+
+    <section id="machines">
+      <h2>{{club}}A new machine, and updates while you sleep</h2>
+      <pre><code>repoke export                 # what you installed, and your config files if you want
+repoke init --from snapshot   # on the new machine, only what is missing
+repoke init                   # or pick tools from a catalog</code></pre>
+      <p>Values that look like secrets, such as registry tokens in <code>.npmrc</code>, are taken out before a snapshot is saved, and a restore never replaces one of your files without asking first and keeping yours as a backup.</p>
+      <pre><code>repoke schedule install                 # every day at 03:00, upgrades what needs no sudo
+repoke schedule install --check-only    # or only check, and notify
+repoke schedule status                  # when it runs, and how the last run went
+repoke schedule run                     # run the job now
+repoke schedule remove</code></pre>
+      <p>The schedule goes through the system's own scheduler: launchd on macOS, a systemd timer on Linux, Task Scheduler on Windows. A run missed while the machine slept happens when it wakes up. Each run keeps its output and a history, and you get a system notification when something was upgraded, failed or is waiting.</p>
+    </section>
+
+    <section id="agents">
+      <h2>{{diamond}}For scripts, agents and plugins</h2>
+      <pre><code>repoke check --json                     # exits 100 when something is outdated
+repoke upgrade --yes --no-sudo --json   # one JSON event per line
+repoke mcp                              # MCP server over stdio</code></pre>
+      <p>Without a terminal, repoke never waits for input: a manager that wants a password is skipped or fails at once. <code>repoke mcp</code> gives AI agents four tools: <code>list_managers</code>, <code>check_updates</code>, <code>upgrade</code> and <code>schedule_status</code>. <code>upgrade</code> only previews until it is told otherwise, and never uses sudo. In Claude Code:</p>
+      <pre><code>/plugin install repoke --marketplace paveldelpozo/repoke</code></pre>
+      <p>Codex and other MCP clients run <code>repoke mcp</code> as a stdio server; the <a href="commands.html#repoke-mcp">reference</a> has the configuration.</p>
+      <pre><code>repoke plugin search            # official plugins: oh-my-zsh, VS Code extensions…
+repoke plugin install vscode    # shows its code and asks before installing
+repoke plugin new my-tool       # start your own from a template</code></pre>
+      <p>Any other manager can be added with a TOML file or a small executable. <a href="plugins.html">The plugin guide</a> explains both.</p>
+    </section>
+
+    <section id="commands">
+      <h2>All commands</h2>
+      <table class="commands">
+        <tbody>
+          <tr><td><a href="commands.html#repoke-list"><code>list</code></a></td><td>The managers repoke supports here, installed or not</td></tr>
+          <tr><td><a href="commands.html#repoke-check"><code>check</code></a></td><td>What is outdated, without changing anything</td></tr>
+          <tr><td><a href="commands.html#repoke-upgrade"><code>upgrade</code></a></td><td>Upgrade what you pick, or everything with <code>--yes</code></td></tr>
+          <tr><td><a href="commands.html#repoke-export"><code>export</code></a></td><td>Save what is installed, and your config, to restore elsewhere</td></tr>
+          <tr><td><a href="commands.html#repoke-init"><code>init</code></a></td><td>Set up a machine from a snapshot or a catalog</td></tr>
+          <tr><td><a href="commands.html#repoke-schedule"><code>schedule</code></a></td><td><code>install</code>, <code>status</code>, <code>run</code> and <code>remove</code> a periodic run</td></tr>
+          <tr><td><a href="commands.html#repoke-self-update"><code>self-update</code></a></td><td>Update repoke itself</td></tr>
+          <tr><td><a href="commands.html#repoke-mcp"><code>mcp</code></a></td><td>Serve repoke's tools to AI agents</td></tr>
+          <tr><td><a href="commands.html#repoke-plugin"><code>plugin</code></a></td><td><code>list</code>, <code>new</code>, <code>search</code>, <code>install</code> and <code>remove</code> plugins</td></tr>
+        </tbody>
+      </table>
+      <p><a href="commands.html">The command reference</a> has every option, the configuration file, the JSON output and the exit codes.</p>
+    </section>

@@ -35,13 +35,21 @@ def inline(text):
             url = pieces[n + 1]
             # Links in the guide are relative to docs/; on the site they point at GitHub.
             if url.startswith("../"):
-                url = REPO + url[3:]
+                url = REPO + url.replace("../", "")
             out.append(f'<a href="{html.escape(url)}">{spans(piece)}</a>')
     return "".join(out)
 
 
 def cells(row):
-    return [c.strip() for c in row.strip().strip("|").split("|")]
+    # `\|` is a literal bar inside a cell, as in `daily\|weekly`.
+    parts = re.split(r"(?<!\\)\|", row.strip().strip("|"))
+    return [c.strip().replace("\\|", "|") for c in parts]
+
+
+def slug(text):
+    """Heading anchors: `repoke schedule install` becomes `repoke-schedule-install`."""
+    text = re.sub(r"<[^>]+>", "", text).lower()
+    return re.sub(r"[^a-z0-9áéíóúñü]+", "-", text).strip("-")
 
 
 def render(markdown):
@@ -68,7 +76,8 @@ def render(markdown):
         elif heading := re.match(r"(#{1,4}) (.+)", line):
             flush()
             level = len(heading.group(1))
-            out.append(f"<h{level}>{inline(heading.group(2))}</h{level}>")
+            title = inline(heading.group(2))
+            out.append(f'<h{level} id="{slug(title)}">{title}</h{level}>')
         elif line.startswith("|"):
             flush()
             rows = []

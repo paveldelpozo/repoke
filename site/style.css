@@ -62,7 +62,7 @@ a:hover { text-decoration-thickness: 2px; }
 }
 .skip:focus { left: 1rem; top: 1rem; background: var(--paper); padding: 0.5rem 0.75rem; }
 
-/* Header: the logo and wordmark lead; nav and the theme switch stay quiet. */
+/* Header: the logo and wordmark lead; the nav and the language and theme menus stay quiet. */
 .top {
   display: flex;
   flex-wrap: wrap;
@@ -83,10 +83,34 @@ a:hover { text-decoration-thickness: 2px; }
   margin-right: auto;
 }
 
-nav { display: flex; flex-wrap: wrap; }
+/* Two rows at every width: logo and menus first, the links on their own row below. */
+nav { display: flex; flex-wrap: wrap; order: 3; width: 100%; margin-left: -0.55rem; }
 
-nav a,
-.theme {
+.prefs { display: flex; gap: 0.4rem; order: 2; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.pref {
+  min-height: 44px;
+  padding: 0 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.pref:hover { border-color: var(--muted); }
+
+nav a {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
@@ -97,15 +121,6 @@ nav a,
 }
 nav a:hover, nav a[aria-current="page"] { color: var(--red); }
 
-.theme {
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: transparent;
-  font: inherit;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-.theme:hover { border-color: var(--muted); }
 
 h1, h2, h3 { font-family: var(--serif); line-height: 1.2; }
 
@@ -194,6 +209,13 @@ pre.output code { color: var(--muted); }
 .copy:hover { border-color: var(--muted); }
 .copy[data-done] { color: var(--red); border-color: var(--red); }
 
+/* All-commands table on the landing page: the command links to its reference entry. */
+.commands { width: 100%; border-collapse: collapse; margin: 0 0 1rem; }
+.commands td { padding: 0 0.75rem 0 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.commands td:first-child { white-space: nowrap; }
+.commands a { display: inline-flex; align-items: center; min-height: 44px; }
+.commands td:last-child { color: var(--muted); padding-top: 0.6rem; padding-bottom: 0.6rem; }
+
 .columns {
   display: grid;
   grid-template-columns: 1fr;
@@ -224,13 +246,20 @@ footer {
 footer p { margin: 0.3rem 0; }
 
 @media (max-width: 30rem) {
-  /* Logo and theme switch share the first row; the nav gets the second to itself. */
-  .theme { order: 1; }
-  nav { order: 2; width: 100%; margin-left: -0.55rem; }
+  .top { column-gap: 0.5rem; }
+  nav { margin-left: -0.35rem; }
+  nav a { padding: 0 0.35rem; font-size: 0.85rem; }
+  .prefs { gap: 0.3rem; }
+  .pref { padding: 0 0.2rem; font-size: 0.8rem; }
   nav a { padding: 0 0.45rem; }
   body { font-size: 1rem; }
   section { padding: 2rem 0; }
   h1 { margin-top: 1.75rem; }
-  .brand { font-size: 1.4rem; }
-  .brand img { width: 54px; height: 36px; }
+  .brand { font-size: 1.2rem; gap: 0.4rem; }
+  .brand img { width: 42px; height: 28px; }
+}
+
+/* At the narrowest widths the cards alone carry the brand, so the menus stay on the first row. */
+@media (max-width: 22.5rem) {
+  .brand span { display: none; }
 }

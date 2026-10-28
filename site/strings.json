@@ -1,0 +1,108 @@
+{
+  "en": {
+    "skip": "Skip to content",
+    "home_label": "repoke home",
+    "language": "Language",
+    "theme": "Theme",
+    "theme_system": "System",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "nav_label": "Main",
+    "nav": [
+      [
+        "#install",
+        "Install"
+      ],
+      [
+        "commands.html",
+        "Commands"
+      ],
+      [
+        "#agents",
+        "Agents"
+      ],
+      [
+        "plugins.html",
+        "Plugins"
+      ],
+      [
+        "https://github.com/paveldelpozo/repoke",
+        "GitHub"
+      ]
+    ],
+    "footer": "repoke is free software under the MIT or Apache 2.0 license, written by Pavel del Pozo.",
+    "source": "Source",
+    "plugins": "Official plugins",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copy_failed": "Select and copy",
+    "built_from": "This page is built from",
+    "pages": {
+      "index": [
+        "repoke: every package manager, one command",
+        "repoke finds the package managers on your machine (Homebrew, npm, pnpm, pip, cargo, apt, winget and more), shows what is outdated and upgrades what you pick, from a terminal, a script, a schedule or an AI agent."
+      ],
+      "commands": [
+        "Command reference · repoke",
+        "Every repoke command and option: list, check, upgrade, export, init, schedule, self-update, mcp and plugin, with configuration, JSON output and exit codes."
+      ],
+      "plugins": [
+        "Writing a repoke plugin",
+        "How to add a package manager to repoke: a TOML file that declares commands and how to read their output, or an executable that answers a small JSON protocol."
+      ]
+    }
+  },
+  "es": {
+    "skip": "Saltar al contenido",
+    "home_label": "Inicio de repoke",
+    "language": "Idioma",
+    "theme": "Tema",
+    "theme_system": "Sistema",
+    "theme_light": "Claro",
+    "theme_dark": "Oscuro",
+    "nav_label": "Principal",
+    "nav": [
+      [
+        "#install",
+        "Instalar"
+      ],
+      [
+        "commands.html",
+        "Comandos"
+      ],
+      [
+        "#agents",
+        "Agentes"
+      ],
+      [
+        "plugins.html",
+        "Plugins"
+      ],
+      [
+        "https://github.com/paveldelpozo/repoke",
+        "GitHub"
+      ]
+    ],
+    "footer": "repoke es software libre con licencia MIT o Apache 2.0, escrito por Pavel del Pozo.",
+    "source": "Código",
+    "plugins": "Plugins oficiales",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "copy_failed": "Selecciona y copia",
+    "built_from": "Esta página se genera a partir de",
+    "pages": {
+      "index": [
+        "repoke: todos tus gestores de paquetes, un solo comando",
+        "repoke encuentra los gestores de paquetes de tu máquina (Homebrew, npm, pnpm, pip, cargo, apt, winget y más), te dice qué está desactualizado y actualiza lo que elijas, desde una terminal, un script, una tarea programada o un agente de IA."
+      ],
+      "commands": [
+        "Referencia de comandos · repoke",
+        "Todos los comandos y opciones de repoke: list, check, upgrade, export, init, schedule, self-update, mcp y plugin, con la configuración, la salida JSON y los códigos de salida."
+      ],
+      "plugins": [
+        "Cómo escribir un plugin de repoke",
+        "Cómo añadir un gestor de paquetes a repoke: un fichero TOML que declara los comandos y cómo leer su salida, o un ejecutable que responde a un protocolo JSON pequeño."
+      ]
+    }
+  }
+}

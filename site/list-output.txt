@@ -1,0 +1,15 @@
+brew      Homebrew                  7.0.11-24-g2833c25
+mas       Mac App Store             not found
+npm       npm (global)              12.2.1
+pnpm      pnpm (global)             12.15.0
+fnm       fnm (Node.js)             1.39.0
+nvm       nvm (Node.js)             not found
+pip       pip (user)                26.2.2
+uv        uv (tools)                0.13.6
+cargo     cargo (installed crates)  1.99.1
+rustup    rustup (toolchains)       1.29.2
+gem       RubyGems                  not found
+composer  Composer (global)         2.10.2
+mise      mise (tools)              not found
+omz       oh-my-zsh                 17a2b4c
+vscode    VS Code extensions        1.143.1

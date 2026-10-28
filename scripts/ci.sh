@@ -25,6 +25,11 @@ done
 step "test (host)"
 cargo test
 
+step "docs cover every command and option"
+cargo build --quiet
+python3 scripts/check-docs.py target/debug/repoke
+python3 site/build.py "$(mktemp -d)"
+
 if [[ "${1:-}" != "--quick" ]]; then
   step "test (linux, docker)"
   if docker info >/dev/null 2>&1; then
