@@ -9,6 +9,7 @@ Finds the package managers installed on your system, shows what is outdated and 
 ```sh
 brew tap paveldelpozo/tap && brew trust paveldelpozo/tap   # Homebrew asks you to trust third-party taps
 brew install repoke                                        # macOS and Linux
+cargo install repoke                                       # anywhere with Rust
 ```
 
 or download the archive for your system from the [releases](https://github.com/paveldelpozo/repoke/releases) and put `repoke` on your `PATH`. `repoke self-update` updates it, through Homebrew or cargo when it was installed with them; `--check` only reports (exit 100 when there is a newer version). In a terminal, repoke also mentions a new version once a day; `REPOKE_NO_UPDATE_CHECK=1` turns that off.

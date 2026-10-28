@@ -96,7 +96,8 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] Commit del tap reescrito con el Gmail y subido (28-10).
 - [ ] Probar `brew install` desde el tap una vez hecho `brew trust` (en el Mac de Pavel convive con la versión de cargo).
 - [x] Primera release `v0.1.0` (28-10, privada): cinco binarios con su `.sha256`. `repoke self-update --check` con `GITHUB_TOKEN` la lee bien y detecta la instalación por cargo.
-- [ ] `cargo login` y publicación en crates.io, al abrir el repositorio.
+- [x] Publicado en crates.io: `repoke 0.1.0` (28-10). Las próximas versiones, con `scripts/release.sh --crate`.
+- [ ] Revocar el token de crates.io que quedó escrito en la conversación y crear uno nuevo con `cargo login` desde otra terminal.
 - [x] Correo de los commits: `paveldelpozo@gmail.com` (elegido por Pavel), configurado en el repo.
 - [ ] Más adelante, la fórmula en homebrew-core cuando cumpla sus requisitos de popularidad.
 
