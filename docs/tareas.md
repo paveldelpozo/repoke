@@ -135,12 +135,15 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [ ] tpm, zinit, antidote, lazy.nvim, vim-plug y componentes de gcloud: Pavel no tiene ninguno instalado, así que quedan pendientes hasta poder probarlos en una máquina que los tenga.
 - [ ] Se quedan en el núcleo, por ser gestores de paquetes: mas, rustup.
 
-## Landing
+## Landing (publicada en https://repoke.paveldelpozo.es)
 
-- [ ] Landing del proyecto. El icono parte de la idea de un **repóker de ases** (juego de palabras con el nombre). El logo final hay que pedírselo a Pavel o confirmarlo con él antes de usarlo.
-- [ ] Sección de instalación con todas las opciones: `brew install`, `cargo install` y binario descargado de las releases de GitHub.
-- [ ] Apartado de documentación para plugins (ver fase 8).
-- [ ] Desplegar en el Dokploy personal; antes, pedir el dominio y comprobar con `dig` que apunta al servidor.
+- [x] Logo del **repóker de ases** (diseño propio a partir de la idea de Pavel): cuatro ases en abanico con su palo en la esquina, colores alternos y el as de corazones delante; favicon con el as de corazones. `site/logo.svg`, `site/favicon.svg`.
+- [x] Dirección visual en `site/DESIGN.md`: colores de la baraja (papel, tinta, rojo), minimalista como brew.sh; tema oscuro con el verde del tapete. Contrastes AA comprobados con el script de antislop.
+- [x] Web estática en `site/`: instalación (brew con `brew trust`, cargo, binarios), salida real de `repoke list`, una sección por palo, botones de copiar (sin los comentarios `#`) y cambio de tema. Revisada en escritorio y a 320, 390 y 768 px: sin desbordes y con objetivos de 44 px.
+- [x] Guía de plugins (`plugins.html`) generada en el build desde `docs/plugins.md` con un conversor propio en Python (`site/render.py`); el clasificador bloquea descargar `marked`.
+- [x] Desplegada en Dokploy (proyecto «repoke» → aplicación «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`), desde GitHub con `site/Dockerfile`, autodespliegue al tocar `site/**` o `docs/plugins.md`. Certificado de Let's Encrypt.
+- [ ] **La landing tiene que estar en español y en inglés** (pedido por Pavel el 28-10): versión en español con selector de idioma, y la guía de plugins también en los dos.
+- [ ] Imagen para compartir en redes (Open Graph) a partir del logo.
 
 ## Preguntas abiertas
 
