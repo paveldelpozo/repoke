@@ -1,6 +1,6 @@
 # Cómo escribir un plugin de repoke
 
-repoke conoce 22 gestores de paquetes de serie. Un plugin añade otro, y a partir de ahí participa en todo: `list`, `check`, `upgrade`, `export`, `init`, `schedule` y el servidor MCP. Hay dos tipos:
+repoke conoce 24 gestores de paquetes de serie. Un plugin añade otro, y a partir de ahí participa en todo: `list`, `check`, `upgrade`, `export`, `init`, `schedule` y el servidor MCP. Hay dos tipos:
 
 - **Un fichero TOML** que dice qué comandos ejecutar y cómo leer su salida. Basta para casi cualquier herramienta capaz de decir qué tiene desactualizado.
 - **Un ejecutable** llamado `repoke-<id>`, en el lenguaje que quieras, que responde a un protocolo JSON pequeño. Para herramientas que necesitan lógica, como un clon de git o varios comandos por consulta.

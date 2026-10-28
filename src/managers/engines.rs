@@ -10,16 +10,16 @@ use super::node_versions::{self, Version};
 use crate::manager::{Package, capture};
 
 /// Packages whose `latest` (the newest release when it is empty, as in `init`) declares an
-/// `engines.node` range the running Node is outside of. `view` asks the registry, and both npm
-/// and pnpm answer it the same way.
-pub fn incompatible(bin: &Path, packages: &[Package]) -> Vec<(Package, String)> {
+/// `engines.node` range the running Node is outside of. `viewer` is npm or pnpm, whose `view`
+/// asks the registry; the Node checked is the one next to `bin`, the manager.
+pub fn incompatible(bin: &Path, viewer: &Path, packages: &[Package]) -> Vec<(Package, String)> {
     let Some(node) = node_version(bin) else {
         return Vec::new();
     };
     thread::scope(|scope| {
         let handles: Vec<_> = packages
             .iter()
-            .map(|p| scope.spawn(move || (p, required(bin, p))))
+            .map(|p| scope.spawn(move || (p, required(viewer, p))))
             .collect();
         handles
             .into_iter()

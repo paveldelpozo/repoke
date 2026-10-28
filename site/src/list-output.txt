@@ -2,6 +2,8 @@ brew      Homebrew                  7.0.11-24-g2833c25
 mas       Mac App Store             not found
 npm       npm (global)              12.2.1
 pnpm      pnpm (global)             12.15.0
+yarn      yarn (global)             1.22.22
+bun       bun (global)              1.4.2
 fnm       fnm (Node.js)             1.39.0
 nvm       nvm (Node.js)             not found
 pip       pip (user)                26.2.2

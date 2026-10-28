@@ -42,7 +42,7 @@ Upgrades what is outdated. In a terminal it shows a list with everything selecte
 
 Managers run one after another, each with its own spinner showing the last line of its output. If a batch fails, its packages are retried one at a time, so one bad package doesn't hold back the rest. A manager that needs root runs through `sudo -n`; in a terminal repoke asks for the password once, up front. Homebrew casks that install a `.pkg` or remove system services ask for the password themselves, so they run in a batch of their own: in a terminal repoke asks first, with `--yes` they run only if `sudo` still remembers the password, and `--no-sudo` skips them.
 
-npm and pnpm globals whose new version declares an `engines.node` range the Node in use doesn't meet are skipped with the version they need, instead of installing and then failing to run.
+npm, pnpm and Yarn 1 globals whose new version declares an `engines.node` range the Node in use doesn't meet are skipped with the version they need, instead of installing and then failing to run.
 
 Only one `upgrade` or `init` runs at a time: a second one exits with 75 straight away.
 

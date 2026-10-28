@@ -39,7 +39,7 @@ impl Manager for Pnpm {
     }
 
     fn incompatible(&self, bin: &Path, packages: &[Package]) -> Vec<(Package, String)> {
-        super::engines::incompatible(bin, packages)
+        super::engines::incompatible(bin, bin, packages)
     }
 
     fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {

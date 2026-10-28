@@ -42,7 +42,7 @@ Actualiza lo que está desactualizado. En una terminal enseña una lista con tod
 
 Los gestores van uno detrás de otro, cada uno con su indicador mostrando la última línea de su salida. Si un lote falla, sus paquetes se reintentan de uno en uno, para que un paquete problemático no frene al resto. Un gestor que necesita root se ejecuta con `sudo -n`; en una terminal, repoke pide la contraseña una vez, al principio. Los casks de Homebrew que instalan un `.pkg` o quitan servicios del sistema piden la contraseña por su cuenta, así que van en un lote aparte: en una terminal repoke la pide antes, con `--yes` solo se lanzan si `sudo` aún la recuerda, y con `--no-sudo` se saltan.
 
-Los globales de npm y pnpm cuya nueva versión declara en `engines.node` un rango que no cumple el Node en uso se saltan, indicando qué versión necesitan, en vez de instalarse y luego no arrancar.
+Los globales de npm, pnpm y Yarn 1 cuya nueva versión declara en `engines.node` un rango que no cumple el Node en uso se saltan, indicando qué versión necesitan, en vez de instalarse y luego no arrancar.
 
 Solo puede haber un `upgrade` o un `init` a la vez: si ya hay uno en marcha, el segundo sale enseguida con 75.
 

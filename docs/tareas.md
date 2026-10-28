@@ -62,7 +62,8 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [ ] Probar apt, dnf, pacman, zypper y flatpak en contenedores Docker (`scripts/ci.sh` ya tiene el paso; falta arrancar Docker y añadir imágenes por distro).
 - [ ] Probar winget, scoop y choco en un Windows real; la salida de winget cambia con el idioma y la versión.
 - [ ] Probar mas, nvm, gem y mise en una máquina que los tenga.
-- [ ] Pendientes: yarn global (solo yarn 1), bun, deno, volta, asdf, `softwareupdate` de macOS (solo bajo petición explícita).
+- [x] yarn global (solo Yarn 1; explica el fallo por variables sin definir en `.npmrc`) y bun global, probados con datos reales (bun en una carpeta aislada, `BUN_INSTALL`).
+- [ ] Pendientes: deno, volta, asdf (no están en el Mac de Pavel), `softwareupdate` de macOS (solo bajo petición explícita).
 - [ ] cargo consulta crates.io crate a crate; con muchos crates instalados será lento. Valorar la API de crates.io en paralelo o `cargo install-update` si está.
 - [ ] fnm y nvm: las versiones viejas se quedan instaladas. Ofrecer limpiarlas cuando la nueva funcione.
 

@@ -1,5 +1,6 @@
 mod apt;
 mod brew;
+mod bun;
 mod cargo;
 mod choco;
 mod composer;
@@ -22,6 +23,7 @@ mod snap;
 mod table;
 mod uv;
 mod winget;
+mod yarn;
 mod zypper;
 
 use crate::manager::Manager;
@@ -37,7 +39,7 @@ pub fn all() -> Vec<&'static dyn Manager> {
 }
 
 /// Every manager repoke knows, whatever the OS.
-pub fn every() -> [&'static dyn Manager; 22] {
+pub fn every() -> [&'static dyn Manager; 24] {
     [
         &brew::Brew,
         &mas::Mas,
@@ -52,6 +54,8 @@ pub fn every() -> [&'static dyn Manager; 22] {
         &choco::Choco,
         &npm::Npm,
         &pnpm::Pnpm,
+        &yarn::Yarn,
+        &bun::Bun,
         &fnm::Fnm,
         &nvm::Nvm,
         &pip::Pip,

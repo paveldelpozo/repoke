@@ -129,6 +129,8 @@ repoke never waits for input when stdin is not a terminal: a manager that tries 
 | choco    | Chocolatey                  | Windows       |          | run from an elevated shell |
 | npm      | npm globals                 | all           | macOS    | installs the exact version listed |
 | pnpm     | pnpm globals                | all           | macOS    | updates itself with `self-update` |
+| yarn     | Yarn 1 globals              | all           | macOS    | Yarn 2+ has no globals and is left out |
+| bun      | bun globals                 | all           | macOS    | |
 | fnm      | Node.js versions via fnm    | all           | macOS    | one entry per major line; moves `default` and reinstalls globals |
 | nvm      | Node.js versions via nvm    | macOS, Linux  |          | same as fnm, via `--reinstall-packages-from` |
 | pip      | pip `--user` packages       | all           | macOS    | never forces an externally managed Python (PEP 668) |
@@ -139,7 +141,7 @@ repoke never waits for input when stdin is not a terminal: a manager that tries 
 | composer | Composer globals            | all           | macOS    | |
 | mise     | mise tools                  | all           |          | |
 
-Planned: yarn, bun, deno, volta, asdf, `softwareupdate` (opt in). See [docs/tareas.md](docs/tareas.md).
+Planned: deno, volta, asdf, `softwareupdate` (opt in). See [docs/tareas.md](docs/tareas.md).
 
 ### Plugins
 
