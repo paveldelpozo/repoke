@@ -5,7 +5,7 @@ repoke conoce 26 gestores de paquetes de serie. Un plugin añade otro, y a parti
 - **Un fichero TOML** que dice qué comandos ejecutar y cómo leer su salida. Basta para casi cualquier herramienta capaz de decir qué tiene desactualizado.
 - **Un ejecutable** llamado `repoke-<id>`, en el lenguaje que quieras, que responde a un protocolo JSON pequeño. Para herramientas que necesitan lógica, como un clon de git o varios comandos por consulta.
 
-Los plugins oficiales están en [repoke-plugins](https://github.com/paveldelpozo/repoke-plugins): `repoke plugin search` los lista y `repoke plugin install <id>` enseña el código de uno, pregunta y lo copia en `~/.local/bin` o en la carpeta de gestores. `REPOKE_PLUGIN_INDEX` hace que esos comandos usen otro índice, una URL o un fichero local.
+Los plugins oficiales están en [repoke-plugins](https://github.com/paveldelpozo/repoke-plugins): `repoke plugin search` los lista y `repoke plugin install <id>` enseña el código de uno, pregunta y lo copia en `~/.local/bin` o en la carpeta de gestores. Cada fichero está fijado en el índice por el sha256 de la versión revisada, e `install` rechaza uno que no coincida. `REPOKE_PLUGIN_INDEX` hace que esos comandos usen otro índice, una URL o un fichero local; uno local, útil mientras escribes un plugin, puede no llevar las sumas.
 
 `repoke plugin new <id>` escribe una plantilla TOML para empezar, y `repoke plugin new <id> --exec`, un script de shell. `repoke plugin list` muestra los plugins que repoke ha encontrado y cualquier problema que tengan. Hay dos ejemplos en [`examples/plugins`](../../examples/plugins): las extensiones de GitHub CLI (TOML) y oh-my-zsh (ejecutable).
 

@@ -162,7 +162,7 @@ Gestores añadidos sin cambiar repoke: un fichero TOML en `~/.config/repoke/mana
 | `repoke plugin list [--json]` | Los plugins encontrados, y cualquier problema que tengan |
 | `repoke plugin new <id> [--exec] [-o <ruta>]` | Una plantilla para empezar: TOML por defecto, un script con `--exec` |
 | `repoke plugin search [--json]` | Los plugins oficiales |
-| `repoke plugin install <id> [-y] [--force]` | Descarga un plugin oficial, enseña su código y pregunta antes de instalarlo |
+| `repoke plugin install <id> [-y] [--force]` | Descarga un plugin oficial, lo comprueba con el sha256 fijado en el índice, enseña su código y pregunta antes de instalarlo |
 | `repoke plugin remove <id>` | Quita un plugin que instaló `plugin install` |
 
 ## Configuración

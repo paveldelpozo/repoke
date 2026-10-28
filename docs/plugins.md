@@ -5,7 +5,7 @@ repoke knows 26 package managers out of the box. A plugin adds another one, and 
 - **A TOML file** that says which commands to run and how to read their output. Enough for most tools that can print what is outdated.
 - **An executable** named `repoke-<id>`, in any language, that answers a small JSON protocol. For tools that need logic, like a git clone or several commands per check.
 
-Official plugins live in [repoke-plugins](https://github.com/paveldelpozo/repoke-plugins): `repoke plugin search` lists them and `repoke plugin install <id>` shows a plugin's code, asks, and copies it into `~/.local/bin` or the managers folder. `REPOKE_PLUGIN_INDEX` points those commands at another index, a URL or a local file.
+Official plugins live in [repoke-plugins](https://github.com/paveldelpozo/repoke-plugins): `repoke plugin search` lists them and `repoke plugin install <id>` shows a plugin's code, asks, and copies it into `~/.local/bin` or the managers folder. Each file is pinned in the index by the sha256 of the version that was reviewed, and `install` refuses one that doesn't match. `REPOKE_PLUGIN_INDEX` points those commands at another index, a URL or a local file; a local one, handy while writing a plugin, may leave the sums out.
 
 `repoke plugin new <id>` writes a TOML template to start from, and `repoke plugin new <id> --exec` a shell script. `repoke plugin list` shows the plugins repoke found and any problem with them. Two examples are in [`examples/plugins`](../examples/plugins): GitHub CLI extensions (TOML) and oh-my-zsh (executable).
 

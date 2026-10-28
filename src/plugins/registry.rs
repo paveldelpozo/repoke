@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{loaded, supported, write};
 use crate::manager::{self, capture_within};
+use crate::self_update::sha256;
 use crate::{PluginInstallArgs, config, print_json, snapshot};
 
 const INDEX: &str = "https://raw.githubusercontent.com/paveldelpozo/repoke-plugins/main/index.toml";
@@ -37,6 +38,36 @@ struct Entry {
     #[serde(default)]
     requires: Vec<String>,
     description: String,
+    /// Of the file as it was reviewed; `install` refuses anything else.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    sha256: Option<String>,
+}
+
+/// A remote index has to pin every file; a local one, used while writing a plugin, may not.
+fn verify(entry: &Entry, location: &str, code: &str) -> Result<(), String> {
+    let actual = sha256(code.as_bytes());
+    match &entry.sha256 {
+        Some(expected) if expected.eq_ignore_ascii_case(&actual) => Ok(()),
+        Some(expected) => Err(format!(
+            "`{}` doesn't match the reviewed version (sha256 {actual}, the index expects {expected}): it changed after review, so it won't be installed",
+            entry.id
+        )),
+        None if location.contains("://") => Err(format!(
+            "`{}` has no sha256 in {location}, so there is no reviewed version to check it against",
+            entry.id
+        )),
+        None => {
+            eprintln!(
+                "{}",
+                style(format!(
+                    "`{}` has no sha256 in the local index; not verified.",
+                    entry.id
+                ))
+                .yellow()
+            );
+            Ok(())
+        }
+    }
 }
 
 fn location() -> String {
@@ -153,6 +184,7 @@ pub fn install(args: &PluginInstallArgs) -> Result<ExitCode, String> {
 
     let source = beside(&location, &entry.file);
     let code = fetch(&source)?;
+    verify(entry, &location, &code)?;
     let interactive = io::stdin().is_terminal() && io::stdout().is_terminal();
     if !args.yes {
         if !interactive {
@@ -229,6 +261,7 @@ pub fn remove(id: &str) -> Result<ExitCode, String> {
             os: Vec::new(),
             requires: Vec::new(),
             description: String::new(),
+            sha256: None,
         };
         let path = target(&entry)?;
         if path.is_file() {
@@ -279,5 +312,25 @@ description = "oh-my-zsh"
         )
         .unwrap();
         assert_eq!(index.plugin[0].requires, ["git"]);
+    }
+
+    #[test]
+    fn installs_only_the_reviewed_file() {
+        let mut entry: Entry = toml::from_str(
+            r#"
+id = "omz"
+name = "oh-my-zsh"
+kind = "executable"
+file = "plugins/omz/repoke-omz"
+description = "oh-my-zsh"
+"#,
+        )
+        .unwrap();
+        let code = "#!/bin/sh\necho reviewed\n";
+        assert!(verify(&entry, INDEX, code).is_err());
+        assert!(verify(&entry, "/tmp/index.toml", code).is_ok());
+        entry.sha256 = Some(sha256(code.as_bytes()).to_uppercase());
+        assert!(verify(&entry, INDEX, code).is_ok());
+        assert!(verify(&entry, INDEX, "#!/bin/sh\necho changed\n").is_err());
     }
 }

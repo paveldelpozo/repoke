@@ -180,4 +180,4 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 
 ## Preguntas abiertas
 
-- Decisión abierta: el índice comunitario de plugins (opciones planteadas a Pavel el 28-10 por la noche). Ya decididas: 0.4.0, asdf, cifrado con `age`, deno y volta pendientes, `softwareupdate` añadido.
+- Índice comunitario de plugins (decidido el 28-10 por la noche): **opción C**, empezar todo en GitHub (carpeta `community/` en `repoke-plugins` por PR, revisión del agente a petición de Pavel, descargas contadas como ficheros de release, votos y opiniones en una Discussion por plugin, un script que escribe los números en `index.toml`) y pasar a un servicio propio en Dokploy solo si hace falta. Hecho el primer paso: `sha256` obligatorio en el índice remoto. Ya decididas: 0.4.0, asdf, cifrado con `age`, deno y volta pendientes, `softwareupdate` añadido.

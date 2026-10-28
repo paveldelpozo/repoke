@@ -247,7 +247,7 @@ fn download(url: &str, to: &Path) -> Result<(), String> {
     .map(drop)
 }
 
-fn sha256(bytes: &[u8]) -> String {
+pub fn sha256(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
         .map(|b| format!("{b:02x}"))
