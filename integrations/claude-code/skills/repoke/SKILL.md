@@ -20,7 +20,7 @@ Report the result grouped by manager, with current and latest versions. Say whic
 3. Run it with `dry_run: false`, or `repoke upgrade --yes --no-sudo --json` with the same filters.
 4. Report from the events: `done` and `failed` per package (with the error's last lines), `skipped`, then the `summary` totals.
 
-Never upgrade without `--no-sudo` and never run sudo yourself. Managers that need root (apt, dnf, pacman, a system npm) come back as `skipped`; tell the user to run `repoke upgrade` in their own terminal for those.
+Never upgrade without `--no-sudo` and never run sudo yourself. Managers that need root (apt, dnf, pacman, a system npm) and Homebrew casks that ask for a password come back as `skipped`; tell the user to run `repoke upgrade` in their own terminal for those. npm and pnpm globals whose new version needs a newer Node are `skipped` too, with the version they need. Exit code 75 means another upgrade is already running: wait and try again.
 
 Node versions under fnm or nvm show up as `node@<major>`: upgrading moves to the newest release of that major line and carries the global npm packages over. Moving to a new major is the user's call.
 

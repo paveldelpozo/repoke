@@ -40,6 +40,10 @@ impl Manager for Npm {
         }
     }
 
+    fn incompatible(&self, bin: &Path, packages: &[Package]) -> Vec<(Package, String)> {
+        super::engines::incompatible(bin, packages)
+    }
+
     fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
         let json = capture(bin, ["ls", "--global", "--depth=0", "--json"])?.expect(&[0])?;
         parse_globals(&json)

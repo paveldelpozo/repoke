@@ -40,9 +40,13 @@ Actualiza lo que está desactualizado. En una terminal enseña una lista con tod
 | `--no-sudo` | Salta los gestores que necesitan root en vez de usar `sudo` |
 | `--json` | Imprime un evento JSON por línea |
 
-Los gestores van uno detrás de otro, cada uno con su indicador mostrando la última línea de su salida. Si un lote falla, sus paquetes se reintentan de uno en uno, para que un paquete problemático no frene al resto. Un gestor que necesita root se ejecuta con `sudo -n`; en una terminal, repoke pide la contraseña una vez, al principio.
+Los gestores van uno detrás de otro, cada uno con su indicador mostrando la última línea de su salida. Si un lote falla, sus paquetes se reintentan de uno en uno, para que un paquete problemático no frene al resto. Un gestor que necesita root se ejecuta con `sudo -n`; en una terminal, repoke pide la contraseña una vez, al principio. Los casks de Homebrew que instalan un `.pkg` o quitan servicios del sistema piden la contraseña por su cuenta, así que van en un lote aparte: en una terminal repoke la pide antes, con `--yes` solo se lanzan si `sudo` aún la recuerda, y con `--no-sudo` se saltan.
 
-Sale con 0 si se actualizó todo lo seleccionado, con 1 si algo falló y con 130 si se canceló la lista.
+Los globales de npm y pnpm cuya nueva versión declara en `engines.node` un rango que no cumple el Node en uso se saltan, indicando qué versión necesitan, en vez de instalarse y luego no arrancar.
+
+Solo puede haber un `upgrade` o un `init` a la vez: si ya hay uno en marcha, el segundo sale enseguida con 75.
+
+Sale con 0 si se actualizó todo lo seleccionado, con 1 si algo falló, con 75 si había otra ejecución en marcha y con 130 si se canceló la lista.
 
 ## repoke export
 
@@ -107,7 +111,7 @@ Si hay una ejecución programada, cuándo, y cómo fue la última. Con `--json`,
 
 ### repoke schedule run
 
-Lo que ejecuta el planificador, y una forma de probar la tarea en el momento. Guarda la salida de la última ejecución y un `history.jsonl` en `~/Library/Logs/repoke` (`~/.local/state/repoke` en Linux, `%LOCALAPPDATA%\repoke` en Windows), y manda una notificación del sistema cuando se actualizó algo, algo falló o hay algo pendiente.
+Lo que ejecuta el planificador, y una forma de probar la tarea en el momento. Guarda la salida de la última ejecución y un `history.jsonl` en `~/Library/Logs/repoke` (`~/.local/state/repoke` en Linux, `%LOCALAPPDATA%\repoke` en Windows), y manda una notificación del sistema cuando se actualizó algo, algo falló o hay algo pendiente. El historial guarda las últimas 1000 ejecuciones.
 
 ### repoke schedule remove
 
@@ -204,4 +208,5 @@ greedy = true                    # también los casks que se actualizan solos
 | 100 | `check` y `self-update --check`: hay algo que actualizar |
 | 1 | Un gestor falló al consultar, actualizar o instalar |
 | 2 | Argumentos o configuración no válidos, o falta `--yes` fuera de una terminal |
+| 75 | `upgrade` e `init`: hay otro `upgrade` o `init` en marcha |
 | 130 | Se canceló la lista interactiva |

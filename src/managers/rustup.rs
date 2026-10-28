@@ -72,6 +72,7 @@ impl Manager for Rustup {
                 Step {
                     commands,
                     packages: vec![Package::from(p)],
+                    password: false,
                 }
             })
             .collect()

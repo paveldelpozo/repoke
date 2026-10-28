@@ -284,6 +284,7 @@ impl Manager for Declared {
             .map(|(args, covered)| Step {
                 commands: vec![args],
                 packages: covered.iter().map(|&i| packages[i].clone()).collect(),
+                password: false,
             })
             .collect()
     }

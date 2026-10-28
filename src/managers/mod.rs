@@ -4,6 +4,7 @@ mod cargo;
 mod choco;
 mod composer;
 mod dnf;
+mod engines;
 mod flatpak;
 mod fnm;
 mod gem;

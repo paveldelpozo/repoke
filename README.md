@@ -105,6 +105,7 @@ greedy = true                    # also casks that update themselves (Chrome, Sl
 | 100  | `check`: updates are available |
 | 1    | A manager failed to check or upgrade (details in the output) |
 | 2    | Invalid arguments or config, or `upgrade` without `--yes` outside a terminal |
+| 75   | `upgrade` or `init`: another one is already running |
 | 130  | The interactive selection was cancelled |
 
 repoke never waits for input when stdin is not a terminal: a manager that tries to prompt fails instead of hanging.

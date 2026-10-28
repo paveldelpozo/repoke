@@ -2,6 +2,7 @@
 //! report and the closing summary.
 
 use std::fmt;
+use std::fs::{self, File, TryLockError};
 use std::io::{BufRead, BufReader, Read};
 use std::process::{Command, ExitCode, Stdio};
 use std::slice;
@@ -19,8 +20,36 @@ use crate::manager::{self, Manager, Package, Step};
 use crate::progress::Progress;
 
 pub const EXIT_CANCELLED: u8 = 130;
+/// Another `upgrade` or `init` holds the lock; 75 is EX_TEMPFAIL, "try again later".
+pub const EXIT_BUSY: u8 = 75;
 /// Lines of a failed command's output shown under the package; `--json` carries all of them.
 const ERROR_LINES: usize = 10;
+
+/// Two runs at once would have two managers' installs racing over the same files, so `upgrade`
+/// and `init` hold this until they end; the OS releases it if repoke dies. If the lock file
+/// can't be made, the run goes ahead unlocked.
+pub fn lock(dry_run: bool) -> Result<Option<File>, ExitCode> {
+    if dry_run {
+        return Ok(None);
+    }
+    let Ok(dir) = crate::schedule::state_dir() else {
+        return Ok(None);
+    };
+    let file = fs::create_dir_all(&dir).and_then(|()| File::create(dir.join("run.lock")));
+    let Ok(file) = file else {
+        return Ok(None);
+    };
+    match file.try_lock() {
+        Ok(()) => Ok(Some(file)),
+        Err(TryLockError::WouldBlock) => {
+            eprintln!(
+                "repoke: another `repoke upgrade` or `repoke init` is running, try again when it ends"
+            );
+            Err(ExitCode::from(EXIT_BUSY))
+        }
+        Err(TryLockError::Error(_)) => Ok(None),
+    }
+}
 
 #[derive(Clone, Copy, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -165,13 +194,7 @@ impl<'a> Engine<'a> {
         steps: impl Fn(&Found, &[T]) -> Vec<Step>,
     ) {
         let m = found.manager;
-        self.report.header(m.name());
-        self.managers.push(ManagerTally {
-            id: m.id(),
-            name: m.name(),
-            manager: m,
-            tally: Tally::default(),
-        });
+        self.start(m);
 
         let root = m.needs_root(&found.path);
         if root && self.options.no_sudo {
@@ -201,6 +224,21 @@ impl<'a> Engine<'a> {
         }
 
         for step in steps(found, items) {
+            if step.password && !self.options.dry_run {
+                if self.options.no_sudo {
+                    self.tally().skipped += step.packages.len();
+                    self.report.emit(&Event::Skipped {
+                        manager: m.id(),
+                        reason: "asks for an administrator password and --no-sudo was given",
+                        packages: &step.packages,
+                    });
+                    continue;
+                }
+                if let Err(error) = self.password() {
+                    self.record(&step.packages, Duration::ZERO, Err(error));
+                    continue;
+                }
+            }
             if self.options.dry_run {
                 self.tally().planned += step.packages.len();
                 let commands: Vec<String> = step
@@ -238,21 +276,61 @@ impl<'a> Engine<'a> {
 
     /// Reports a manager whose packages can't be handled, such as one that isn't installed.
     pub fn skip(&mut self, manager: &'static dyn Manager, packages: &[Package], reason: &str) {
-        self.report.header(manager.name());
-        self.managers.push(ManagerTally {
-            id: manager.id(),
-            name: manager.name(),
-            manager,
-            tally: Tally {
-                skipped: packages.len(),
-                ..Tally::default()
-            },
-        });
+        self.start(manager);
+        self.tally().skipped += packages.len();
         self.report.emit(&Event::Skipped {
             manager: manager.id(),
             reason,
             packages,
         });
+    }
+
+    /// Reports packages left out before running, each with its own reason, under the manager
+    /// that was just run or a new header if it wasn't.
+    pub fn held_back(&mut self, manager: &'static dyn Manager, packages: &[(Package, String)]) {
+        if packages.is_empty() {
+            return;
+        }
+        if self.managers.last().is_none_or(|t| t.id != manager.id()) {
+            self.start(manager);
+        }
+        for (package, reason) in packages {
+            self.tally().skipped += 1;
+            self.report.emit(&Event::Skipped {
+                manager: manager.id(),
+                reason,
+                packages: slice::from_ref(package),
+            });
+        }
+    }
+
+    fn start(&mut self, manager: &'static dyn Manager) {
+        self.report.header(manager.name());
+        self.managers.push(ManagerTally {
+            id: manager.id(),
+            name: manager.name(),
+            manager,
+            tally: Tally::default(),
+        });
+    }
+
+    /// Makes sure sudo won't need to ask while a spinner covers the terminal: at a terminal it
+    /// asks now, and unattended it only goes ahead if sudo still remembers the password.
+    fn password(&self) -> Result<(), String> {
+        if self.options.interactive {
+            return authenticate(self.progress);
+        }
+        let cached = Command::new("sudo")
+            .args(["-n", "-v"])
+            .stdin(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .is_ok_and(|s| s.success());
+        if cached {
+            Ok(())
+        } else {
+            Err("asks for an administrator password: run `sudo -v` first, or upgrade without --yes so repoke can ask".into())
+        }
     }
 
     /// Prints the summary and gives the exit code.

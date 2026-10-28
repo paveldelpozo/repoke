@@ -40,8 +40,8 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
   - pnpm se rechaza a sí mismo con `add -g` (ERR_PNPM_GLOBAL_PNPM_INSTALL): ahora usa `pnpm self-update <versión>`.
   - La línea con la selección se resume ("6 packages") y los avisos `[WARN]` / `npm warn` no entran en el mensaje de error.
 - [x] Repetir la prueba real tras las correcciones: Pavel confirma que funciona (28-10).
-- [ ] Antes de instalar un global de npm o pnpm, comparar su `engines.node` con la versión de node en uso y avisar, en vez de dejar que falle.
-- [ ] Algunos casks de brew piden contraseña con sudo por su cuenta: el aviso queda tapado por el spinner. Detectar los casks y pedir `sudo -v` antes, o mostrar su salida tal cual.
+- [x] Antes de instalar un global de npm o pnpm, comparar su `engines.node` con la versión de node en uso: se salta con la versión que necesita (`src/managers/engines.rs`). Solo en `upgrade`; `init` todavía no lo mira.
+- [x] Casks de brew que piden contraseña (`pkg`, `installer` o `uninstall` con pkgutil/launchctl/kext/script, según `brew info --json=v2`): van en un lote aparte; en terminal se pide `sudo -v` antes, con `--yes` solo si sudo la recuerda, con `--no-sudo` se saltan. Falta verlo con un cask real de ese tipo.
 - [x] Salida agrupada por gestor: una línea por paquete con ✓/✗, versiones y tiempo; los fallos enseñan el comando y las últimas 10 líneas. Tabla resumen final por gestor con totales y duración (28-10, a petición de Pavel). Respeta `NO_COLOR`.
 - [x] composer: `global require` con `--with-all-dependencies`; sin él, laravel/installer 5.32 falló porque `laravel/prompts` estaba fijado en el lock.
 - [ ] Timeouts por gestor en la configuración.
@@ -96,8 +96,8 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [ ] Comprobar el 29-10 por la mañana con `repoke schedule status` que la ejecución de las 03:00 fue bien (Pavel).
 - [ ] Windows: no hay notificación (habría que usar un toast de PowerShell).
 - [ ] Probar en Linux con systemd y sin él.
-- [ ] Evitar dos ejecuciones a la vez (un fichero de bloqueo).
-- [ ] Rotar `history.jsonl` cuando crezca.
+- [x] Evitar dos ejecuciones a la vez: `upgrade` e `init` bloquean `run.lock` en la carpeta de estado (`File::try_lock`, por eso el MSRV pasa a 1.89); el segundo sale con 75.
+- [x] Rotar `history.jsonl`: guarda las últimas 1000 ejecuciones.
 
 ## Fase 6 · Distribución (publicada)
 

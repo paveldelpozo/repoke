@@ -306,10 +306,10 @@ pub fn run_job() -> Result<ExitCode, String> {
     } else {
         summarize_upgrade(&stdout)
     };
-    let message = if code == 2 {
-        format!("repoke could not start: {}", stderr.trim())
-    } else {
-        message
+    let message = match code {
+        2 => format!("repoke could not start: {}", stderr.trim()),
+        75 => "skipped, another repoke upgrade was already running".to_string(),
+        _ => message,
     };
 
     let dir = state_dir()?;
@@ -324,10 +324,12 @@ pub fn run_job() -> Result<ExitCode, String> {
         exit: code,
         message: message.clone(),
     };
+    let history = dir.join("history.jsonl");
+    trim_history(&history);
     let mut history = OpenOptions::new()
         .create(true)
         .append(true)
-        .open(dir.join("history.jsonl"))
+        .open(history)
         .map_err(|e| e.to_string())?;
     writeln!(
         history,
@@ -341,6 +343,21 @@ pub fn run_job() -> Result<ExitCode, String> {
     }
     println!("{message}");
     Ok(ExitCode::from(u8::try_from(code).unwrap_or(1)))
+}
+
+/// Runs kept in `history.jsonl`: more than two years of daily runs. Only the last one is read.
+const HISTORY_RUNS: usize = 1000;
+
+/// Drops the oldest runs once the history is full; a failure here only leaves it longer.
+fn trim_history(path: &Path) {
+    let Ok(text) = fs::read_to_string(path) else {
+        return;
+    };
+    let lines: Vec<&str> = text.lines().collect();
+    if lines.len() >= HISTORY_RUNS {
+        let kept = &lines[lines.len() + 1 - HISTORY_RUNS..];
+        let _ = fs::write(path, kept.join("\n") + "\n");
+    }
 }
 
 /// The message for the log and the notification, and whether it is worth a notification.
@@ -769,6 +786,20 @@ fn schtasks(exe: &str, every: Every, hour: u8, minute: u8) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn history_keeps_the_latest_runs() {
+        let path = env::temp_dir().join(format!("repoke-history-{}.jsonl", std::process::id()));
+        let runs: String = (0..HISTORY_RUNS + 5).map(|i| format!("{i}\n")).collect();
+        fs::write(&path, runs).unwrap();
+        trim_history(&path);
+        let text = fs::read_to_string(&path).unwrap();
+        fs::remove_file(&path).unwrap();
+        let lines: Vec<&str> = text.lines().collect();
+        // One short of the limit, so the run being recorded makes it full.
+        assert_eq!(lines.len(), HISTORY_RUNS - 1);
+        assert_eq!(lines.last(), Some(&"1004"));
+    }
 
     #[test]
     fn parses_times() {

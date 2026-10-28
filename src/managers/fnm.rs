@@ -61,6 +61,7 @@ impl Manager for Fnm {
                 Step {
                     commands,
                     packages: vec![p.clone()],
+                    password: false,
                 }
             })
             .collect()
@@ -84,6 +85,7 @@ impl Manager for Fnm {
                 Some(Step {
                     commands,
                     packages: vec![Package::from(p)],
+                    password: false,
                 })
             })
             .collect()

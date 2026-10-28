@@ -58,6 +58,10 @@ pub fn run(args: &InitArgs, config: &Config) -> Result<ExitCode, String> {
     if !args.yes && !interactive && !args.dry_run {
         return Err("not running in a terminal, pass --yes to install without asking".into());
     }
+    let _lock = match crate::run::lock(args.dry_run) {
+        Ok(lock) => lock,
+        Err(busy) => return Ok(busy),
+    };
     let progress = Progress::new(args.json);
     let engine = Engine::new(
         Options {

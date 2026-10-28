@@ -111,6 +111,8 @@ pub struct Step {
     /// Arguments for the manager; `Manager::invocation` supplies the program.
     pub commands: Vec<Vec<String>>,
     pub packages: Vec<Package>,
+    /// The commands may ask for an administrator password on their own, as some brew casks do.
+    pub password: bool,
 }
 
 impl Step {
@@ -118,7 +120,13 @@ impl Step {
         Self {
             commands: vec![args.into_iter().map(Into::into).collect()],
             packages: packages.to_vec(),
+            password: false,
         }
+    }
+
+    pub fn with_password(mut self) -> Self {
+        self.password = true;
+        self
     }
 
     pub fn install<S: Into<String>>(
@@ -128,6 +136,7 @@ impl Step {
         Self {
             commands: vec![args.into_iter().map(Into::into).collect()],
             packages: packages.iter().map(Package::from).collect(),
+            password: false,
         }
     }
 
@@ -174,6 +183,12 @@ pub trait Manager: Sync {
 
     fn needs_root(&self, _bin: &Path) -> bool {
         false
+    }
+
+    /// Packages that would not work here, each with the reason, so they are skipped up front
+    /// instead of failing halfway through the upgrade.
+    fn incompatible(&self, _bin: &Path, _packages: &[Package]) -> Vec<(Package, String)> {
+        Vec::new()
     }
 
     /// A suggestion for a failure the manager recognises, shown under the error.

@@ -78,6 +78,7 @@ impl Manager for Nvm {
                 Step {
                     commands,
                     packages: vec![p.clone()],
+                    password: false,
                 }
             })
             .collect()
@@ -100,6 +101,7 @@ impl Manager for Nvm {
                 Some(Step {
                     commands,
                     packages: vec![Package::from(p)],
+                    password: false,
                 })
             })
             .collect()

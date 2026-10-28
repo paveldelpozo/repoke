@@ -8,7 +8,7 @@ use crate::UpgradeArgs;
 use crate::check;
 use crate::config::{self, Config};
 use crate::progress::Progress;
-use crate::run::{Action, EXIT_CANCELLED, Engine, Event, Options, choose};
+use crate::run::{self, Action, EXIT_CANCELLED, Engine, Event, Options, choose};
 
 pub fn run(args: &UpgradeArgs, config: &Config) -> Result<ExitCode, String> {
     let started = Instant::now();
@@ -17,6 +17,10 @@ pub fn run(args: &UpgradeArgs, config: &Config) -> Result<ExitCode, String> {
     if !args.yes && !interactive && !args.dry_run {
         return Err("not running in a terminal, pass --yes to upgrade without asking".into());
     }
+    let _lock = match run::lock(args.dry_run) {
+        Ok(lock) => lock,
+        Err(busy) => return Ok(busy),
+    };
     let progress = Progress::new(args.json);
     let mut engine = Engine::new(
         Options {
@@ -80,10 +84,15 @@ pub fn run(args: &UpgradeArgs, config: &Config) -> Result<ExitCode, String> {
     engine
         .report
         .fit(pending.iter().flat_map(|(_, packages)| packages));
-    for (found, packages) in &pending {
-        engine.run_manager(found, packages, |found, packages| {
-            found.manager.upgrade_steps(&found.path, packages)
-        });
+    for (found, mut packages) in pending {
+        let held = found.manager.incompatible(&found.path, &packages);
+        packages.retain(|p| !held.iter().any(|(h, _)| h == p));
+        if !packages.is_empty() {
+            engine.run_manager(&found, &packages, |found, packages| {
+                found.manager.upgrade_steps(&found.path, packages)
+            });
+        }
+        engine.held_back(found.manager, &held);
     }
     Ok(engine.finish(started, checks_failed))
 }

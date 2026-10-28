@@ -33,11 +33,28 @@ impl Manager for Brew {
     }
 
     /// Without `--greedy`, `brew upgrade` leaves a self-updating cask alone even when named.
-    fn upgrade_steps(&self, _bin: &Path, packages: &[Package]) -> Vec<Step> {
-        let mut args = vec!["upgrade".to_string()];
-        args.extend(greedy().map(String::from));
-        args.extend(packages.iter().map(|p| p.name.clone()));
-        vec![Step::new(args, packages)]
+    /// Casks that ask for a password go in a step of their own, so the prompt can be handled.
+    fn upgrade_steps(&self, bin: &Path, packages: &[Package]) -> Vec<Step> {
+        let names: Vec<&str> = packages.iter().map(|p| p.name.as_str()).collect();
+        let asking = password_casks(bin, &names);
+        let (password, quiet): (Vec<Package>, Vec<Package>) = packages
+            .iter()
+            .cloned()
+            .partition(|p| asking.contains(&p.name));
+        let step = |packages: &[Package]| {
+            let mut args = vec!["upgrade".to_string()];
+            args.extend(greedy().map(String::from));
+            args.extend(packages.iter().map(|p| p.name.clone()));
+            Step::new(args, packages)
+        };
+        let mut steps = Vec::new();
+        if !quiet.is_empty() {
+            steps.push(step(&quiet));
+        }
+        if !password.is_empty() {
+            steps.push(step(&password).with_password());
+        }
+        steps
     }
 
     fn hint(&self, packages: &[Package], error: &str) -> Option<String> {
@@ -77,7 +94,7 @@ impl Manager for Brew {
     }
 
     /// Taps first, so the formulae and casks that come from them resolve.
-    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+    fn install_steps(&self, bin: &Path, packages: &[Installed]) -> Vec<Step> {
         let of = |kind: Option<&str>| -> Vec<Installed> {
             packages
                 .iter()
@@ -90,9 +107,69 @@ impl Manager for Brew {
             .map(|tap| Step::install(["tap", &tap.name], slice::from_ref(tap)))
             .collect();
         steps.extend(Step::install_all(&["install"], &of(None)));
-        steps.extend(Step::install_all(&["install", "--cask"], &of(Some("cask"))));
+        let casks = of(Some("cask"));
+        let names: Vec<&str> = casks.iter().map(|c| c.name.as_str()).collect();
+        let asking = password_casks(bin, &names);
+        let (password, quiet): (Vec<Installed>, Vec<Installed>) =
+            casks.into_iter().partition(|c| asking.contains(&c.name));
+        steps.extend(Step::install_all(&["install", "--cask"], &quiet));
+        steps.extend(
+            Step::install_all(&["install", "--cask"], &password)
+                .into_iter()
+                .map(Step::with_password),
+        );
         steps
     }
+}
+
+/// The casks among `names` that run `sudo` themselves. When brew can't tell, none are, and a
+/// prompt shows up as it did before.
+fn password_casks(bin: &Path, names: &[&str]) -> Vec<String> {
+    if names.is_empty() {
+        return Vec::new();
+    }
+    let mut args = vec!["info", "--json=v2"];
+    args.extend(names);
+    capture(bin, args)
+        .and_then(|out| out.expect(&[0]))
+        .and_then(|json| parse_password_casks(&json))
+        .unwrap_or_default()
+}
+
+/// A `.pkg` installs with `sudo installer`, and removing what one left behind (receipts, system
+/// services, kernel extensions, uninstall scripts) also runs as root during an upgrade.
+fn parse_password_casks(json: &str) -> Result<Vec<String>, String> {
+    #[derive(Deserialize)]
+    struct Info {
+        #[serde(default)]
+        casks: Vec<Cask>,
+    }
+    #[derive(Deserialize)]
+    struct Cask {
+        token: String,
+        artifacts: Vec<serde_json::Map<String, serde_json::Value>>,
+    }
+    let info: Info =
+        serde_json::from_str(json).map_err(|e| format!("unexpected brew output: {e}"))?;
+    let as_root = |artifact: &serde_json::Map<String, serde_json::Value>| {
+        artifact.keys().any(|k| k == "pkg" || k == "installer")
+            || artifact
+                .get("uninstall")
+                .and_then(|u| u.as_array())
+                .is_some_and(|directives| {
+                    directives.iter().any(|d| {
+                        ["pkgutil", "launchctl", "kext", "script", "early_script"]
+                            .iter()
+                            .any(|k| d.get(k).is_some())
+                    })
+                })
+    };
+    Ok(info
+        .casks
+        .into_iter()
+        .filter(|c| c.artifacts.iter().any(as_root))
+        .map(|c| c.token)
+        .collect())
 }
 
 fn greedy() -> Option<&'static str> {
@@ -170,6 +247,16 @@ mod tests {
                 .contains("brew reinstall --cask caskhub")
         );
         assert!(Brew.hint(&casks, "Error: network down").is_none());
+    }
+
+    #[test]
+    fn finds_casks_that_ask_for_a_password() {
+        let json = r#"{"formulae": [{"name": "git"}], "casks": [
+            {"token": "zoom", "artifacts": [{"uninstall": [{"launchctl": ["us.zoom.updater"], "pkgutil": "us.zoom.pkg"}]}, {"pkg": ["zoom.pkg"]}]},
+            {"token": "vorssaint", "artifacts": [{"uninstall": [{"quit": "com.vorssaint.utils"}]}, {"app": ["Vorssaint.app"]}, {"zap": [{"launchctl": ["x"]}]}]},
+            {"token": "karabiner", "artifacts": [{"uninstall": [{"script": {"executable": "uninstall.sh", "sudo": true}}]}]}
+        ]}"#;
+        assert_eq!(parse_password_casks(json).unwrap(), ["zoom", "karabiner"]);
     }
 
     #[test]

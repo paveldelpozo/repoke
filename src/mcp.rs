@@ -162,6 +162,7 @@ fn call(params: &Value) -> Value {
         ("check", 100) => "updates are available",
         (_, 0) => "ok",
         (_, 1) => "a manager failed, see its error",
+        (_, 75) => "another repoke upgrade is running, try again when it ends",
         _ => "repoke could not run",
     };
     let mut text = format!(

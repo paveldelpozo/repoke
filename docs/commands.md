@@ -40,9 +40,13 @@ Upgrades what is outdated. In a terminal it shows a list with everything selecte
 | `--no-sudo` | Skip managers that need root instead of calling `sudo` |
 | `--json` | Print one JSON event per line |
 
-Managers run one after another, each with its own spinner showing the last line of its output. If a batch fails, its packages are retried one at a time, so one bad package doesn't hold back the rest. A manager that needs root runs through `sudo -n`; in a terminal repoke asks for the password once, up front.
+Managers run one after another, each with its own spinner showing the last line of its output. If a batch fails, its packages are retried one at a time, so one bad package doesn't hold back the rest. A manager that needs root runs through `sudo -n`; in a terminal repoke asks for the password once, up front. Homebrew casks that install a `.pkg` or remove system services ask for the password themselves, so they run in a batch of their own: in a terminal repoke asks first, with `--yes` they run only if `sudo` still remembers the password, and `--no-sudo` skips them.
 
-Exits 0 when everything selected was upgraded, 1 when something failed, 130 when the list was cancelled.
+npm and pnpm globals whose new version declares an `engines.node` range the Node in use doesn't meet are skipped with the version they need, instead of installing and then failing to run.
+
+Only one `upgrade` or `init` runs at a time: a second one exits with 75 straight away.
+
+Exits 0 when everything selected was upgraded, 1 when something failed, 75 when another run was in progress, 130 when the list was cancelled.
 
 ## repoke export
 
@@ -107,7 +111,7 @@ Whether a run is scheduled, when, and how the last one went. `--json` prints it 
 
 ### repoke schedule run
 
-What the scheduler runs, and a way to try the job now. It keeps the output of the last run and a `history.jsonl` in `~/Library/Logs/repoke` (`~/.local/state/repoke` on Linux, `%LOCALAPPDATA%\repoke` on Windows), and sends a system notification when something was upgraded, failed or is pending.
+What the scheduler runs, and a way to try the job now. It keeps the output of the last run and a `history.jsonl` in `~/Library/Logs/repoke` (`~/.local/state/repoke` on Linux, `%LOCALAPPDATA%\repoke` on Windows), and sends a system notification when something was upgraded, failed or is pending. The history keeps the last 1000 runs.
 
 ### repoke schedule remove
 
@@ -204,4 +208,5 @@ greedy = true                    # also casks that update themselves
 | 100 | `check` and `self-update --check`: there is something to update |
 | 1 | A manager failed to check, upgrade or install |
 | 2 | Invalid arguments or config, or `--yes` needed outside a terminal |
+| 75 | `upgrade` and `init`: another `upgrade` or `init` is running |
 | 130 | The interactive list was cancelled |
