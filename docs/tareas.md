@@ -4,14 +4,13 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 
 ## Estado al cierre de la sesión del 28-10-2026
 
-Publicado: **v0.2.1** en GitHub (5 binarios), crates.io, el tap `paveldelpozo/tap` y el plugin de Claude Code (activo en todos los perfiles de Pavel); landing bilingüe en https://repoke.paveldelpozo.es (Dokploy, proyecto «repoke» → «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`, se redespliega sola); plugins oficiales en `paveldelpozo/repoke-plugins` (`omz`, `vscode`). En el Mac de Pavel: repoke 0.2.1 instalado con cargo, plugins `omz` y `vscode`, `[brew] greedy = true` y el modo programado a las 03:00.
+Publicado: **v0.3.0** (28-10 por la tarde; antes v0.2.1) en GitHub (5 binarios), crates.io, el tap `paveldelpozo/tap` y el plugin de Claude Code (activo en todos los perfiles de Pavel); landing bilingüe en https://repoke.paveldelpozo.es (Dokploy, proyecto «repoke» → «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`, se redespliega sola); plugins oficiales en `paveldelpozo/repoke-plugins` (`omz`, `vscode`). En el Mac de Pavel: repoke 0.2.1 instalado con cargo, plugins `omz` y `vscode`, `[brew] greedy = true` y el modo programado a las 03:00.
 
 Lo siguiente, por orden (actualizado el 28-10 por la tarde):
 
 1. **Pavel, 29-10 por la mañana:** `repoke schedule status` para ver cómo fue la primera ejecución programada (y `~/Library/Logs/repoke/last-run.log` si algo falló).
 2. **Un compañero de Pavel, como beta-tester:** `brew install` desde el tap tras `brew trust paveldelpozo/tap`.
-3. Publicar lo hecho el 28-10 por la tarde (imagen Open Graph, robustez, landing en Astro): subir a `main` (Dokploy redespliega la landing) y sacar la release con `scripts/release.sh --crate`, que por los `feat:` será la 0.3.0.
-4. **En espera, hasta que Pavel pueda probarlo en una imagen de Docker o en su portátil con Ubuntu:** probar en Linux lo que solo tiene tests de parseo (apt, dnf, pacman, zypper, flatpak, snap). Windows (winget, scoop, choco) sigue sin máquina donde probarlo.
+3. **En espera, hasta que Pavel pueda probarlo en una imagen de Docker o en su portátil con Ubuntu:** probar en Linux lo que solo tiene tests de parseo (apt, dnf, pacman, zypper, flatpak, snap). Windows (winget, scoop, choco) sigue sin máquina donde probarlo.
 
 Hecho el 28-10 por la tarde: imagen Open Graph; robustez (`engines.node`, casks con contraseña, bloqueo, rotación del historial); landing en Astro; plugin de Claude probado en conversación.
 
