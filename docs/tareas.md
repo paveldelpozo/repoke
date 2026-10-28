@@ -101,13 +101,14 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] Correo de los commits: `paveldelpozo@gmail.com` (elegido por Pavel), configurado en el repo.
 - [ ] Más adelante, la fórmula en homebrew-core cuando cumpla sus requisitos de popularidad.
 
-## Fase 7 · Agentes (hecha; falta instalar el plugin)
+## Fase 7 · Agentes (hecha; falta probarlo en una conversación)
 
 - [x] `repoke upgrade --package nombre,gestor:nombre` para actualizar paquetes sueltos.
 - [x] `repoke mcp`: servidor MCP por stdio en el propio binario (sin SDK). Herramientas `list_managers`, `check_updates`, `upgrade` (dry-run por defecto, siempre `--no-sudo`) y `schedule_status`, con anotaciones de solo lectura o destructiva. Negocia las versiones de protocolo 2025-06-18, 2025-03-26 y 2024-11-05. Probado por stdio de principio a fin.
 - [x] Plugin de Claude Code en `integrations/claude-code/` (skill `repoke` + `.mcp.json`) y marketplace en `.claude-plugin/marketplace.json`. `claude plugin validate` pasa en los dos. `release.sh` sube también la versión de `plugin.json`.
 - [x] README: instalación en Claude Code, Codex y cualquier cliente MCP.
-- [ ] Instalar el plugin en los perfiles de Pavel y probarlo en una conversación real.
+- [x] Plugin activado en todos los perfiles de Claude con `hvf` (`plugin_add`, marketplace `paveldelpozo/repoke`), 28-10.
+- [ ] Probarlo en una conversación nueva: pedir "¿qué tengo desactualizado?" y ver que usa `check_updates`.
 - [ ] Más herramientas MCP si hacen falta: `export`, `init --dry-run`.
 
 ## Fase 8 · Plugins de la comunidad
