@@ -2,3 +2,4 @@
 /dist
 /.claude/settings.local.json
 /site/dist
+__pycache__/
