@@ -10,7 +10,7 @@ repository = "https://github.com/paveldelpozo/repoke"
 readme = "README.md"
 keywords = ["package-manager", "update", "upgrade", "cli", "homebrew"]
 categories = ["command-line-utilities", "development-tools"]
-include = ["src/**/*", "build.rs", "README.md", "LICENSE-MIT", "LICENSE-APACHE"]
+include = ["/src/**/*", "/build.rs", "/README.md", "/LICENSE-MIT", "/LICENSE-APACHE"]
 
 [profile.release]
 strip = true
