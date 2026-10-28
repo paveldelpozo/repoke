@@ -4,7 +4,7 @@ Every command takes `--help`. Lists of managers or packages are comma separated:
 
 ## repoke list
 
-The package managers repoke supports on this system, whether each is installed and its version. Plugins appear after the built-in managers.
+The package managers repoke supports on this system, in two groups: the ones found, with a ✓ and their version, and the ones that are not installed. Plugins appear after the built-in managers and are marked as such.
 
 | Option | |
 |--------|---|

@@ -4,7 +4,7 @@ Todos los comandos aceptan `--help`. Las listas de gestores o de paquetes van se
 
 ## repoke list
 
-Los gestores de paquetes que repoke admite en este sistema, si cada uno está instalado y en qué versión. Los plugins salen después de los gestores integrados.
+Los gestores de paquetes que repoke admite en este sistema, en dos grupos: los que encuentra, con un ✓ y su versión, y los que no están instalados. Los plugins salen después de los gestores integrados, marcados como tales.
 
 | Opción | |
 |--------|---|

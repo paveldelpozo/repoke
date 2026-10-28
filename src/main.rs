@@ -369,18 +369,47 @@ fn list(json: bool) -> ExitCode {
     if json {
         print_json(&detected);
     } else {
-        let id_width = detected.iter().map(|d| d.id.len()).max().unwrap_or(0);
-        let name_width = detected.iter().map(|d| d.name.len()).max().unwrap_or(0);
-        for d in &detected {
-            let state = match &d.version {
-                Some(version) => version.as_str(),
-                None if d.installed => "installed",
-                None => "not found",
-            };
-            println!("{:<id_width$}  {:<name_width$}  {state}", d.id, d.name);
-        }
+        print_list(&detected);
     }
     ExitCode::SUCCESS
+}
+
+/// Found managers first, with their version; the ones missing after them, dimmed.
+fn print_list(detected: &[Detected]) {
+    use console::style;
+    let id_width = detected.iter().map(|d| d.id.len()).max().unwrap_or(0);
+    let name_width = detected.iter().map(|d| d.name.len()).max().unwrap_or(0);
+    let plugins: Vec<&str> = plugins::loaded().managers.iter().map(|m| m.id()).collect();
+    let (found, missing): (Vec<&Detected>, Vec<&Detected>) =
+        detected.iter().partition(|d| d.installed);
+
+    println!(
+        "{} {}",
+        style("Found").bold(),
+        style(format!("({} of {})", found.len(), detected.len())).dim()
+    );
+    for d in &found {
+        let version = d.version.as_deref().unwrap_or("installed");
+        let plugin = if plugins.contains(&d.id) {
+            style("  plugin").dim().to_string()
+        } else {
+            String::new()
+        };
+        println!(
+            "  {} {}  {:<name_width$}  {}{plugin}",
+            style("✓").green(),
+            style(format!("{:<id_width$}", d.id)).bold(),
+            d.name,
+            style(version).cyan()
+        );
+    }
+    if !missing.is_empty() {
+        println!("\n{}", style("Not found").bold());
+        for d in &missing {
+            let line = format!("{:<id_width$}  {}", d.id, d.name);
+            println!("  {} {}", style("·").dim(), style(line).dim());
+        }
+    }
 }
 
 fn print_json<T: Serialize>(value: &T) {
