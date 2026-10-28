@@ -118,6 +118,7 @@ repoke never waits for input when stdin is not a terminal: a manager that tries 
 | Id       | Manager                     | OS            | Verified | Notes |
 |----------|-----------------------------|---------------|----------|-------|
 | brew     | Homebrew formulae and casks | macOS, Linux  | macOS    | `--refresh` runs `brew update` |
+| softwareupdate | macOS Software Update | macOS        | macOS    | needs sudo; updates that restart the Mac are left to System Settings |
 | mas      | Mac App Store               | macOS         |          | |
 | apt      | APT                         | Linux         |          | needs sudo; `--refresh` runs `apt-get update` |
 | dnf      | DNF                         | Linux         |          | needs sudo |
@@ -143,7 +144,7 @@ repoke never waits for input when stdin is not a terminal: a manager that tries 
 | mise     | mise tools                  | all           |          | |
 | asdf     | asdf tools                  | macOS, Linux  | Linux    | asdf 0.16+; only the global versions in `~/.tool-versions`; old versions stay installed |
 
-Planned: deno, volta, `softwareupdate` (opt in). See [docs/tareas.md](docs/tareas.md).
+Planned: deno, volta. See [docs/tareas.md](docs/tareas.md).
 
 ### Plugins
 

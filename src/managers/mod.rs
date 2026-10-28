@@ -21,6 +21,7 @@ mod pnpm;
 mod rustup;
 mod scoop;
 mod snap;
+mod softwareupdate;
 mod table;
 mod uv;
 mod winget;
@@ -40,9 +41,10 @@ pub fn all() -> Vec<&'static dyn Manager> {
 }
 
 /// Every manager repoke knows, whatever the OS.
-pub fn every() -> [&'static dyn Manager; 25] {
+pub fn every() -> [&'static dyn Manager; 26] {
     [
         &brew::Brew,
+        &softwareupdate::SoftwareUpdate,
         &mas::Mas,
         &apt::Apt,
         &dnf::Dnf,

@@ -1,6 +1,6 @@
 # Writing a repoke plugin
 
-repoke knows 25 package managers out of the box. A plugin adds another one, and it then takes part in everything: `list`, `check`, `upgrade`, `export`, `init`, `schedule` and the MCP server. There are two kinds:
+repoke knows 26 package managers out of the box. A plugin adds another one, and it then takes part in everything: `list`, `check`, `upgrade`, `export`, `init`, `schedule` and the MCP server. There are two kinds:
 
 - **A TOML file** that says which commands to run and how to read their output. Enough for most tools that can print what is outdated.
 - **An executable** named `repoke-<id>`, in any language, that answers a small JSON protocol. For tools that need logic, like a git clone or several commands per check.

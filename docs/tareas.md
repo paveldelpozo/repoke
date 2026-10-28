@@ -19,7 +19,6 @@ Decisiones que tiene que tomar Pavel:
 
 - **Índice comunitario de plugins:** dónde vive (otro repositorio, o el mismo `repoke-plugins` con una sección aparte) y quién revisa lo que entra.
 - **deno y volta:** Pavel prefiere mantenerlos pendientes (28-10); propuesta original de descartarlos. deno no sabe decir qué globales están desactualizados, y volta lleva tiempo sin mantenimiento.
-- **`softwareupdate` de macOS:** solo si Pavel lo pide.
 
 Hecho el 28-10 por la tarde: imagen Open Graph; robustez (`engines.node`, casks con contraseña, bloqueo, rotación del historial); landing en Astro; plugin de Claude probado en conversación; v0.3.0 publicada.
 
@@ -75,7 +74,8 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [ ] Probar mas, nvm, gem y mise en una máquina que los tenga.
 - [x] yarn global (solo Yarn 1; explica el fallo por variables sin definir en `.npmrc`) y bun global, probados con datos reales (bun en una carpeta aislada, `BUN_INSTALL`).
 - [x] asdf (0.16 o posterior, el binario en Go): lee las versiones globales de `~/.tool-versions` (no `asdf current`, que depende de la carpeta), las compara con `asdf latest --all` y actualiza con `install` + `set -u`; las versiones antiguas quedan instaladas. `init` hace `plugin add`, `install` y `set -u`. Probado de principio a fin con asdf 0.20.2 y jq en `debian:stable-slim` (28-10): `list`, `check`, `upgrade`, `export` e `init`.
-- [ ] Pendientes: deno, volta (no están en el Mac de Pavel), `softwareupdate` de macOS (solo bajo petición explícita).
+- [x] `softwareupdate` de macOS (28-10, noche, lo pidió Pavel): `--list` y `--install <label>` con sudo; las que piden reinicio (el propio macOS) se retienen con aviso para hacerlas desde Ajustes, porque podrían reiniciar el Mac sin nadie delante y en Apple silicon piden la contraseña del usuario. Probado en el Mac de Pavel sin actualizaciones pendientes; el formato con actualizaciones sale de la documentación, falta verlo con una real.
+- [ ] Pendientes: deno, volta (no están en el Mac de Pavel).
 - [x] cargo consulta crates.io de 8 en 8 en paralelo (con 4 crates, de 1,8 s a 0,8 s).
 - [x] fnm y nvm: con `[node] remove_old = true`, tras instalar la nueva versión de una línea y comprobar que arranca (`exec … node --version`), se desinstalan las anteriores de esa línea. Desactivado por defecto: un `.node-version` puede fijar una versión exacta. Probado con `--dry-run`, no en real.
 
@@ -180,4 +180,4 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 
 ## Preguntas abiertas
 
-- Decisiones abiertas: índice comunitario y `softwareupdate`. Ya decididas (28-10, noche): subir y sacar la 0.4.0, Docker para asdf, cifrado con una dependencia en Rust, deno y volta pendientes.
+- Decisión abierta: el índice comunitario de plugins (opciones planteadas a Pavel el 28-10 por la noche). Ya decididas: 0.4.0, asdf, cifrado con `age`, deno y volta pendientes, `softwareupdate` añadido.
