@@ -13,5 +13,6 @@ rustup    rustup (toolchains)       1.29.2
 gem       RubyGems                  not found
 composer  Composer (global)         2.10.2
 mise      mise (tools)              not found
+asdf      asdf (tools)              not found
 omz       oh-my-zsh                 17a2b4c
 vscode    VS Code extensions        1.143.1

@@ -1,6 +1,6 @@
 ---
 name: repoke
-description: Check and upgrade the software installed through package managers on this machine (Homebrew, Mac App Store, apt, dnf, pacman, winget, scoop, npm, pnpm, yarn 1 and bun globals, Node versions via fnm or nvm, pip, uv, cargo, rustup, gem, composer, mise) with repoke. Use when the user asks what is outdated, to update or upgrade their system, tools, Node or global packages, or to schedule updates.
+description: Check and upgrade the software installed through package managers on this machine (Homebrew, Mac App Store, apt, dnf, pacman, winget, scoop, npm, pnpm, yarn 1 and bun globals, Node versions via fnm or nvm, pip, uv, cargo, rustup, gem, composer, mise, asdf) with repoke. Use when the user asks what is outdated, to update or upgrade their system, tools, Node or global packages, or to schedule updates.
 ---
 
 # repoke

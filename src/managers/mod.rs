@@ -1,4 +1,5 @@
 mod apt;
+mod asdf;
 mod brew;
 mod bun;
 mod cargo;
@@ -39,7 +40,7 @@ pub fn all() -> Vec<&'static dyn Manager> {
 }
 
 /// Every manager repoke knows, whatever the OS.
-pub fn every() -> [&'static dyn Manager; 24] {
+pub fn every() -> [&'static dyn Manager; 25] {
     [
         &brew::Brew,
         &mas::Mas,
@@ -65,5 +66,6 @@ pub fn every() -> [&'static dyn Manager; 24] {
         &gem::Gem,
         &composer::Composer,
         &mise::Mise,
+        &asdf::Asdf,
     ]
 }

@@ -140,8 +140,9 @@ repoke never waits for input when stdin is not a terminal: a manager that tries 
 | gem      | RubyGems                    | all           |          | skips the system Ruby on macOS |
 | composer | Composer globals            | all           | macOS    | |
 | mise     | mise tools                  | all           |          | |
+| asdf     | asdf tools                  | macOS, Linux  | Linux    | asdf 0.16+; only the global versions in `~/.tool-versions`; old versions stay installed |
 
-Planned: deno, volta, asdf, `softwareupdate` (opt in). See [docs/tareas.md](docs/tareas.md).
+Planned: deno, volta, `softwareupdate` (opt in). See [docs/tareas.md](docs/tareas.md).
 
 ### Plugins
 

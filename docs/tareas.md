@@ -8,18 +8,17 @@ Publicado: **v0.3.0** (28-10 por la tarde; antes v0.2.1) en GitHub (5 binarios),
 
 Lo siguiente, por orden (actualizado el 28-10 por la noche, antes de reiniciar la sesión):
 
-1. **Sin subir:** 6 commits locales sobre `cc29a99` (`dd27cfb` timeouts por gestor y Node en `init`, `d340120` yarn 1 y bun, `86c1e60` cargo en paralelo, `1a14e4b` `[node] remove_old`, `e789829` Node en el catálogo y errores de brew, `de9118e` herramientas MCP `export` e `init_preview`). La CI pasa en todos. Falta que Pavel diga si se suben (Dokploy redespliega la landing) y si se saca la release: por los `feat:` será la **0.4.0**, y la lanza él con `! scripts/release.sh --crate` porque el clasificador se la bloquea al agente. En su Mac ya está instalado el binario local con todo esto (`cargo install --path . --force`).
+1. **Release 0.4.0:** los 7 commits se subieron el 28-10 por la noche y el dry-run calcula la **v0.4.0**. Falta que Pavel la lance con `! scripts/release.sh --crate`.
 2. **Pavel, 29-10 por la mañana:** `repoke schedule status` para ver cómo fue la primera ejecución programada (y `~/Library/Logs/repoke/last-run.log` si algo falló).
 3. **Un compañero de Pavel, como beta-tester:** `brew install` desde el tap tras `brew trust paveldelpozo/tap`.
 4. **En espera, hasta que Pavel pueda probarlo en una imagen de Docker o en su portátil con Ubuntu:** probar en Linux lo que solo tiene tests de parseo (apt, dnf, pacman, zypper, flatpak, snap). Windows (winget, scoop, choco) sigue sin máquina donde probarlo.
-5. **Siguiente gestor, asdf:** explorar su salida real en un contenedor `debian:stable-slim` (binario Go de las releases, plugin `jq`, `asdf list`, `asdf latest --all`, `asdf current`) e implementarlo con eso. Se quedó sin hacer porque Docker Desktop estaba parado; falta que Pavel diga si se puede arrancar (`open -a Docker`).
+5. **Cifrado del backup de `export`:** Pavel eligió una dependencia en Rust (28-10), que funciona igual en todos los sistemas. Siguiente tarea de código.
 6. **Pruebas que solo puede hacer Pavel:** las preguntas interactivas de `export` e `init` en una terminal real; un cask que pida contraseña (`.pkg`); `[node] remove_old = true` en real (solo se ha probado con `--dry-run`).
 
 Decisiones que tiene que tomar Pavel:
 
-- **Cifrar el backup de `export` con contraseña:** una dependencia de cifrado en Rust (igual en todos los sistemas) o llamar a `openssl` (en Windows no suele estar). Recomendación: la dependencia.
 - **Índice comunitario de plugins:** dónde vive (otro repositorio, o el mismo `repoke-plugins` con una sección aparte) y quién revisa lo que entra.
-- **deno y volta:** propuesta de descartarlos. deno no sabe decir qué globales están desactualizados, y volta lleva tiempo sin mantenimiento.
+- **deno y volta:** Pavel prefiere mantenerlos pendientes (28-10); propuesta original de descartarlos. deno no sabe decir qué globales están desactualizados, y volta lleva tiempo sin mantenimiento.
 - **`softwareupdate` de macOS:** solo si Pavel lo pide.
 
 Hecho el 28-10 por la tarde: imagen Open Graph; robustez (`engines.node`, casks con contraseña, bloqueo, rotación del historial); landing en Astro; plugin de Claude probado en conversación; v0.3.0 publicada.
@@ -75,7 +74,8 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [ ] Probar winget, scoop y choco en un Windows real; la salida de winget cambia con el idioma y la versión.
 - [ ] Probar mas, nvm, gem y mise en una máquina que los tenga.
 - [x] yarn global (solo Yarn 1; explica el fallo por variables sin definir en `.npmrc`) y bun global, probados con datos reales (bun en una carpeta aislada, `BUN_INSTALL`).
-- [ ] Pendientes: deno, volta, asdf (no están en el Mac de Pavel), `softwareupdate` de macOS (solo bajo petición explícita).
+- [x] asdf (0.16 o posterior, el binario en Go): lee las versiones globales de `~/.tool-versions` (no `asdf current`, que depende de la carpeta), las compara con `asdf latest --all` y actualiza con `install` + `set -u`; las versiones antiguas quedan instaladas. `init` hace `plugin add`, `install` y `set -u`. Probado de principio a fin con asdf 0.20.2 y jq en `debian:stable-slim` (28-10): `list`, `check`, `upgrade`, `export` e `init`.
+- [ ] Pendientes: deno, volta (no están en el Mac de Pavel), `softwareupdate` de macOS (solo bajo petición explícita).
 - [x] cargo consulta crates.io de 8 en 8 en paralelo (con 4 crates, de 1,8 s a 0,8 s).
 - [x] fnm y nvm: con `[node] remove_old = true`, tras instalar la nueva versión de una línea y comprobar que arranca (`exec … node --version`), se desinstalan las anteriores de esa línea. Desactivado por defecto: un `.node-version` puede fijar una versión exacta. Probado con `--dry-run`, no en real.
 
@@ -180,4 +180,4 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 
 ## Preguntas abiertas
 
-- Las cuatro decisiones de arriba (cifrado del backup, índice comunitario, deno y volta, `softwareupdate`), más si se suben los commits y se saca la 0.4.0, y si se puede arrancar Docker para asdf.
+- Decisiones abiertas: índice comunitario y `softwareupdate`. Ya decididas (28-10, noche): subir y sacar la 0.4.0, Docker para asdf, cifrado con una dependencia en Rust, deno y volta pendientes.
