@@ -27,6 +27,8 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] Repetir la prueba real tras las correcciones: Pavel confirma que funciona (28-10).
 - [ ] Antes de instalar un global de npm o pnpm, comparar su `engines.node` con la versión de node en uso y avisar, en vez de dejar que falle.
 - [ ] Algunos casks de brew piden contraseña con sudo por su cuenta: el aviso queda tapado por el spinner. Detectar los casks y pedir `sudo -v` antes, o mostrar su salida tal cual.
+- [x] Salida agrupada por gestor: una línea por paquete con ✓/✗, versiones y tiempo; los fallos enseñan el comando y las últimas 10 líneas. Tabla resumen final por gestor con totales y duración (28-10, a petición de Pavel). Respeta `NO_COLOR`.
+- [x] composer: `global require` con `--with-all-dependencies`; sin él, laravel/installer 5.32 falló porque `laravel/prompts` estaba fijado en el lock.
 - [ ] Timeouts por gestor en la configuración.
 - [ ] Con `--refresh`, el spinner de npm y pnpm dice "refreshing" un instante aunque no tengan índice que refrescar.
 
