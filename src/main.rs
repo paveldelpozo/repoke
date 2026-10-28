@@ -7,6 +7,7 @@ mod manager;
 mod managers;
 mod progress;
 mod run;
+mod schedule;
 mod snapshot;
 mod upgrade;
 
@@ -50,6 +51,47 @@ enum Command {
     Export(ExportArgs),
     /// Install a saved snapshot (--from) or pick tools from a catalog, on a new machine
     Init(InitArgs),
+    /// Keep the machine up to date on a schedule, through the system scheduler
+    Schedule {
+        #[command(subcommand)]
+        action: ScheduleAction,
+    },
+}
+
+#[derive(Subcommand)]
+enum ScheduleAction {
+    /// Register the periodic run, replacing any earlier one
+    Install(ScheduleInstallArgs),
+    /// Show the schedule and how the last run went
+    Status {
+        #[arg(long)]
+        json: bool,
+    },
+    /// Unregister the periodic run
+    Remove {
+        /// Print what would be removed
+        #[arg(long)]
+        dry_run: bool,
+    },
+    /// Run the scheduled job now, as the scheduler does: log it and notify
+    Run,
+}
+
+#[derive(Args)]
+struct ScheduleInstallArgs {
+    #[command(flatten)]
+    managers: Managers,
+    #[arg(long, value_enum, default_value = "daily")]
+    every: schedule::Every,
+    /// Local time, 24-hour clock; weekly runs are on Mondays
+    #[arg(long, default_value = "09:00")]
+    at: String,
+    /// Only check and notify; don't upgrade
+    #[arg(long)]
+    check_only: bool,
+    /// Print the scheduler files and commands, register nothing
+    #[arg(long)]
+    dry_run: bool,
 }
 
 #[derive(Args)]
@@ -159,15 +201,28 @@ fn main() -> ExitCode {
         console::set_colors_enabled_stderr(false);
     }
     let command = Cli::parse().command;
-    if let Command::List { json } = command {
-        return list(json);
+    let scheduled = match &command {
+        Command::List { json } => return list(*json),
+        Command::Schedule { action } => Some(match action {
+            ScheduleAction::Install(args) => schedule::install(args),
+            ScheduleAction::Status { json } => schedule::status(*json),
+            ScheduleAction::Remove { dry_run } => schedule::remove(*dry_run),
+            ScheduleAction::Run => schedule::run_job(),
+        }),
+        _ => None,
+    };
+    if let Some(outcome) = scheduled {
+        return outcome.unwrap_or_else(|e| {
+            eprintln!("repoke: {e}");
+            ExitCode::from(EXIT_USAGE)
+        });
     }
     let outcome = config::load().and_then(|config| match &command {
         Command::Check { json, selection } => check::run(selection, &config, *json),
         Command::Upgrade(args) => upgrade::run(args, &config),
         Command::Export(args) => export::run(args, &config),
         Command::Init(args) => init::run(args, &config),
-        Command::List { .. } => unreachable!("handled above"),
+        Command::List { .. } | Command::Schedule { .. } => unreachable!("handled above"),
     });
     outcome.unwrap_or_else(|e| {
         eprintln!("repoke: {e}");

@@ -33,6 +33,19 @@ repoke init --tools ripgrep,fd --yes  # the same without the picker
 
 `init --from` skips managers the machine doesn't have for its OS, installs only what is missing, runs Homebrew first (it often installs the other managers) and offers to install a still-missing manager with Homebrew. Config files are compared first: missing ones are restored, equal ones left alone, and different ones are kept unless you choose the snapshot's copy (or pass `--overwrite`), with yours backed up as `<file>.repoke-<date>.bak`. Removed secret values are filled back from the file already on the machine, so restoring never swaps a real token for the placeholder.
 
+### On a schedule
+
+```sh
+repoke schedule install                        # daily at 09:00, upgrades what needs no sudo
+repoke schedule install --every weekly --at 08:30 --check-only --exclude brew
+repoke schedule install --dry-run              # print the scheduler files and commands
+repoke schedule status                         # schedule, next run (Linux) and the last result
+repoke schedule run                            # run the job now, as the scheduler would
+repoke schedule remove
+```
+
+The job is registered with the system scheduler: a launchd agent (`~/Library/LaunchAgents/repoke.schedule.plist`) on macOS, a systemd user timer (`repoke.timer`) on Linux, a `repoke` task in the Task Scheduler on Windows. Without systemd, `install` prints the crontab line to add instead. A run missed while the machine was asleep or off happens at the next wake or boot. It calls `repoke schedule run`, which runs `upgrade --yes --no-sudo` (or `check` with `--check-only`), keeps the output of the last run and a `history.jsonl` in `~/Library/Logs/repoke` (`~/.local/state/repoke` on Linux, `%LOCALAPPDATA%\repoke` on Windows) and sends a system notification when something was upgraded, failed or is pending. Schedulers start jobs with a bare `PATH`, so `install` saves yours, swapping fnm's per-shell folder for its `default` alias; run `install` again after changing your `PATH`.
+
 `--only`, `--exclude`, `--hold` and `--refresh` (runs `brew update` first) work with both `check` and `upgrade`. In a terminal, spinners on stderr show what each manager is doing; with `--json` or when piped there are none.
 
 ### Unattended use

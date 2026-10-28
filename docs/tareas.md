@@ -69,12 +69,19 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [ ] Configuraciones que no son de un gestor (`~/.gitconfig`, `~/.zshrc`): vendrán con los plugins oficiales (fase 9).
 - [ ] Al restaurar en otra máquina, avisar de los paquetes que no existen allí (p. ej. taps privados) en vez de dejar que falle brew.
 
-## Fase 5 · Modo programado
+## Fase 5 · Modo programado (hecha; falta instalarlo de verdad)
 
-- [ ] `repoke schedule install --every daily|weekly [--only …]`: registra una ejecución periódica de `repoke upgrade --yes --no-sudo` en el planificador nativo (launchd en macOS, timer de systemd de usuario en Linux, Programador de tareas en Windows) en vez de tocar el crontab.
-- [ ] `repoke schedule status` y `repoke schedule remove`.
-- [ ] Log de cada ejecución en `~/.local/state/repoke/` (o equivalente por SO) y notificación del sistema con el resumen.
-- [ ] Decidir si por defecto solo consulta y notifica, o si actualiza directamente.
+- [x] `repoke schedule install --every daily|weekly --at HH:MM [--check-only] [--only/--exclude] [--dry-run]`: launchd (LaunchAgent), timer de systemd de usuario o Programador de tareas. Sin systemd, imprime la línea de crontab.
+- [x] Por defecto actualiza (`upgrade --yes --no-sudo`), porque Pavel pidió "que mantenga actualizado el sistema"; `--check-only` solo consulta y avisa.
+- [x] `schedule run`: lo que llama el planificador. Guarda la salida de la última ejecución y un `history.jsonl`; notifica (osascript en macOS, notify-send en Linux) solo si se actualizó, falló o hay pendientes.
+- [x] `schedule status` (también `--json`) y `schedule remove`.
+- [x] PATH: el planificador arranca con un PATH mínimo. Se guarda el del usuario sin duplicados y cambiando la carpeta por sesión de fnm (`fnm_multishells/…`, que desaparece) por `$FNM_DIR/aliases/default/bin`.
+- [x] Probado en el Mac: plist validado con `plutil`, `schedule run` en modo consulta con un HOME falso, `status` con el historial.
+- [ ] Instalarlo de verdad en el Mac de Pavel (`repoke schedule install`) y comprobar que la notificación llega a su hora. No se ha hecho sin su permiso porque deja una tarea programada.
+- [ ] Windows: no hay notificación (habría que usar un toast de PowerShell).
+- [ ] Probar en Linux con systemd y sin él.
+- [ ] Evitar dos ejecuciones a la vez (un fichero de bloqueo).
+- [ ] Rotar `history.jsonl` cuando crezca.
 
 ## Fase 6 · Distribución
 

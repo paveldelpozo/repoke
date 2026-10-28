@@ -30,6 +30,11 @@ fn path() -> Option<PathBuf> {
     if let Some(file) = env::var_os("REPOKE_CONFIG") {
         return Some(file.into());
     }
+    Some(dir()?.join("config.toml"))
+}
+
+/// `~/.config/repoke`, or `%APPDATA%\repoke` on Windows.
+pub fn dir() -> Option<PathBuf> {
     let base = if cfg!(windows) {
         env::var_os("APPDATA").map(PathBuf::from)
     } else {
@@ -37,7 +42,7 @@ fn path() -> Option<PathBuf> {
             .map(PathBuf::from)
             .or_else(|| env::var_os("HOME").map(|home| PathBuf::from(home).join(".config")))
     };
-    Some(base?.join("repoke").join("config.toml"))
+    Some(base?.join("repoke"))
 }
 
 pub fn held(hold: &[String], manager: &str, package: &str) -> bool {
