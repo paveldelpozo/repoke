@@ -162,6 +162,9 @@ section { padding: 2.75rem 0; border-top: 1px solid var(--line); }
   margin: 0 0 0.6rem;
 }
 
+.version { margin: -0.3rem 0 0.75rem; color: var(--muted); font-size: 0.95rem; }
+.version strong { color: var(--ink); }
+
 .or { margin: 0.5rem 0; color: var(--muted); font-size: 0.95rem; }
 .note { color: var(--muted); font-size: 0.95rem; }
 

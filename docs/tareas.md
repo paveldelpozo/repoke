@@ -146,7 +146,8 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] Español e inglés (28-10): `/` y `/es/`, idioma del navegador en la primera visita y menú para cambiarlo (se recuerda). Tema con menú Sistema / Claro / Oscuro, aplicado antes de pintar.
 - [x] Todos los comandos documentados: referencia completa en `docs/commands.md` y `docs/es/commands.md` (página *Commands* / *Comandos*), guía de plugins traducida (`docs/es/plugins.md`), y en la portada el modo programado, el MCP y una tabla con todos los comandos.
 - [x] `scripts/check-docs.py` en la CI: falla si `repoke --help` tiene un comando u opción que no está en las dos referencias. **Cada función nueva actualiza la landing.**
-- [ ] Averiguar por qué Dokploy no redespliega solo al hacer push (el despliegue del 28-10 hubo que lanzarlo a mano por la API).
+- [x] Autodespliegue: los `watchPaths` no incluían las referencias nuevas; ampliados a `site/**`, `docs/commands.md`, `docs/plugins.md`, `docs/es/**` y `Cargo.toml`, y desde entonces redespliega solo.
+- [x] La landing muestra la última versión publicada (junto a la instalación y en el pie), leída de `Cargo.toml` en el build: cada release la actualiza sin tocar nada (28-10, a petición de Pavel).
 - [ ] **Paso final: convertir la landing a Astro** (Pavel, 28-10). A partir de ahora, cualquier landing nueva se hace en Astro salvo que él diga lo contrario.
 - [ ] Imagen para compartir en redes (Open Graph) a partir del logo.
 

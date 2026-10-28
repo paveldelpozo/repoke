@@ -2,13 +2,15 @@
 
 The landing pages come from site/pages/<lang>/index.html; the command reference and the plugin
 guide are rendered from docs/ (the Spanish ones from docs/es/), so the site never drifts from the
-repository. site/list-output.txt is a real `repoke list` run, shown on both landing pages.
+repository. site/list-output.txt is a real `repoke list` run, shown on both landing pages, and the
+version shown comes from Cargo.toml.
 """
 
 import html
 import json
 import shutil
 import sys
+import tomllib
 from pathlib import Path
 
 from render import render
@@ -69,7 +71,10 @@ def page(layout, strings, lang, name, content, main_class=""):
 
 
 def build(out):
-    layout = (SITE / "layout.html").read_text()
+    # Cargo.toml changes only in a release commit, so its version is the latest one published.
+    with open(ROOT / "Cargo.toml", "rb") as cargo:
+        version = tomllib.load(cargo)["package"]["version"]
+    layout = (SITE / "layout.html").read_text().replace("{{version}}", version)
     strings = json.loads((SITE / "strings.json").read_text())
     listing = html.escape((SITE / "list-output.txt").read_text().rstrip("\n"))
     out.mkdir(parents=True, exist_ok=True)
@@ -81,7 +86,7 @@ def build(out):
         folder.mkdir(parents=True, exist_ok=True)
         landing = fill(
             (SITE / "pages" / lang / "index.html").read_text(),
-            {**{n: suit(n) for n in SUITS}, "list_output": listing},
+            {**{n: suit(n) for n in SUITS}, "list_output": listing, "version": version},
         )
         (folder / "index.html").write_text(page(layout, strings, lang, "index", landing))
         for name in ("commands", "plugins"):
