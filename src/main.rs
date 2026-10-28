@@ -87,6 +87,10 @@ struct Detected {
 }
 
 fn main() -> ExitCode {
+    if std::env::var_os("NO_COLOR").is_some() {
+        console::set_colors_enabled(false);
+        console::set_colors_enabled_stderr(false);
+    }
     let command = Cli::parse().command;
     if let Command::List { json } = command {
         return list(json);

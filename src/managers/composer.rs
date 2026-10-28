@@ -31,10 +31,16 @@ impl Manager for Composer {
     }
 
     /// `global update` stays inside the version constraints in composer.json, so the
-    /// constraint is moved to the version that was listed.
+    /// constraint is moved to the version that was listed. `-W` lets dependencies pinned in the
+    /// lock file move too (laravel/installer 5.32 needs a newer laravel/prompts).
     fn upgrade_steps(&self, _bin: &Path, packages: &[Package]) -> Vec<Step> {
         let specs = packages.iter().map(|p| format!("{}:^{}", p.name, p.latest));
-        let args = ["global", "require", "--no-interaction"];
+        let args = [
+            "global",
+            "require",
+            "--with-all-dependencies",
+            "--no-interaction",
+        ];
         vec![Step::new(
             args.into_iter().map(String::from).chain(specs),
             packages,

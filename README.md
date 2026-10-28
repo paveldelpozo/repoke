@@ -22,7 +22,7 @@ repoke upgrade --yes --json --no-sudo --hold eslint
 
 ### Unattended use
 
-`upgrade` without `--yes` refuses to run outside a terminal (exit 2) instead of waiting for input. With `--json` it prints one event per line (`check_failed`, `running`, `planned`, `upgraded`, `failed`, `skipped`, then `summary`). A manager that needs root is called with `sudo -n`, so it fails at once when there is no cached password; `--no-sudo` skips it instead.
+`upgrade` without `--yes` refuses to run outside a terminal (exit 2) instead of waiting for input. With `--json` it prints one event per line (`check_failed`, `running`, `planned`, `upgraded`, `failed`, `skipped`, `retrying`, then `summary`). `upgraded` and `failed` carry `seconds`; `summary` has the totals, `elapsed_seconds` for the whole run and a per-manager breakdown. A manager that needs root is called with `sudo -n`, so it fails at once when there is no cached password; `--no-sudo` skips it instead.
 
 ### Configuration
 
