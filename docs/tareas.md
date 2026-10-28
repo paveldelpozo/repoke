@@ -8,7 +8,7 @@ Publicado: **v0.3.0** (28-10 por la tarde; antes v0.2.1) en GitHub (5 binarios),
 
 Lo siguiente, por orden (actualizado el 28-10 por la noche, antes de reiniciar la sesión):
 
-1. **v0.4.0 publicada** (28-10, noche, la lanzó Pavel): GitHub con 5 binarios, crates.io, tap y landing. Incluye asdf, el cifrado del backup y el aviso de cookies de GA4 de la landing.
+1. **v0.5.0 publicada** (28-10, noche, la lanzó Pavel): `softwareupdate`, sha256 obligatorio en `plugin install` y `list` agrupado con colores. Antes, la v0.4.0 (asdf, cifrado del backup, aviso de cookies de la landing).
 2. **Pavel, 29-10 por la mañana:** `repoke schedule status` para ver cómo fue la primera ejecución programada (y `~/Library/Logs/repoke/last-run.log` si algo falló).
 3. **Un compañero de Pavel, como beta-tester:** `brew install` desde el tap tras `brew trust paveldelpozo/tap`.
 4. **En espera, hasta que Pavel pueda probarlo en una imagen de Docker o en su portátil con Ubuntu:** probar en Linux lo que solo tiene tests de parseo (apt, dnf, pacman, zypper, flatpak, snap). Windows (winget, scoop, choco) sigue sin máquina donde probarlo.
