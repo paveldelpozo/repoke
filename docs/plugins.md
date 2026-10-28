@@ -7,6 +7,8 @@ repoke knows 26 package managers out of the box. A plugin adds another one, and 
 
 Official plugins live in [repoke-plugins](https://github.com/paveldelpozo/repoke-plugins): `repoke plugin search` lists them and `repoke plugin install <id>` shows a plugin's code, asks, and copies it into `~/.local/bin` or the managers folder. Each file is pinned in the index by the sha256 of the version that was reviewed, and `install` refuses one that doesn't match. `REPOKE_PLUGIN_INDEX` points those commands at another index, a URL or a local file; a local one, handy while writing a plugin, may leave the sums out.
 
+Community plugins sit in the same index, in `community/`, and `repoke plugin search` lists them after the official ones, with their author, downloads (↓) and votes (▲). Each one gets in through a pull request that is reviewed before it is listed; the sum then pins that version. People vote for a plugin by upvoting its Discussion, where comments hold the reviews.
+
 `repoke plugin new <id>` writes a TOML template to start from, and `repoke plugin new <id> --exec` a shell script. `repoke plugin list` shows the plugins repoke found and any problem with them. Two examples are in [`examples/plugins`](../examples/plugins): GitHub CLI extensions (TOML) and oh-my-zsh (executable).
 
 A plugin's id must not clash with a built-in manager or with another plugin; `plugin list` reports the clash and the plugin is not loaded. `REPOKE_NO_PLUGINS=1` turns all plugins off for one run.
@@ -143,3 +145,7 @@ repoke list                             # installed, and which version?
 repoke check --only <id>                # what is outdated
 repoke upgrade --only <id> --dry-run    # the commands it would run
 ```
+
+## Sharing a plugin
+
+Open a pull request against [repoke-plugins](https://github.com/paveldelpozo/repoke-plugins) that adds the plugin as `community/<id>/repoke-<id>` (or `<id>.toml`) and its entry in `index.toml` with `tier = "community"`, your GitHub login as `author` and no `sha256`. Say which machine and tool versions you tried it on. Once it is reviewed, the reviewer pins it and opens its Discussion; every later change goes through review again.

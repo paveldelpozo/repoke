@@ -161,7 +161,7 @@ Managers added without changing repoke: a TOML file in `~/.config/repoke/manager
 |---------|---|
 | `repoke plugin list [--json]` | The plugins found, and any problem with them |
 | `repoke plugin new <id> [--exec] [-o <path>]` | A template to start from: TOML by default, a script with `--exec` |
-| `repoke plugin search [--json]` | The official plugins |
+| `repoke plugin search [--json]` | Official and community plugins, with downloads and votes |
 | `repoke plugin install <id> [-y] [--force]` | Downloads an official plugin, checks it against the sha256 pinned in the index, shows its code and asks before installing it |
 | `repoke plugin remove <id>` | Removes a plugin that `plugin install` installed |
 

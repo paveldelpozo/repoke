@@ -41,6 +41,39 @@ struct Entry {
     /// Of the file as it was reviewed; `install` refuses anything else.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     sha256: Option<String>,
+    /// The reviewed file as a release asset, where GitHub counts its downloads; `file` stays for
+    /// older repokes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    url: Option<String>,
+    /// `official` or `community`.
+    #[serde(default = "official")]
+    tier: String,
+    /// GitHub login of a community plugin's author.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    author: Option<String>,
+    /// Where people vote and comment.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    discussion: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    downloads: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    votes: Option<u64>,
+}
+
+fn official() -> String {
+    "official".to_string()
+}
+
+/// `↓ 120  ▲ 8`, or nothing before the stats are first counted.
+fn stats(entry: &Entry) -> String {
+    let mut parts = Vec::new();
+    if let Some(downloads) = entry.downloads {
+        parts.push(format!("↓ {downloads}"));
+    }
+    if let Some(votes) = entry.votes {
+        parts.push(format!("▲ {votes}"));
+    }
+    parts.join("  ")
 }
 
 /// A remote index has to pin every file; a local one, used while writing a plugin, may not.
@@ -128,27 +161,66 @@ fn target(entry: &Entry) -> Result<PathBuf, String> {
 }
 
 pub fn search(json: bool) -> Result<ExitCode, String> {
-    let (_, entries) = index()?;
+    let (_, mut entries) = index()?;
     if json {
         print_json(&entries);
         return Ok(ExitCode::SUCCESS);
     }
+    // Community plugins by votes, then downloads; official ones keep the index order.
+    entries.sort_by_key(|e| {
+        let community = e.tier == "community";
+        let rank = if community {
+            (
+                u64::MAX - e.votes.unwrap_or(0),
+                u64::MAX - e.downloads.unwrap_or(0),
+            )
+        } else {
+            (0, 0)
+        };
+        (community, rank)
+    });
     let active: Vec<&str> = loaded().managers.iter().map(|m| m.id()).collect();
     let width = entries.iter().map(|e| e.id.len()).max().unwrap_or(0);
-    for entry in &entries {
-        let state = if active.contains(&entry.id.as_str()) {
-            style("installed").green().to_string()
-        } else if !supported(&entry.os) {
-            style(format!("not for {}", env::consts::OS))
-                .dim()
-                .to_string()
-        } else {
-            String::new()
-        };
-        println!("  {:<width$}  {}  {state}", entry.id, entry.description);
+    for (tier, title) in [("official", "Official"), ("community", "Community")] {
+        let listed: Vec<&Entry> = entries.iter().filter(|e| e.tier == tier).collect();
+        if listed.is_empty() {
+            continue;
+        }
+        println!("{}", style(title).bold());
+        for entry in listed {
+            let state = if active.contains(&entry.id.as_str()) {
+                style("installed").green().to_string()
+            } else if !supported(&entry.os) {
+                style(format!("not for {}", env::consts::OS))
+                    .dim()
+                    .to_string()
+            } else {
+                String::new()
+            };
+            let by = entry.author.as_deref().map(|a| format!("by @{a}"));
+            let details = [by, Some(stats(entry))]
+                .into_iter()
+                .flatten()
+                .filter(|d| !d.is_empty())
+                .collect::<Vec<_>>()
+                .join("  ");
+            let mut line = format!(
+                "  {}  {}",
+                style(format!("{:<width$}", entry.id)).bold(),
+                entry.description
+            );
+            for extra in [style(details).dim().to_string(), state] {
+                if !console::strip_ansi_codes(&extra).is_empty() {
+                    line.push_str("  ");
+                    line.push_str(&extra);
+                }
+            }
+            println!("{line}");
+        }
+        println!();
     }
     println!(
-        "\n{}",
+        "{}",
         style("Install one with `repoke plugin install <id>`.").dim()
     );
     Ok(ExitCode::SUCCESS)
@@ -182,7 +254,10 @@ pub fn install(args: &PluginInstallArgs) -> Result<ExitCode, String> {
         .filter(|tool| manager::locate(tool).is_none())
         .collect();
 
-    let source = beside(&location, &entry.file);
+    let source = entry
+        .url
+        .clone()
+        .unwrap_or_else(|| beside(&location, &entry.file));
     let code = fetch(&source)?;
     verify(entry, &location, &code)?;
     let interactive = io::stdin().is_terminal() && io::stdout().is_terminal();
@@ -192,7 +267,21 @@ pub fn install(args: &PluginInstallArgs) -> Result<ExitCode, String> {
                 "not running in a terminal, pass --yes to install without reviewing".into(),
             );
         }
-        println!("{} {}\n", style("Source:").bold(), source);
+        println!("{} {}", style("Source:").bold(), source);
+        if entry.tier == "community" {
+            let author = entry.author.as_deref().unwrap_or("unknown");
+            println!(
+                "{}",
+                style(format!(
+                    "A community plugin by @{author}, reviewed before it was listed, not written by repoke's author."
+                ))
+                .yellow()
+            );
+        }
+        if let Some(discussion) = &entry.discussion {
+            println!("{} {discussion}", style("Votes and comments:").bold());
+        }
+        println!();
         for (n, line) in code.lines().enumerate() {
             println!("{} {line}", style(format!("{:>4}", n + 1)).dim());
         }
@@ -262,6 +351,12 @@ pub fn remove(id: &str) -> Result<ExitCode, String> {
             requires: Vec::new(),
             description: String::new(),
             sha256: None,
+            url: None,
+            tier: official(),
+            author: None,
+            discussion: None,
+            downloads: None,
+            votes: None,
         };
         let path = target(&entry)?;
         if path.is_file() {
@@ -312,6 +407,27 @@ description = "oh-my-zsh"
         )
         .unwrap();
         assert_eq!(index.plugin[0].requires, ["git"]);
+    }
+
+    #[test]
+    fn reads_community_entries_and_their_stats() {
+        let mut entry: Entry = toml::from_str(
+            r#"
+id = "demo"
+name = "Demo"
+kind = "executable"
+file = "community/demo/repoke-demo"
+tier = "community"
+author = "someone"
+description = "A community example"
+"#,
+        )
+        .unwrap();
+        assert_eq!(entry.tier, "community");
+        assert_eq!(stats(&entry), "");
+        entry.downloads = Some(42);
+        entry.votes = Some(7);
+        assert_eq!(stats(&entry), "↓ 42  ▲ 7");
     }
 
     #[test]

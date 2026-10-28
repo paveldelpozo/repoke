@@ -7,6 +7,8 @@ repoke conoce 26 gestores de paquetes de serie. Un plugin añade otro, y a parti
 
 Los plugins oficiales están en [repoke-plugins](https://github.com/paveldelpozo/repoke-plugins): `repoke plugin search` los lista y `repoke plugin install <id>` enseña el código de uno, pregunta y lo copia en `~/.local/bin` o en la carpeta de gestores. Cada fichero está fijado en el índice por el sha256 de la versión revisada, e `install` rechaza uno que no coincida. `REPOKE_PLUGIN_INDEX` hace que esos comandos usen otro índice, una URL o un fichero local; uno local, útil mientras escribes un plugin, puede no llevar las sumas.
 
+Los plugins de la comunidad están en el mismo índice, en `community/`, y `repoke plugin search` los lista después de los oficiales, con su autor, sus descargas (↓) y sus votos (▲). Cada uno entra con un pull request que se revisa antes de listarlo; después, la suma fija esa versión. Para votar un plugin se vota a favor su Discussion, donde los comentarios hacen de opiniones.
+
 `repoke plugin new <id>` escribe una plantilla TOML para empezar, y `repoke plugin new <id> --exec`, un script de shell. `repoke plugin list` muestra los plugins que repoke ha encontrado y cualquier problema que tengan. Hay dos ejemplos en [`examples/plugins`](../../examples/plugins): las extensiones de GitHub CLI (TOML) y oh-my-zsh (ejecutable).
 
 El id de un plugin no puede coincidir con el de un gestor integrado ni con el de otro plugin; `plugin list` avisa del choque y el plugin no se carga. `REPOKE_NO_PLUGINS=1` desactiva todos los plugins durante una ejecución.
@@ -143,3 +145,7 @@ repoke list                             # ¿está instalado, y en qué versión?
 repoke check --only <id>                # qué tiene desactualizado
 repoke upgrade --only <id> --dry-run    # los comandos que lanzaría
 ```
+
+## Compartir un plugin
+
+Abre un pull request en [repoke-plugins](https://github.com/paveldelpozo/repoke-plugins) que añada el plugin como `community/<id>/repoke-<id>` (o `<id>.toml`) y su entrada en `index.toml` con `tier = "community"`, tu usuario de GitHub como `author` y sin `sha256`. Indica en qué máquina y con qué versiones lo has probado. Cuando se revisa, quien lo revisa fija la versión y abre su Discussion; cada cambio posterior vuelve a pasar por revisión.
