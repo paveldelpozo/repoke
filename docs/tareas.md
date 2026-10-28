@@ -91,10 +91,13 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] Aviso de versión nueva como mucho una vez al día, solo en terminal y nunca con `--json` ni en la tarea programada (`REPOKE_NO_UPDATE_CHECK` lo apaga).
 - [x] Dry-run en el Mac: los cinco binarios generados y verificados con `file`, checksum comprobado con `shasum -c` y fórmula pasada por `brew style`.
 - [x] zig 0.17 y cargo-zigbuild 0.24 instalados (28-10, con permiso de Pavel): el dry-run genera los cinco objetivos; los de Linux son estáticos.
-- [ ] Crear el repositorio del tap `paveldelpozo/homebrew-tap` (pendiente de Pavel).
+- [x] Tap público `paveldelpozo/homebrew-tap` creado con la fórmula de v0.1.0 (28-10). Homebrew 7 obliga a `brew trust paveldelpozo/tap` antes de instalar desde un tap de terceros: va en el README y tendrá que ir en la landing.
+- [x] Repositorio de repoke **público** (28-10), tras reescribir el historial: commits con `paveldelpozo@gmail.com` y sin la IP del servidor. `self-update` ya lee las releases sin token.
+- [ ] Subir forzando el commit del tap reescrito con el Gmail (bloqueado dos veces por tiempo en Blast Radius).
+- [ ] Probar `brew install` desde el tap una vez hecho `brew trust` (en el Mac de Pavel convive con la versión de cargo).
 - [x] Primera release `v0.1.0` (28-10, privada): cinco binarios con su `.sha256`. `repoke self-update --check` con `GITHUB_TOKEN` la lee bien y detecta la instalación por cargo.
 - [ ] `cargo login` y publicación en crates.io, al abrir el repositorio.
-- [ ] Decidir con qué correo firmar los commits antes de abrir el repositorio: ahora salen con el del trabajo.
+- [x] Correo de los commits: `paveldelpozo@gmail.com` (elegido por Pavel), configurado en el repo.
 - [ ] Más adelante, la fórmula en homebrew-core cuando cumpla sus requisitos de popularidad.
 
 ## Fase 7 · Agentes
