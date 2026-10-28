@@ -131,7 +131,7 @@ repoke never waits for input when stdin is not a terminal: a manager that tries 
 | pnpm     | pnpm globals                | all           | macOS    | updates itself with `self-update` |
 | yarn     | Yarn 1 globals              | all           | macOS    | Yarn 2+ has no globals and is left out |
 | bun      | bun globals                 | all           | macOS    | |
-| fnm      | Node.js versions via fnm    | all           | macOS    | one entry per major line; moves `default` and reinstalls globals |
+| fnm      | Node.js versions via fnm    | all           | macOS    | one entry per major line; moves `default` and reinstalls globals; `[node] remove_old` uninstalls the replaced releases |
 | nvm      | Node.js versions via nvm    | macOS, Linux  |          | same as fnm, via `--reinstall-packages-from` |
 | pip      | pip `--user` packages       | all           | macOS    | never forces an externally managed Python (PEP 668) |
 | uv       | uv tools and uv itself      | all           | macOS    | |

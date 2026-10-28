@@ -174,6 +174,9 @@ brew = "30m"                     # por id de gestor; también plugins, y entonce
 
 [brew]
 greedy = true                    # también los casks que se actualizan solos
+
+[node]
+remove_old = true                # fnm y nvm: cuando la nueva versión de una línea arranca, desinstala las anteriores
 ```
 
 | Variable | |

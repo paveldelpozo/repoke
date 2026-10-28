@@ -57,9 +57,9 @@ impl Manager for Nvm {
 
     /// `--reinstall-packages-from` carries the globals over, nvm keeps them per version.
     fn upgrade_steps(&self, bin: &Path, packages: &[Package]) -> Vec<Step> {
-        let default = run(bin, &["ls", "--no-colors"])
-            .ok()
-            .and_then(|ls| parse_ls(&ls).1);
+        let (installed, default) = run(bin, &["ls", "--no-colors"])
+            .map(|ls| parse_ls(&ls))
+            .unwrap_or_default();
         packages
             .iter()
             .map(|p| {
@@ -74,6 +74,20 @@ impl Manager for Nvm {
                         "default".to_string(),
                         p.latest.clone(),
                     ]);
+                }
+                // Steps stop at the first failure, so the old releases go only once the new runs.
+                let old = node_versions::replaced(&installed, p);
+                if !old.is_empty() {
+                    commands.push(vec![
+                        "exec".to_string(),
+                        p.latest.clone(),
+                        "node".to_string(),
+                        "--version".to_string(),
+                    ]);
+                    commands.extend(
+                        old.into_iter()
+                            .map(|v| vec!["uninstall".to_string(), node_versions::show(v)]),
+                    );
                 }
                 Step {
                     commands,

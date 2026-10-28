@@ -64,8 +64,8 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [ ] Probar mas, nvm, gem y mise en una máquina que los tenga.
 - [x] yarn global (solo Yarn 1; explica el fallo por variables sin definir en `.npmrc`) y bun global, probados con datos reales (bun en una carpeta aislada, `BUN_INSTALL`).
 - [ ] Pendientes: deno, volta, asdf (no están en el Mac de Pavel), `softwareupdate` de macOS (solo bajo petición explícita).
-- [ ] cargo consulta crates.io crate a crate; con muchos crates instalados será lento. Valorar la API de crates.io en paralelo o `cargo install-update` si está.
-- [ ] fnm y nvm: las versiones viejas se quedan instaladas. Ofrecer limpiarlas cuando la nueva funcione.
+- [x] cargo consulta crates.io de 8 en 8 en paralelo (con 4 crates, de 1,8 s a 0,8 s).
+- [x] fnm y nvm: con `[node] remove_old = true`, tras instalar la nueva versión de una línea y comprobar que arranca (`exec … node --version`), se desinstalan las anteriores de esa línea. Desactivado por defecto: un `.node-version` puede fijar una versión exacta. Probado con `--dry-run`, no en real.
 
 ## Fase 4 · `init` y `export` (hecha)
 

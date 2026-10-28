@@ -30,10 +30,10 @@ impl Manager for Fnm {
 
     /// fnm keeps globals per Node version, so they are reinstalled on the new one.
     fn upgrade_steps(&self, bin: &Path, packages: &[Package]) -> Vec<Step> {
-        let default = capture(bin, ["list"])
+        let (installed, default) = capture(bin, ["list"])
             .and_then(|o| o.expect(&[0]))
-            .ok()
-            .and_then(|list| parse_list(&list).1);
+            .map(|list| parse_list(&list))
+            .unwrap_or_default();
         packages
             .iter()
             .map(|p| {
@@ -57,6 +57,20 @@ impl Manager for Fnm {
                     ];
                     install.extend(globals);
                     commands.push(install);
+                }
+                // Steps stop at the first failure, so the old releases go only once the new runs.
+                let old = node_versions::replaced(&installed, p);
+                if !old.is_empty() {
+                    commands.push(vec![
+                        "exec".to_string(),
+                        format!("--using={latest}"),
+                        "node".to_string(),
+                        "--version".to_string(),
+                    ]);
+                    commands.extend(
+                        old.into_iter()
+                            .map(|v| vec!["uninstall".to_string(), node_versions::show(v)]),
+                    );
                 }
                 Step {
                     commands,

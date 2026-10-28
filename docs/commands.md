@@ -174,6 +174,9 @@ brew = "30m"                     # by manager id; plugins too, overriding plugin
 
 [brew]
 greedy = true                    # also casks that update themselves
+
+[node]
+remove_old = true                # fnm and nvm: once a line's new release runs, uninstall its older ones
 ```
 
 | Variable | |

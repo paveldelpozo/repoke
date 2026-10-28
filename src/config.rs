@@ -21,6 +21,15 @@ pub struct Config {
     /// The longest one of a manager's commands may run, by manager id, in the same format.
     pub timeouts: BTreeMap<String, String>,
     pub brew: Brew,
+    pub node: Node,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Node {
+    /// After a Node line moves to its newest release under fnm or nvm, and that release runs,
+    /// uninstall the older releases of the same line.
+    pub remove_old: bool,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -134,6 +143,9 @@ mod tests {
 
             [brew]
             greedy = true
+
+            [node]
+            remove_old = true
             "#,
         )
         .unwrap();
@@ -141,6 +153,7 @@ mod tests {
         assert_eq!(config.exclude, ["brew"]);
         assert_eq!(config.hold, ["eslint", "pnpm:typescript"]);
         assert!(config.brew.greedy);
+        assert!(config.node.remove_old);
     }
 
     #[test]

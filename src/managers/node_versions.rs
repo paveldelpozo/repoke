@@ -57,6 +57,22 @@ pub fn lines(installed: &[Version], default: Option<Version>) -> Vec<Installed> 
         .collect()
 }
 
+/// With `[node] remove_old`, the releases on the package's line that the upgrade replaces.
+pub fn replaced(installed: &[Version], package: &Package) -> Vec<Version> {
+    if !crate::config::current().node.remove_old {
+        return Vec::new();
+    }
+    let (Some(major), Some(latest)) = (major(package), parse(&format!("v{}", package.latest)))
+    else {
+        return Vec::new();
+    };
+    installed
+        .iter()
+        .filter(|v| v[0] == major && **v != latest)
+        .copied()
+        .collect()
+}
+
 pub fn major(package: &Package) -> Option<u64> {
     package.name.strip_prefix("node@")?.parse().ok()
 }
