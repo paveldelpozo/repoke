@@ -56,14 +56,15 @@ pub fn gather(
     Ok(parallel(found, |found| {
         let m = found.manager;
         let bar = progress.spinner(m.id(), "checking for updates");
-        let refreshed = if selection.refresh {
-            bar.set_message("refreshing the package index");
-            m.refresh(&found.path)
-        } else {
-            Ok(())
-        };
-        bar.set_message("checking for updates");
-        let (packages, error) = match refreshed.and_then(|()| m.outdated(&found.path)) {
+        let checked = crate::manager::within(m.timeout(), || {
+            if selection.refresh && m.has_refresh() {
+                bar.set_message("refreshing the package index");
+                m.refresh(&found.path)?;
+                bar.set_message("checking for updates");
+            }
+            m.outdated(&found.path)
+        });
+        let (packages, error) = match checked {
             Ok(packages) => (
                 packages
                     .into_iter()

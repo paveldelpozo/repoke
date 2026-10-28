@@ -28,6 +28,10 @@ impl Manager for Apt {
         ))
     }
 
+    fn has_refresh(&self) -> bool {
+        true
+    }
+
     fn refresh(&self, bin: &Path) -> Result<(), String> {
         let out = if needs_sudo() {
             capture("sudo", ["-n".as_ref(), bin.as_os_str(), "update".as_ref()])?

@@ -145,7 +145,7 @@ fn describe(id: &str, path: &Path) -> Result<Exec, String> {
 
 impl Exec {
     fn detect(&self) -> Option<Detect> {
-        let json = capture_within(&self.path, ["detect"], timeout())
+        let json = capture_within(&self.path, ["detect"], self.timeout())
             .ok()?
             .expect(&[0])
             .ok()?;
@@ -186,7 +186,7 @@ impl Manager for Exec {
     }
 
     fn outdated(&self, bin: &Path) -> Result<Vec<Package>, String> {
-        let json = capture_within(bin, ["outdated"], timeout())?.expect(&[0])?;
+        let json = capture_within(bin, ["outdated"], self.timeout())?.expect(&[0])?;
         serde_json::from_str(&json)
             .map_err(|e| format!("`outdated` didn't print a JSON list of packages: {e}"))
     }
@@ -199,17 +199,21 @@ impl Manager for Exec {
         )]
     }
 
+    fn has_refresh(&self) -> bool {
+        self.can("refresh")
+    }
+
     fn refresh(&self, bin: &Path) -> Result<(), String> {
         if !self.can("refresh") {
             return Ok(());
         }
-        capture_within(bin, ["refresh"], timeout())?
+        capture_within(bin, ["refresh"], self.timeout())?
             .expect(&[0])
             .map(drop)
     }
 
     fn timeout(&self) -> Option<Duration> {
-        timeout()
+        super::timeout_of(self.id())
     }
 
     fn needs_root(&self, _bin: &Path) -> bool {
@@ -220,7 +224,7 @@ impl Manager for Exec {
         if !self.can("installed") {
             return Err("this plugin doesn't list what is installed".into());
         }
-        let json = capture_within(bin, ["installed"], timeout())?.expect(&[0])?;
+        let json = capture_within(bin, ["installed"], self.timeout())?.expect(&[0])?;
         let listed: Vec<Listed> = serde_json::from_str(&json)
             .map_err(|e| format!("`installed` didn't print a JSON list: {e}"))?;
         Ok(listed

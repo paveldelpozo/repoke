@@ -196,9 +196,15 @@ pub trait Manager: Sync {
         None
     }
 
-    /// How long one of its commands may run; plugins have a limit, built-in managers don't.
+    /// How long one of its commands may run: `[timeouts]` in the config, else no limit for
+    /// built-in managers (plugins fall back to `plugin_timeout`).
     fn timeout(&self) -> Option<Duration> {
-        None
+        crate::config::timeout_for(self.id()).flatten()
+    }
+
+    /// Whether `refresh` does anything, so the spinner only says so when it does.
+    fn has_refresh(&self) -> bool {
+        false
     }
 
     /// What the user installed on purpose, leaving out dependencies, for `export`.
@@ -268,7 +274,20 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
 {
-    capture_within(program, args, None)
+    capture_within(program, args, CHECK_TIMEOUT.get())
+}
+
+thread_local! {
+    /// Managers call `capture` themselves while checking, so the limit reaches them this way.
+    static CHECK_TIMEOUT: std::cell::Cell<Option<Duration>> = const { std::cell::Cell::new(None) };
+}
+
+/// Runs `f` with every `capture` on this thread stopped after `timeout`.
+pub fn within<R>(timeout: Option<Duration>, f: impl FnOnce() -> R) -> R {
+    CHECK_TIMEOUT.set(timeout);
+    let out = f();
+    CHECK_TIMEOUT.set(None);
+    out
 }
 
 /// Like `capture`, but the program is stopped once `timeout` passes.
@@ -337,7 +356,7 @@ pub fn wait_within(
             let _ = child.kill();
             let _ = child.wait();
             return Err(format!(
-                "{} was stopped after {} (plugin_timeout)",
+                "{} was stopped after {}, its time limit",
                 program.display(),
                 crate::config::show_duration(limit)
             ));

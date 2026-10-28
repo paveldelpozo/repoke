@@ -30,6 +30,10 @@ impl Manager for Scoop {
     }
 
     /// Without app names, `scoop update` updates scoop itself and its buckets.
+    fn has_refresh(&self) -> bool {
+        true
+    }
+
     fn refresh(&self, bin: &Path) -> Result<(), String> {
         capture(bin, ["update"])?.expect(&[0]).map(drop)
     }

@@ -9,8 +9,9 @@ use serde::Deserialize;
 use super::node_versions::{self, Version};
 use crate::manager::{Package, capture};
 
-/// Packages whose `latest` declares an `engines.node` range the running Node is outside of.
-/// `view` asks the registry, and both npm and pnpm answer it the same way.
+/// Packages whose `latest` (the newest release when it is empty, as in `init`) declares an
+/// `engines.node` range the running Node is outside of. `view` asks the registry, and both npm
+/// and pnpm answer it the same way.
 pub fn incompatible(bin: &Path, packages: &[Package]) -> Vec<(Package, String)> {
     let Some(node) = node_version(bin) else {
         return Vec::new();
@@ -18,7 +19,6 @@ pub fn incompatible(bin: &Path, packages: &[Package]) -> Vec<(Package, String)> 
     thread::scope(|scope| {
         let handles: Vec<_> = packages
             .iter()
-            .filter(|p| !p.latest.is_empty())
             .map(|p| scope.spawn(move || (p, required(bin, p))))
             .collect();
         handles
@@ -27,9 +27,12 @@ pub fn incompatible(bin: &Path, packages: &[Package]) -> Vec<(Package, String)> 
             .filter_map(|(p, range)| {
                 let range = range?;
                 (!satisfies(&range, node)).then(|| {
+                    let release = match p.latest.as_str() {
+                        "" => "its latest release",
+                        version => version,
+                    };
                     let reason = format!(
-                        "{} needs Node {range}, and this is Node {}",
-                        p.latest,
+                        "{release} needs Node {range}, and this is Node {}",
                         node_versions::show(node)
                     );
                     (p.clone(), reason)
@@ -51,7 +54,11 @@ fn node_version(bin: &Path) -> Option<Version> {
 }
 
 fn required(bin: &Path, package: &Package) -> Option<String> {
-    let spec = format!("{}@{}", package.name, package.latest);
+    let version = match package.latest.as_str() {
+        "" => "latest",
+        version => version,
+    };
+    let spec = format!("{}@{version}", package.name);
     let json = capture(bin, ["view", &spec, "engines.node", "--json"])
         .ok()?
         .expect(&[0])

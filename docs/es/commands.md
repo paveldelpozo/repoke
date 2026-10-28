@@ -169,6 +169,9 @@ exclude = ["mas"]                # gestores fuera salvo que los nombre --only
 hold = ["eslint", "pnpm:pnpm"]   # nunca se actualizan ni se informan, como nombre o gestor:nombre
 plugin_timeout = "10m"           # tiempo máximo de un comando de plugin (600, 90s, 10m, 1h; 0 = sin límite)
 
+[timeouts]                       # tiempo máximo de cada comando de un gestor, consultas incluidas
+brew = "30m"                     # por id de gestor; también plugins, y entonces manda sobre plugin_timeout
+
 [brew]
 greedy = true                    # también los casks que se actualizan solos
 ```

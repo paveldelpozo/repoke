@@ -169,6 +169,9 @@ exclude = ["mas"]                # managers left out unless named in --only
 hold = ["eslint", "pnpm:pnpm"]   # never upgraded nor reported, as name or manager:name
 plugin_timeout = "10m"           # longest a plugin command may run (600, 90s, 10m, 1h; 0 = no limit)
 
+[timeouts]                       # longest one of a manager's commands may run, checks included
+brew = "30m"                     # by manager id; plugins too, overriding plugin_timeout
+
 [brew]
 greedy = true                    # also casks that update themselves
 ```

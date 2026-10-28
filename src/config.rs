@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::env;
 use std::fs;
 use std::io::ErrorKind;
@@ -17,6 +18,8 @@ pub struct Config {
     pub hold: Vec<String>,
     /// How long a plugin command may run: seconds, or `90s`, `10m`, `1h`; `0` for no limit.
     pub plugin_timeout: Option<String>,
+    /// The longest one of a manager's commands may run, by manager id, in the same format.
+    pub timeouts: BTreeMap<String, String>,
     pub brew: Brew,
 }
 
@@ -46,6 +49,10 @@ pub fn load() -> Result<Config, String> {
                 parse_duration(timeout)
                     .map_err(|e| format!("{}: plugin_timeout: {e}", path.display()))?;
             }
+            for (id, timeout) in &config.timeouts {
+                parse_duration(timeout)
+                    .map_err(|e| format!("{}: timeouts.{id}: {e}", path.display()))?;
+            }
             Ok(config)
         }
         Err(e) if e.kind() == ErrorKind::NotFound => Ok(Config::default()),
@@ -70,6 +77,14 @@ pub fn dir() -> Option<PathBuf> {
             .or_else(|| env::var_os("HOME").map(|home| PathBuf::from(home).join(".config")))
     };
     Some(base?.join("repoke"))
+}
+
+/// The limit set for this manager in `[timeouts]`, if there is one; `Some(None)` is no limit.
+pub fn timeout_for(id: &str) -> Option<Option<Duration>> {
+    current()
+        .timeouts
+        .get(id)
+        .and_then(|t| parse_duration(t).ok())
 }
 
 /// `600`, `90s`, `10m` or `1h`; `0` means no limit and gives `None`.
@@ -114,11 +129,15 @@ mod tests {
             exclude = ["brew"]
             hold = ["eslint", "pnpm:typescript"]
 
+            [timeouts]
+            brew = "30m"
+
             [brew]
             greedy = true
             "#,
         )
         .unwrap();
+        assert_eq!(config.timeouts["brew"], "30m");
         assert_eq!(config.exclude, ["brew"]);
         assert_eq!(config.hold, ["eslint", "pnpm:typescript"]);
         assert!(config.brew.greedy);

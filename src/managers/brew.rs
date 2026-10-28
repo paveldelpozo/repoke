@@ -69,6 +69,10 @@ impl Manager for Brew {
         ))
     }
 
+    fn has_refresh(&self) -> bool {
+        true
+    }
+
     fn refresh(&self, bin: &Path) -> Result<(), String> {
         capture(bin, ["update"])?.expect(&[0]).map(drop)
     }

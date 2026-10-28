@@ -238,11 +238,20 @@ fn from_snapshot(
                 Err(cancel) => return Err(cancel),
             }
         }
-        engine.run_manager(&found, picks, |found, picks| {
-            found
-                .manager
-                .install_steps(&found.path, &as_installed(picks))
-        });
+        let held = m.incompatible(&found.path, &packages(picks));
+        let picks: Vec<Pick> = picks
+            .iter()
+            .filter(|p| !held.iter().any(|(h, _)| *h == Package::from(&p.installed)))
+            .cloned()
+            .collect();
+        if !picks.is_empty() {
+            engine.run_manager(&found, &picks, |found, picks| {
+                found
+                    .manager
+                    .install_steps(&found.path, &as_installed(picks))
+            });
+        }
+        engine.held_back(m, &held);
     }
 
     let configs: Vec<&ConfigFile> = if args.no_config {
@@ -599,10 +608,19 @@ fn from_catalog(
         .flat_map(|(_, packages)| packages.iter().map(Package::from))
         .collect();
     engine.report.fit(shown.iter());
-    for (i, packages) in &pending {
-        engine.run_manager(&found[*i], packages, |found, packages| {
-            found.manager.install_steps(&found.path, packages)
-        });
+    for (i, mut packages) in pending {
+        let found = &found[i];
+        let held = found.manager.incompatible(
+            &found.path,
+            &packages.iter().map(Package::from).collect::<Vec<_>>(),
+        );
+        packages.retain(|p| !held.iter().any(|(h, _)| *h == Package::from(p)));
+        if !packages.is_empty() {
+            engine.run_manager(found, &packages, |found, packages| {
+                found.manager.install_steps(&found.path, packages)
+            });
+        }
+        engine.held_back(found.manager, &held);
     }
     Ok(Ok(engine.finish(started, false)))
 }

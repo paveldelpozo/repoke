@@ -87,6 +87,11 @@ const DEFAULT_TIMEOUT: Duration = Duration::from_secs(10 * 60);
 
 /// The longest a plugin command may run: `REPOKE_PLUGIN_TIMEOUT`, else `plugin_timeout` in the
 /// config file, else 10 minutes. `0` means no limit.
+pub fn timeout_of(id: &str) -> Option<Duration> {
+    config::timeout_for(id).unwrap_or_else(timeout)
+}
+
+/// The limit for every plugin, before `[timeouts]` names one.
 pub fn timeout() -> Option<Duration> {
     static TIMEOUT: OnceLock<Option<Duration>> = OnceLock::new();
     *TIMEOUT.get_or_init(|| {

@@ -9,7 +9,7 @@ use regex_lite::Regex;
 use serde::Deserialize;
 use serde_json::Value;
 
-use super::{Candidate, leak, supported, timeout};
+use super::{Candidate, leak, supported};
 use crate::manager::{self, Installed, Manager, Package, Step, capture_within};
 
 #[derive(Deserialize)]
@@ -263,7 +263,7 @@ impl Manager for Declared {
 
     fn outdated(&self, bin: &Path) -> Result<Vec<Package>, String> {
         let query = &self.spec.outdated;
-        let text = capture_within(bin, &query.command, timeout())?.expect(&query.ok_codes)?;
+        let text = capture_within(bin, &query.command, self.timeout())?.expect(&query.ok_codes)?;
         Ok(rows(query, self.outdated_pattern.as_ref(), &text)?
             .into_iter()
             .map(|row| Package {
@@ -289,9 +289,13 @@ impl Manager for Declared {
             .collect()
     }
 
+    fn has_refresh(&self) -> bool {
+        self.spec.refresh.is_some()
+    }
+
     fn refresh(&self, bin: &Path) -> Result<(), String> {
         match &self.spec.refresh {
-            Some(run) => capture_within(bin, &run.command, timeout())?
+            Some(run) => capture_within(bin, &run.command, self.timeout())?
                 .expect(&[0])
                 .map(drop),
             None => Ok(()),
@@ -299,7 +303,7 @@ impl Manager for Declared {
     }
 
     fn timeout(&self) -> Option<Duration> {
-        timeout()
+        super::timeout_of(self.id())
     }
 
     fn needs_root(&self, _bin: &Path) -> bool {
@@ -312,7 +316,7 @@ impl Manager for Declared {
             .installed
             .as_ref()
             .ok_or("this manager has no [installed] section")?;
-        let text = capture_within(bin, &query.command, timeout())?.expect(&query.ok_codes)?;
+        let text = capture_within(bin, &query.command, self.timeout())?.expect(&query.ok_codes)?;
         Ok(rows(query, self.installed_pattern.as_ref(), &text)?
             .into_iter()
             .map(|row| Installed::new(row.name).version(row.version))

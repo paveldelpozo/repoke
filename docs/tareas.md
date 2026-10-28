@@ -39,12 +39,12 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
   - pnpm se rechaza a sí mismo con `add -g` (ERR_PNPM_GLOBAL_PNPM_INSTALL): ahora usa `pnpm self-update <versión>`.
   - La línea con la selección se resume ("6 packages") y los avisos `[WARN]` / `npm warn` no entran en el mensaje de error.
 - [x] Repetir la prueba real tras las correcciones: Pavel confirma que funciona (28-10).
-- [x] Antes de instalar un global de npm o pnpm, comparar su `engines.node` con la versión de node en uso: se salta con la versión que necesita (`src/managers/engines.rs`). Solo en `upgrade`; `init` todavía no lo mira.
+- [x] Antes de instalar un global de npm o pnpm, comparar su `engines.node` con la versión de node en uso: se salta con la versión que necesita (`src/managers/engines.rs`). También en `init`, con la versión de la foto o la última si no hay.
 - [x] Casks de brew que piden contraseña (`pkg`, `installer` o `uninstall` con pkgutil/launchctl/kext/script, según `brew info --json=v2`): van en un lote aparte; en terminal se pide `sudo -v` antes, con `--yes` solo si sudo la recuerda, con `--no-sudo` se saltan. Falta verlo con un cask real de ese tipo.
 - [x] Salida agrupada por gestor: una línea por paquete con ✓/✗, versiones y tiempo; los fallos enseñan el comando y las últimas 10 líneas. Tabla resumen final por gestor con totales y duración (28-10, a petición de Pavel). Respeta `NO_COLOR`.
 - [x] composer: `global require` con `--with-all-dependencies`; sin él, laravel/installer 5.32 falló porque `laravel/prompts` estaba fijado en el lock.
-- [ ] Timeouts por gestor en la configuración.
-- [ ] Con `--refresh`, el spinner de npm y pnpm dice "refreshing" un instante aunque no tengan índice que refrescar.
+- [x] Timeouts por gestor: tabla `[timeouts]` en `config.toml` por id; vale para consultas y actualizaciones, y en un plugin manda sobre `plugin_timeout`.
+- [x] Con `--refresh`, el spinner solo dice "refreshing" en los gestores que tienen índice (`Manager::has_refresh`).
 
 ## Fase 3 · Más gestores (hecha en código; falta probar los de Linux y Windows)
 
