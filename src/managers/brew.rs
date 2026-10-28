@@ -58,15 +58,26 @@ impl Manager for Brew {
     }
 
     fn hint(&self, packages: &[Package], error: &str) -> Option<String> {
-        // The cask's app was deleted or moved by hand, so brew has nothing to replace.
-        if !(error.contains("App source") && error.contains("is not there")) {
-            return None;
-        }
         let names: Vec<&str> = packages.iter().map(|p| p.name.as_str()).collect();
         let names = names.join(" ");
-        Some(format!(
-            "the app was removed outside Homebrew: bring it back with `brew reinstall --cask {names}`, or forget it with `brew uninstall --cask --force {names}`"
-        ))
+        // The cask's app was deleted or moved by hand, so brew has nothing to replace.
+        if error.contains("App source") && error.contains("is not there") {
+            return Some(format!(
+                "the app was removed outside Homebrew: bring it back with `brew reinstall --cask {names}`, or forget it with `brew uninstall --cask --force {names}`"
+            ));
+        }
+        // Restoring a snapshot from another machine: its taps may be private or gone.
+        if error.contains("could not read Username") || error.contains("Repository not found") {
+            return Some(format!(
+                "the tap {names} can't be cloned from here: it may be private (sign in to git first) or no longer exist"
+            ));
+        }
+        if error.contains("No formulae or casks found") || error.contains("No casks found") {
+            return Some(format!(
+                "Homebrew here doesn't know {names}: it may come from a tap that isn't set up on this machine, or have been renamed or removed"
+            ));
+        }
+        None
     }
 
     fn has_refresh(&self) -> bool {
@@ -251,6 +262,19 @@ mod tests {
                 .contains("brew reinstall --cask caskhub")
         );
         assert!(Brew.hint(&casks, "Error: network down").is_none());
+        assert!(
+            Brew.hint(&casks, "Error: No formulae or casks found for caskhub.")
+                .unwrap()
+                .contains("tap that isn't set up")
+        );
+        assert!(
+            Brew.hint(
+                &casks,
+                "fatal: could not read Username for 'https://github.com'"
+            )
+            .unwrap()
+            .contains("private")
+        );
     }
 
     #[test]

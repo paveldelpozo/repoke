@@ -80,9 +80,9 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] Probado en el Mac de Pavel: exportación real (84 paquetes de brew, `.npmrc` con el token quitado y la referencia `${NODE_AUTH_TOKEN}` intacta), `init --from` de su propia foto sin nada que hacer, y restauración real en un `HOME` falso.
 - [ ] Probar las preguntas interactivas de `export` e `init` en una terminal real.
 - [ ] Cifrar el backup con contraseña como alternativa a quitar los secretos.
-- [ ] Node en el catálogo (`fnm install --lts`): el formato de catálogo aún no tiene cómo expresarlo.
+- [x] Node en el catálogo: `node@lts` con fnm (resuelve la línea LTS más nueva con `ls-remote --lts`) o nvm (`lts/*`), y queda como la versión por defecto. Solo se ofrece si fnm o nvm ya están instalados.
 - [ ] Configuraciones que no son de un gestor (`~/.gitconfig`, `~/.zshrc`): vendrán con los plugins oficiales (fase 9).
-- [ ] Al restaurar en otra máquina, avisar de los paquetes que no existen allí (p. ej. taps privados) en vez de dejar que falle brew.
+- [x] Al restaurar en otra máquina: el lote fallido ya se reintentaba paquete a paquete; ahora brew explica las fórmulas o casks que no conoce (tap no configurado, renombrado) y los taps que no puede clonar (privados o borrados).
 
 ## Fase 5 · Modo programado (hecha e instalada)
 

@@ -87,13 +87,17 @@ impl Manager for Fnm {
         Ok(node_versions::lines(&installed, default))
     }
 
-    fn install_steps(&self, _bin: &Path, packages: &[Installed]) -> Vec<Step> {
+    fn install_steps(&self, bin: &Path, packages: &[Installed]) -> Vec<Step> {
         packages
             .iter()
             .filter_map(|p| {
-                let major = p.name.strip_prefix("node@")?.to_string();
+                // `node@lts`, from the catalog, is the newest LTS line, made the default.
+                let (major, default) = match p.name.strip_prefix("node@")? {
+                    "lts" => (lts_major(bin)?.to_string(), true),
+                    major => (major.to_string(), p.is("default")),
+                };
                 let mut commands = vec![vec!["install".to_string(), major.clone()]];
-                if p.is("default") {
+                if default {
                     commands.push(vec!["default".to_string(), major]);
                 }
                 Some(Step {
@@ -104,6 +108,19 @@ impl Manager for Fnm {
             })
             .collect()
     }
+}
+
+/// The major line of the newest LTS release, from lines like `v24.22.2 (Krypton)`.
+fn lts_major(bin: &Path) -> Option<u64> {
+    let remote = capture(bin, ["ls-remote", "--lts"])
+        .ok()?
+        .expect(&[0])
+        .ok()?;
+    remote
+        .lines()
+        .filter_map(|l| l.split_whitespace().next().and_then(node_versions::parse))
+        .max()
+        .map(|v| v[0])
 }
 
 /// Lines look like `* v22.13.1 default, lts-latest`.

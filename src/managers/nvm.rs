@@ -107,9 +107,13 @@ impl Manager for Nvm {
         packages
             .iter()
             .filter_map(|p| {
-                let major = p.name.strip_prefix("node@")?.to_string();
+                // `node@lts`, from the catalog, is the newest LTS line, made the default.
+                let major = match p.name.strip_prefix("node@")? {
+                    "lts" => "lts/*".to_string(),
+                    major => major.to_string(),
+                };
                 let mut commands = vec![vec!["install".to_string(), major.clone()]];
-                if p.is("default") {
+                if p.is("default") || major == "lts/*" {
                     commands.push(vec!["alias".to_string(), "default".to_string(), major]);
                 }
                 Some(Step {

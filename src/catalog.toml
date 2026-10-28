@@ -129,6 +129,12 @@ description = "Rust toolchain installer"
 via = { brew = "rustup", pacman = "rustup", winget = "Rustlang.Rustup", scoop = "rustup" }
 
 [[tool]]
+id = "node"
+category = "Languages"
+description = "Node.js, the newest LTS release as the default (needs fnm or nvm already installed)"
+via = { fnm = "node@lts", nvm = "node@lts" }
+
+[[tool]]
 id = "go"
 category = "Languages"
 description = "Go"
