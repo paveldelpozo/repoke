@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>repoke: every package manager, one command</title>
+  <meta name="description" content="repoke finds the package managers on your machine (Homebrew, npm, pnpm, pip, cargo, apt, winget and more), shows what is outdated and upgrades what you pick, from a terminal, a script, cron or an AI agent.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script src="site.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top">
+    <a class="brand" href="./" aria-label="repoke home">
+      <img src="logo.svg" alt="" width="66" height="44">
+      <span>repoke</span>
+    </a>
+    <nav aria-label="Main">
+      <a href="#install">Install</a>
+      <a href="#usage">Usage</a>
+      <a href="#agents">Agents</a>
+      <a href="plugins.html">Plugins</a>
+      <a href="https://github.com/paveldelpozo/repoke">GitHub</a>
+    </nav>
+    <button class="theme" type="button" aria-pressed="false">Dark</button>
+  </header>
+
+  <main id="main">
+    <section class="intro">
+      <h1>Every package manager on your machine, one&nbsp;command.</h1>
+      <p class="lead">repoke finds Homebrew, npm, pnpm, pip, cargo, apt, winget and the rest of what you have installed, shows what is outdated and upgrades what you pick. In a terminal it asks first. In scripts, cron jobs and AI agents it runs without asking and answers in JSON.</p>
+
+      <div id="install" class="install">
+        <h2 class="label">Install</h2>
+        <pre><code>brew tap paveldelpozo/tap &amp;&amp; brew trust paveldelpozo/tap
+brew install repoke</code></pre>
+        <p class="or">or with Rust</p>
+        <pre><code>cargo install repoke</code></pre>
+        <p class="note">Or download the binary for macOS, Linux or Windows from the <a href="https://github.com/paveldelpozo/repoke/releases">releases</a>. <code>repoke self-update</code> keeps it current.</p>
+      </div>
+    </section>
+
+    <section id="managers">
+      <h2><svg class="suit ink" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L19.2 10 C21.6 12.4 21.3 16.2 18.6 17.9 C16.7 19.1 14.4 18.8 12.9 17.3 L14.2 21.5 H9.8 L11.1 17.3 C9.6 18.8 7.3 19.1 5.4 17.9 C2.7 16.2 2.4 12.4 4.8 10 Z"/></svg>It finds what you use</h2>
+      <p>Every manager repoke knows is looked for, and the ones that aren't there are skipped. This is <code>repoke list</code> on the Mac where repoke is written:</p>
+      <pre class="output" aria-label="Output of repoke list"><code>brew      Homebrew                  7.0.11-24-g2833c25
+mas       Mac App Store             not found
+npm       npm (global)              12.2.1
+pnpm      pnpm (global)             12.15.0
+fnm       fnm (Node.js)             1.39.0
+nvm       nvm (Node.js)             not found
+pip       pip (user)                26.2.2
+uv        uv (tools)                0.13.6
+cargo     cargo (installed crates)  1.99.1
+rustup    rustup (toolchains)       1.29.2
+gem       RubyGems                  not found
+composer  Composer (global)         2.10.2
+mise      mise (tools)              not found
+omz       oh-my-zsh                 17a2b4c
+vscode    VS Code extensions        1.143.1</code></pre>
+      <div class="columns">
+        <div>
+          <h3>System</h3>
+          <p>Homebrew, Mac App Store, APT, DNF, pacman, zypper, Snap, Flatpak, WinGet, Scoop, Chocolatey</p>
+        </div>
+        <div>
+          <h3>Languages and tools</h3>
+          <p>npm and pnpm globals, Node through fnm or nvm, pip, uv, cargo, rustup, RubyGems, Composer, mise</p>
+        </div>
+      </div>
+      <p>The last two lines above are <a href="plugins.html">plugins</a>, which is how anything else gets in.</p>
+    </section>
+
+    <section id="usage">
+      <h2><svg class="suit red" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21 L4.6 13.4 C2.2 11 2.5 7.1 5.2 5.3 C7.5 3.8 10.4 4.4 12 6.6 C13.6 4.4 16.5 3.8 18.8 5.3 C21.5 7.1 21.8 11 19.4 13.4 Z"/></svg>Check first, upgrade what you choose</h2>
+      <pre><code>repoke check                    # what is outdated; nothing changes
+repoke upgrade                  # pick from a list, everything preselected
+repoke upgrade --dry-run        # the commands it would run
+repoke upgrade --hold eslint    # leave a package where it is</code></pre>
+      <p>Each package gets a line with its result and how long it took, and a failure shows the command with the end of its output. Managers run side by side while checking and one after another while upgrading. npm installs the exact version it listed, so a newer release can't break the Node you have. Node versions under fnm or nvm move to the newest release of their major line and take your global packages with them.</p>
+    </section>
+
+    <section id="machines">
+      <h2><svg class="suit ink" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 A3.9 3.9 0 0 1 15.6 8.6 A3.9 3.9 0 1 1 13.1 15.6 L14.3 21.5 H9.7 L10.9 15.6 A3.9 3.9 0 1 1 8.4 8.6 A3.9 3.9 0 0 1 12 3.2 Z"/></svg>A new machine, and updates while you sleep</h2>
+      <pre><code>repoke export                 # what you installed, and your config files if you want
+repoke init --from snapshot   # on the new machine, only what is missing
+repoke init                   # or pick tools from a catalog
+repoke schedule install       # every day at 03:00</code></pre>
+      <p>Values that look like secrets, such as registry tokens in <code>.npmrc</code>, are taken out before a snapshot is saved, and a restore never replaces one of your files without asking first and keeping yours as a backup. The schedule goes through the system's own scheduler: launchd on macOS, a systemd timer on Linux, Task Scheduler on Windows.</p>
+    </section>
+
+    <section id="agents">
+      <h2><svg class="suit red" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L19 12 L12 21.5 L5 12 Z"/></svg>For scripts and agents</h2>
+      <pre><code>repoke check --json                     # exits 100 when something is outdated
+repoke upgrade --yes --no-sudo --json   # one JSON event per line
+repoke mcp                              # MCP server over stdio</code></pre>
+      <p>Without a terminal, repoke never waits for input: a manager that wants a password is skipped or fails at once. The MCP server gives agents <code>check_updates</code> and <code>upgrade</code>, and <code>upgrade</code> only previews until it is told otherwise. In Claude Code:</p>
+      <pre><code>/plugin install repoke --marketplace paveldelpozo/repoke</code></pre>
+      <p>Any other manager can be added with a TOML file or a small executable. <code>repoke plugin search</code> lists the official ones, and <a href="plugins.html">the plugin guide</a> explains how to write your own.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>repoke is free software under the MIT or Apache 2.0 license, written by Pavel del Pozo.</p>
+    <p><a href="https://github.com/paveldelpozo/repoke">Source</a> <span aria-hidden="true">·</span> <a href="https://github.com/paveldelpozo/repoke/releases">Releases</a> <span aria-hidden="true">·</span> <a href="https://crates.io/crates/repoke">crates.io</a> <span aria-hidden="true">·</span> <a href="https://github.com/paveldelpozo/repoke-plugins">Plugins</a></p>
+  </footer>
+</body>
+</html>

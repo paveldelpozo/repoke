@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 24 104 70" role="img" aria-labelledby="t">
+  <title id="t">repoke: four aces</title>
+  <g transform="rotate(-27 60 104)">
+    <rect x="42.0" y="34" width="36" height="50" rx="4.5" fill="#FFFDF8" stroke="#17140F" stroke-width="1.6"/>
+    <text x="49.4" y="45" text-anchor="middle" font-family="Iowan Old Style, Palatino, Georgia, serif" font-size="10" font-weight="700" fill="#17140F">A</text>
+    <path d="M12 3.2 A3.9 3.9 0 0 1 15.6 8.6 A3.9 3.9 0 1 1 13.1 15.6 L14.3 21.5 H9.7 L10.9 15.6 A3.9 3.9 0 1 1 8.4 8.6 A3.9 3.9 0 0 1 12 3.2 Z" transform="translate(46.1 47.5) scale(0.275)" fill="#17140F"/>
+  </g>
+  <g transform="rotate(-9 60 104)">
+    <rect x="42.0" y="34" width="36" height="50" rx="4.5" fill="#FFFDF8" stroke="#17140F" stroke-width="1.6"/>
+    <text x="49.4" y="45" text-anchor="middle" font-family="Iowan Old Style, Palatino, Georgia, serif" font-size="10" font-weight="700" fill="#B3121F">A</text>
+    <path d="M12 2.5 L19 12 L12 21.5 L5 12 Z" transform="translate(46.1 47.5) scale(0.275)" fill="#B3121F"/>
+  </g>
+  <g transform="rotate(9 60 104)">
+    <rect x="42.0" y="34" width="36" height="50" rx="4.5" fill="#FFFDF8" stroke="#17140F" stroke-width="1.6"/>
+    <text x="49.4" y="45" text-anchor="middle" font-family="Iowan Old Style, Palatino, Georgia, serif" font-size="10" font-weight="700" fill="#17140F">A</text>
+    <path d="M12 2.5 L19.2 10 C21.6 12.4 21.3 16.2 18.6 17.9 C16.7 19.1 14.4 18.8 12.9 17.3 L14.2 21.5 H9.8 L11.1 17.3 C9.6 18.8 7.3 19.1 5.4 17.9 C2.7 16.2 2.4 12.4 4.8 10 Z" transform="translate(46.1 47.5) scale(0.275)" fill="#17140F"/>
+  </g>
+  <g transform="rotate(27 60 104)">
+    <rect x="42.0" y="34" width="36" height="50" rx="4.5" fill="#FFFDF8" stroke="#17140F" stroke-width="1.6"/>
+    <text x="49.4" y="45" text-anchor="middle" font-family="Iowan Old Style, Palatino, Georgia, serif" font-size="10" font-weight="700" fill="#B3121F">A</text>
+    <path d="M12 21 L4.6 13.4 C2.2 11 2.5 7.1 5.2 5.3 C7.5 3.8 10.4 4.4 12 6.6 C13.6 4.4 16.5 3.8 18.8 5.3 C21.5 7.1 21.8 11 19.4 13.4 Z" transform="translate(46.1 47.5) scale(0.275)" fill="#B3121F"/>
+    <path d="M12 21 L4.6 13.4 C2.2 11 2.5 7.1 5.2 5.3 C7.5 3.8 10.4 4.4 12 6.6 C13.6 4.4 16.5 3.8 18.8 5.3 C21.5 7.1 21.8 11 19.4 13.4 Z" transform="translate(49.2 47.2) scale(0.9)" fill="#B3121F"/>
+  </g>
+</svg>

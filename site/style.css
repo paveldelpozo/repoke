@@ -1,0 +1,236 @@
+/* Direction and decisions: DESIGN.md. Card paper and suits in light, the felt of a card table in dark. */
+:root {
+  --paper: #FBF9F4;
+  --ink: #17140F;
+  --muted: #5E574C;
+  --red: #B3121F;
+  --code-bg: #EFEBE1;
+  --line: #D9D3C5;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F2A22;
+    --ink: #F4F0E6;
+    --muted: #A9B8AE;
+    --red: #FF6B6B;
+    --code-bg: #163A2F;
+    --line: #2C5546;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #0F2A22;
+  --ink: #F4F0E6;
+  --muted: #A9B8AE;
+  --red: #FF6B6B;
+  --code-bg: #163A2F;
+  --line: #2C5546;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0 auto;
+  max-width: 46rem;
+  padding: 0 1rem 3rem;
+  background: var(--paper);
+  color: var(--ink);
+  font: 1.0625rem/1.6 var(--sans);
+}
+
+a { color: var(--red); text-underline-offset: 0.18em; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.skip {
+  position: absolute;
+  left: -100vw;
+}
+.skip:focus { left: 1rem; top: 1rem; background: var(--paper); padding: 0.5rem 0.75rem; }
+
+/* Header: the logo and wordmark lead; nav and the theme switch stay quiet. */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 1rem;
+  padding: 1.25rem 0 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 0.6rem;
+  color: var(--ink);
+  text-decoration: none;
+  font: 700 1.6rem/1 var(--serif);
+  margin-right: auto;
+}
+
+nav { display: flex; flex-wrap: wrap; }
+
+nav a,
+.theme {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.55rem;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+nav a:hover, nav a[aria-current="page"] { color: var(--red); }
+
+.theme {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.theme:hover { border-color: var(--muted); }
+
+h1, h2, h3 { font-family: var(--serif); line-height: 1.2; }
+
+h1 {
+  font-size: clamp(2rem, 1.3rem + 3.2vw, 2.85rem);
+  margin: 2.5rem 0 1rem;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: clamp(1.4rem, 1.2rem + 1vw, 1.7rem);
+  margin: 0 0 1rem;
+}
+
+h3 { font-size: 1.1rem; margin: 0 0 0.3rem; }
+
+.lead { font-size: 1.15rem; color: var(--ink); margin: 0 0 2rem; }
+
+section { padding: 2.75rem 0; border-top: 1px solid var(--line); }
+.intro { border-top: 0; padding-top: 0; }
+
+/* The suits are the identity motif: one per section, in its own color, as in the logo. */
+.suit { width: 1.15rem; height: 1.15rem; flex: none; }
+.suit.ink { fill: var(--ink); }
+.suit.red { fill: var(--red); }
+
+.install {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1rem 1rem 0.25rem;
+}
+
+.label {
+  font: 600 0.85rem/1.4 var(--sans);
+  color: var(--muted);
+  margin: 0 0 0.6rem;
+}
+
+.or { margin: 0.5rem 0; color: var(--muted); font-size: 0.95rem; }
+.note { color: var(--muted); font-size: 0.95rem; }
+
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--code-bg);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
+
+pre {
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  background: var(--code-bg);
+  border-radius: 6px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+pre code { padding: 0; background: none; font-size: 0.875rem; }
+pre.output code { color: var(--muted); }
+
+/* The copy button sits beside the code, so long lines scroll without running under it. */
+.code {
+  display: flex;
+  align-items: flex-start;
+  margin: 0 0 1rem;
+  background: var(--code-bg);
+  border-radius: 6px;
+}
+.code pre { flex: 1; min-width: 0; margin: 0; }
+
+.copy {
+  flex: none;
+  margin: 0.35rem 0.35rem 0.35rem 0;
+  min-width: 4.5rem;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 0.85rem var(--sans);
+  cursor: pointer;
+}
+.copy:hover { border-color: var(--muted); }
+.copy[data-done] { color: var(--red); border-color: var(--red); }
+
+.columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem 2rem;
+  margin: 1.5rem 0 1rem;
+}
+.columns p { margin: 0; color: var(--muted); }
+
+@media (min-width: 40rem) {
+  .columns { grid-template-columns: 1fr 1fr; }
+}
+
+/* Plugin guide rendered from docs/plugins.md. */
+.doc h1 { font-size: clamp(1.9rem, 1.3rem + 2.6vw, 2.5rem); }
+.doc h2 { margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--line); }
+.doc h3 { margin-top: 1.75rem; }
+.doc table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; display: block; overflow-x: auto; }
+.doc th, .doc td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.doc li { margin: 0.3rem 0; }
+
+footer {
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+footer p { margin: 0.3rem 0; }
+
+@media (max-width: 30rem) {
+  /* Logo and theme switch share the first row; the nav gets the second to itself. */
+  .theme { order: 1; }
+  nav { order: 2; width: 100%; margin-left: -0.55rem; }
+  nav a { padding: 0 0.45rem; }
+  body { font-size: 1rem; }
+  section { padding: 2rem 0; }
+  h1 { margin-top: 1.75rem; }
+  .brand { font-size: 1.4rem; }
+  .brand img { width: 54px; height: 36px; }
+}
