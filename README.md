@@ -90,6 +90,9 @@ Any other MCP client: run `repoke mcp` as a stdio server. Without MCP, agents ca
 exclude = ["brew"]               # managers left out unless named in --only
 hold = ["eslint", "pnpm:pnpm"]   # never upgraded nor reported, as name or manager:name
 plugin_timeout = "10m"           # longest a plugin command may run (600, 90s, 10m, 1h; 0 = no limit)
+
+[brew]
+greedy = true                    # also casks that update themselves (Chrome, Slack…), which brew skips
 ```
 
 `REPOKE_PLUGIN_TIMEOUT` overrides `plugin_timeout` for one run.
@@ -147,7 +150,7 @@ repoke plugin new omz --exec      # ./repoke-omz, a script speaking the protocol
 repoke plugin list                # what was found, and any problem with it
 ```
 
-How to write one: [docs/plugins.md](docs/plugins.md). Examples: [examples/plugins](examples/plugins) (self-updating Homebrew casks, oh-my-zsh).
+How to write one: [docs/plugins.md](docs/plugins.md). Examples: [examples/plugins](examples/plugins) (GitHub CLI extensions, oh-my-zsh).
 
 ## Development
 

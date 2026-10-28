@@ -117,11 +117,13 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 - [x] Gestores declarativos en `~/.config/repoke/managers/*.toml`: comandos y lectura de la salida en JSON (punteros JSON) o por líneas (regex con grupos con nombre), con `{packages}`, `{name}` y `{version}`. Las claves desconocidas son error.
 - [x] Aparecen en `list`, `check`, `upgrade`, `export`, `init`, `schedule` y el MCP. Un id que choca con uno integrado u otro plugin no se carga y se avisa. `REPOKE_NO_PLUGINS=1` los apaga.
 - [x] `repoke plugin list [--json]` y `repoke plugin new <id> [--exec] [-o]` con plantillas que funcionan tal cual.
-- [x] Ejemplos reales en `examples/plugins/`: `brew-greedy.toml` (casks que se actualizan solos) y `repoke-omz` (oh-my-zsh). Probados en el Mac de Pavel con datos reales.
+- [x] Ejemplos en `examples/plugins/`: `gh-extensions.toml` (extensiones de `gh`; Pavel no tiene ninguna, así que está probado solo con tests) y `repoke-omz` (oh-my-zsh, probado de verdad).
+- [x] El ejemplo `brew-greedy.toml` se retiró (28-10): `brew outdated --greedy` lista todos los casks, no solo los que se actualizan solos, y duplicaba lo del gestor integrado (terminal-browser salía dos veces). Ahora es la opción `[brew] greedy = true`.
+- [x] Pistas para errores conocidos (`hint` en el evento `failed`); la primera, para un cask cuya app se borró a mano.
 - [x] Documentación del protocolo y del formato TOML en `docs/plugins.md`, lista para la landing.
 - [ ] Índice comunitario de plugins (¿un repositorio con un `index.toml`?) y `repoke plugin install <id>` que descargue y enseñe el código antes de instalarlo.
 - [x] Tiempo máximo por llamada a un plugin (28-10, a petición de Pavel): 10 minutos por defecto, también en las actualizaciones. `plugin_timeout` en `config.toml` o `REPOKE_PLUGIN_TIMEOUT` (`600`, `90s`, `10m`, `1h`; `0` sin límite). Al pasarse, se corta el proceso y cuenta como fallo de ese plugin.
-- [x] Ejemplos instalados en el Mac de Pavel: `~/.local/bin/repoke-omz` y `~/.config/repoke/managers/brew-greedy.toml` (copias, no enlaces).
+- [x] Ejemplo instalado en el Mac de Pavel: `~/.local/bin/repoke-omz` (copia). `brew-greedy.toml` sustituido por `[brew] greedy = true` en su `config.toml`.
 
 ## Fase 9 · Plugins oficiales (`repoke-plugins`, repositorio aparte)
 

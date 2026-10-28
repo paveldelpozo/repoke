@@ -5,7 +5,7 @@ repoke knows 22 package managers out of the box. A plugin adds another one, and 
 - **A TOML file** that says which commands to run and how to read their output. Enough for most tools that can print what is outdated.
 - **An executable** named `repoke-<id>`, in any language, that answers a small JSON protocol. For tools that need logic, like a git clone or several commands per check.
 
-`repoke plugin new <id>` writes a TOML template to start from, and `repoke plugin new <id> --exec` a shell script. `repoke plugin list` shows the plugins repoke found and any problem with them. Two working examples are in [`examples/plugins`](../examples/plugins).
+`repoke plugin new <id>` writes a TOML template to start from, and `repoke plugin new <id> --exec` a shell script. `repoke plugin list` shows the plugins repoke found and any problem with them. Two examples are in [`examples/plugins`](../examples/plugins): GitHub CLI extensions (TOML) and oh-my-zsh (executable).
 
 A plugin's id must not clash with a built-in manager or with another plugin; `plugin list` reports the clash and the plugin is not loaded. `REPOKE_NO_PLUGINS=1` turns all plugins off for one run.
 
@@ -18,38 +18,38 @@ Every command repoke runs for a plugin, upgrades included, is stopped after 10 m
 repoke reads every `*.toml` file in `~/.config/repoke/managers/` (`%APPDATA%\repoke\managers\` on Windows).
 
 ```toml
-id = "brew-greedy"
-name = "Homebrew casks (self-updating)"
-binary = "brew"             # every command below runs this program
-os = ["macos"]              # optional; all systems by default
+id = "gh-ext"
+name = "GitHub CLI extensions"
+binary = "gh"               # every command below runs this program
+# os = ["macos", "linux"]   # optional; all systems by default
 # needs_root = true         # upgrades go through sudo, and are skipped with --no-sudo
 
 [outdated]
-command = ["outdated", "--cask", "--greedy", "--json=v2"]
-format = "json"
-items = "/casks"            # JSON pointer to the list; "" when the output is the list
-name = "name"               # a field of each item, or a JSON pointer inside it
-current = "/installed_versions/0"
-latest = "current_version"
+command = ["extension", "upgrade", "--all", "--dry-run"]
+format = "lines"
+pattern = '^\[(?P<name>[^\]]+)\]: would have upgraded from (?P<current>\S+) to (?P<latest>\S+)'
 
 [upgrade]
-command = ["upgrade", "--cask", "--greedy", "{packages}"]
+command = ["extension", "upgrade", "{name}"]
 ```
 
 The manager counts as installed when `binary` is on the PATH, and its version is the first version-looking word of `binary --version`.
 
 ### Reading output
 
-`format = "json"` reads `items` as a JSON array and takes `name`, `current` and `latest` from each item. Numbers are turned into text; missing fields are left empty.
-
-`format = "lines"` matches a regular expression against every line of output and keeps the lines that match. Named groups give the fields; `name` is required:
+`format = "json"` reads `items` as a JSON array and takes `name`, `current` and `latest` from each item. Numbers are turned into text; missing fields are left empty. For a tool whose `outdated --json` printed `{"tools": [{"id": "x", "installed": ["1.0"], "available": "1.1"}]}`:
 
 ```toml
 [outdated]
-command = ["extension", "upgrade", "--all", "--dry-run"]
-format = "lines"
-pattern = '^\[(?P<name>[^\]]+)\]: would have upgraded from (?P<current>\S+) to (?P<latest>\S+)'
+command = ["outdated", "--json"]
+format = "json"
+items = "/tools"            # JSON pointer to the list; "" when the output is the list
+name = "id"                 # a field of each item, or a JSON pointer inside it
+current = "/installed/0"
+latest = "available"
 ```
+
+`format = "lines"` matches a regular expression against every line of output and keeps the lines that match. Named groups give the fields; `name` is required. The example at the top reads lines like `[gh-dash]: would have upgraded from v4.1.0 to v4.2.0`.
 
 A command must exit 0 unless you list other accepted codes in `ok_codes = [0, 1]`; some tools exit 1 when they find something outdated.
 

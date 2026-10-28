@@ -1,0 +1,20 @@
+# GitHub CLI extensions (`gh extension install …`). Copy to ~/.config/repoke/managers/.
+id = "gh-ext"
+name = "GitHub CLI extensions"
+binary = "gh"
+
+[outdated]
+command = ["extension", "upgrade", "--all", "--dry-run"]
+format = "lines"
+pattern = '^\[(?P<name>[^\]]+)\]: would have upgraded from (?P<current>\S+) to (?P<latest>\S+)'
+
+[upgrade]
+command = ["extension", "upgrade", "{name}"]
+
+[installed]
+command = ["extension", "list"]
+format = "lines"
+pattern = '^\S+\s+(?P<name>\S+/\S+)\s+(?P<version>\S+)'
+
+[install]
+command = ["extension", "install", "{name}"]

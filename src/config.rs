@@ -2,6 +2,7 @@ use std::env;
 use std::fs;
 use std::io::ErrorKind;
 use std::path::PathBuf;
+use std::sync::OnceLock;
 use std::time::Duration;
 
 use serde::Deserialize;
@@ -16,6 +17,21 @@ pub struct Config {
     pub hold: Vec<String>,
     /// How long a plugin command may run: seconds, or `90s`, `10m`, `1h`; `0` for no limit.
     pub plugin_timeout: Option<String>,
+    pub brew: Brew,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Brew {
+    /// Also casks that update themselves (`brew outdated --greedy`), which brew skips by default.
+    pub greedy: bool,
+}
+
+/// The config for code that has no way to receive it, like a manager. A broken file is reported
+/// by `load` when the command starts, so here it just falls back to the defaults.
+pub fn current() -> &'static Config {
+    static CURRENT: OnceLock<Config> = OnceLock::new();
+    CURRENT.get_or_init(|| load().unwrap_or_default())
 }
 
 pub fn load() -> Result<Config, String> {
@@ -97,11 +113,15 @@ mod tests {
             r#"
             exclude = ["brew"]
             hold = ["eslint", "pnpm:typescript"]
+
+            [brew]
+            greedy = true
             "#,
         )
         .unwrap();
         assert_eq!(config.exclude, ["brew"]);
         assert_eq!(config.hold, ["eslint", "pnpm:typescript"]);
+        assert!(config.brew.greedy);
     }
 
     #[test]

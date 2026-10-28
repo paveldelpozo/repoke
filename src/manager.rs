@@ -176,6 +176,11 @@ pub trait Manager: Sync {
         false
     }
 
+    /// A suggestion for a failure the manager recognises, shown under the error.
+    fn hint(&self, _packages: &[Package], _error: &str) -> Option<String> {
+        None
+    }
+
     /// How long one of its commands may run; plugins have a limit, built-in managers don't.
     fn timeout(&self) -> Option<Duration> {
         None

@@ -26,16 +26,30 @@ impl Manager for Brew {
     }
 
     fn outdated(&self, bin: &Path) -> Result<Vec<Package>, String> {
-        let json = capture(bin, ["outdated", "--json=v2"])?.expect(&[0, 1])?;
+        let mut args = vec!["outdated", "--json=v2"];
+        args.extend(greedy());
+        let json = capture(bin, args)?.expect(&[0, 1])?;
         parse_outdated(&json)
     }
 
+    /// Without `--greedy`, `brew upgrade` leaves a self-updating cask alone even when named.
     fn upgrade_steps(&self, _bin: &Path, packages: &[Package]) -> Vec<Step> {
-        let names = packages.iter().map(|p| p.name.clone());
-        vec![Step::new(
-            ["upgrade".to_string()].into_iter().chain(names),
-            packages,
-        )]
+        let mut args = vec!["upgrade".to_string()];
+        args.extend(greedy().map(String::from));
+        args.extend(packages.iter().map(|p| p.name.clone()));
+        vec![Step::new(args, packages)]
+    }
+
+    fn hint(&self, packages: &[Package], error: &str) -> Option<String> {
+        // The cask's app was deleted or moved by hand, so brew has nothing to replace.
+        if !(error.contains("App source") && error.contains("is not there")) {
+            return None;
+        }
+        let names: Vec<&str> = packages.iter().map(|p| p.name.as_str()).collect();
+        let names = names.join(" ");
+        Some(format!(
+            "the app was removed outside Homebrew: bring it back with `brew reinstall --cask {names}`, or forget it with `brew uninstall --cask --force {names}`"
+        ))
     }
 
     fn refresh(&self, bin: &Path) -> Result<(), String> {
@@ -79,6 +93,10 @@ impl Manager for Brew {
         steps.extend(Step::install_all(&["install", "--cask"], &of(Some("cask"))));
         steps
     }
+}
+
+fn greedy() -> Option<&'static str> {
+    crate::config::current().brew.greedy.then_some("--greedy")
 }
 
 #[derive(Deserialize)]
@@ -135,6 +153,23 @@ mod tests {
                 },
             ]
         );
+    }
+
+    #[test]
+    fn explains_casks_whose_app_is_gone() {
+        let casks = [Package {
+            name: "caskhub".into(),
+            current: "0.9.0".into(),
+            latest: "0.9.3".into(),
+        }];
+        let error =
+            "Error: caskhub: It seems the App source '/Applications/CaskHub.app' is not there.";
+        assert!(
+            Brew.hint(&casks, error)
+                .unwrap()
+                .contains("brew reinstall --cask caskhub")
+        );
+        assert!(Brew.hint(&casks, "Error: network down").is_none());
     }
 
     #[test]

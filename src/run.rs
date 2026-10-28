@@ -81,6 +81,9 @@ pub enum Event<'a> {
         action: Action,
         manager: &'a str,
         error: &'a str,
+        /// What usually fixes this error, when the manager recognises it.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        hint: Option<String>,
         packages: &'a [Package],
         seconds: f64,
     },
@@ -120,6 +123,8 @@ pub struct ManagerTally {
     id: &'static str,
     #[serde(skip)]
     name: &'static str,
+    #[serde(skip)]
+    manager: &'static dyn Manager,
     #[serde(flatten)]
     tally: Tally,
 }
@@ -164,6 +169,7 @@ impl<'a> Engine<'a> {
         self.managers.push(ManagerTally {
             id: m.id(),
             name: m.name(),
+            manager: m,
             tally: Tally::default(),
         });
 
@@ -231,11 +237,12 @@ impl<'a> Engine<'a> {
     }
 
     /// Reports a manager whose packages can't be handled, such as one that isn't installed.
-    pub fn skip(&mut self, manager: &dyn Manager, packages: &[Package], reason: &str) {
+    pub fn skip(&mut self, manager: &'static dyn Manager, packages: &[Package], reason: &str) {
         self.report.header(manager.name());
         self.managers.push(ManagerTally {
             id: manager.id(),
             name: manager.name(),
+            manager,
             tally: Tally {
                 skipped: packages.len(),
                 ..Tally::default()
@@ -318,10 +325,15 @@ impl<'a> Engine<'a> {
             }
             Err(error) => {
                 self.tally().failed += packages.len();
+                let hint = self
+                    .managers
+                    .last()
+                    .and_then(|m| m.manager.hint(packages, &error));
                 self.report.emit(&Event::Failed {
                     action,
                     manager,
                     error: &error,
+                    hint,
                     packages,
                     seconds,
                 });
@@ -391,6 +403,7 @@ impl Reporter {
             Event::Failed {
                 packages,
                 error,
+                hint,
                 seconds,
                 ..
             } => {
@@ -402,6 +415,9 @@ impl Reporter {
                 let rest: Vec<&str> = lines.collect();
                 for line in &rest[rest.len().saturating_sub(ERROR_LINES)..] {
                     println!("      {} {}", style("│").dim(), style(line).dim());
+                }
+                if let Some(hint) = hint {
+                    println!("      {} {}", style("→").yellow(), style(hint).yellow());
                 }
             }
             Event::Skipped {
