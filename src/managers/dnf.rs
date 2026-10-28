@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::path::Path;
 
 use crate::manager::{Installed, Manager, Package, Step, capture, lines, needs_sudo};
@@ -23,9 +24,26 @@ impl Manager for Dnf {
 
     /// `check-update` refreshes stale metadata itself and exits 100 when there are updates.
     fn outdated(&self, bin: &Path) -> Result<Vec<Package>, String> {
-        Ok(parse_check_update(
-            &capture(bin, ["check-update", "--quiet"])?.expect(&[0, 100])?,
-        ))
+        let mut packages =
+            parse_check_update(&capture(bin, ["check-update", "--quiet"])?.expect(&[0, 100])?);
+        if packages.is_empty() {
+            return Ok(packages);
+        }
+        // Not knowing the installed version only costs the "from" column, so rpm may fail.
+        let format = "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE}\\n";
+        let args = ["-q", "--qf", format]
+            .into_iter()
+            .map(String::from)
+            .chain(packages.iter().map(|p| p.name.clone()));
+        if let Ok(out) = capture("rpm", args) {
+            let installed = parse_rpm_query(&out.stdout);
+            for p in &mut packages {
+                if let Some(version) = installed.get(&p.name) {
+                    p.current = version.clone();
+                }
+            }
+        }
+        Ok(packages)
     }
 
     fn needs_root(&self, _bin: &Path) -> bool {
@@ -76,6 +94,24 @@ fn parse_check_update(text: &str) -> Vec<Package> {
         .collect()
 }
 
+/// `xz 1:5.6.2-2.fc41` or `bash (none):5.2.32-1.fc41`, written the way dnf writes versions.
+fn parse_rpm_query(text: &str) -> HashMap<String, String> {
+    let mut installed = HashMap::new();
+    for line in text.lines() {
+        let Some((name, version)) = line
+            .split_once(' ')
+            .filter(|_| !line.ends_with("not installed"))
+        else {
+            continue;
+        };
+        let version = version.strip_prefix("(none):").unwrap_or(version);
+        installed
+            .entry(name.to_string())
+            .or_insert_with(|| version.to_string());
+    }
+    installed
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -87,5 +123,15 @@ mod tests {
         let names: Vec<_> = packages.iter().map(|p| p.name.as_str()).collect();
         assert_eq!(names, ["kernel-core", "python3.11"]);
         assert_eq!(packages[0].latest, "6.11.4-301.fc41");
+    }
+
+    #[test]
+    fn reads_installed_versions_like_dnf_writes_them() {
+        let installed = parse_rpm_query(
+            "xz 1:5.6.2-2.fc41\nbash (none):5.2.32-1.fc41\nbash (none):5.2.32-1.fc41\npackage nope is not installed\n",
+        );
+        assert_eq!(installed["xz"], "1:5.6.2-2.fc41");
+        assert_eq!(installed["bash"], "5.2.32-1.fc41");
+        assert_eq!(installed.len(), 2);
     }
 }
