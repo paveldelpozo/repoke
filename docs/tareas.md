@@ -4,15 +4,27 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 
 ## Estado al cierre de la sesión del 28-10-2026
 
-Publicado: **v0.3.0** (28-10 por la tarde; antes v0.2.1) en GitHub (5 binarios), crates.io, el tap `paveldelpozo/tap` y el plugin de Claude Code (activo en todos los perfiles de Pavel); landing bilingüe en https://repoke.paveldelpozo.es (Dokploy, proyecto «repoke» → «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`, se redespliega sola); plugins oficiales en `paveldelpozo/repoke-plugins` (`omz`, `vscode`). En el Mac de Pavel: repoke 0.2.1 instalado con cargo, plugins `omz` y `vscode`, `[brew] greedy = true` y el modo programado a las 03:00.
+Publicado: **v0.3.0** (28-10 por la tarde; antes v0.2.1) en GitHub (5 binarios), crates.io, el tap `paveldelpozo/tap` y el plugin de Claude Code (activo en todos los perfiles de Pavel); landing bilingüe en https://repoke.paveldelpozo.es (Dokploy, proyecto «repoke» → «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`, se redespliega sola); plugins oficiales en `paveldelpozo/repoke-plugins` (`omz`, `vscode`). En el Mac de Pavel: repoke instalado con cargo desde el código local, plugins `omz` y `vscode`, `[brew] greedy = true` y el modo programado a las 03:00.
 
-Lo siguiente, por orden (actualizado el 28-10 por la tarde):
+Lo siguiente, por orden (actualizado el 28-10 por la noche, antes de reiniciar la sesión):
 
-1. **Pavel, 29-10 por la mañana:** `repoke schedule status` para ver cómo fue la primera ejecución programada (y `~/Library/Logs/repoke/last-run.log` si algo falló).
-2. **Un compañero de Pavel, como beta-tester:** `brew install` desde el tap tras `brew trust paveldelpozo/tap`.
-3. **En espera, hasta que Pavel pueda probarlo en una imagen de Docker o en su portátil con Ubuntu:** probar en Linux lo que solo tiene tests de parseo (apt, dnf, pacman, zypper, flatpak, snap). Windows (winget, scoop, choco) sigue sin máquina donde probarlo.
+1. **Sin subir:** 6 commits locales sobre `cc29a99` (`dd27cfb` timeouts por gestor y Node en `init`, `d340120` yarn 1 y bun, `86c1e60` cargo en paralelo, `1a14e4b` `[node] remove_old`, `e789829` Node en el catálogo y errores de brew, `de9118e` herramientas MCP `export` e `init_preview`). La CI pasa en todos. Falta que Pavel diga si se suben (Dokploy redespliega la landing) y si se saca la release: por los `feat:` será la **0.4.0**, y la lanza él con `! scripts/release.sh --crate` porque el clasificador se la bloquea al agente. En su Mac ya está instalado el binario local con todo esto (`cargo install --path . --force`).
+2. **Pavel, 29-10 por la mañana:** `repoke schedule status` para ver cómo fue la primera ejecución programada (y `~/Library/Logs/repoke/last-run.log` si algo falló).
+3. **Un compañero de Pavel, como beta-tester:** `brew install` desde el tap tras `brew trust paveldelpozo/tap`.
+4. **En espera, hasta que Pavel pueda probarlo en una imagen de Docker o en su portátil con Ubuntu:** probar en Linux lo que solo tiene tests de parseo (apt, dnf, pacman, zypper, flatpak, snap). Windows (winget, scoop, choco) sigue sin máquina donde probarlo.
+5. **Siguiente gestor, asdf:** explorar su salida real en un contenedor `debian:stable-slim` (binario Go de las releases, plugin `jq`, `asdf list`, `asdf latest --all`, `asdf current`) e implementarlo con eso. Se quedó sin hacer porque Docker Desktop estaba parado; falta que Pavel diga si se puede arrancar (`open -a Docker`).
+6. **Pruebas que solo puede hacer Pavel:** las preguntas interactivas de `export` e `init` en una terminal real; un cask que pida contraseña (`.pkg`); `[node] remove_old = true` en real (solo se ha probado con `--dry-run`).
 
-Hecho el 28-10 por la tarde: imagen Open Graph; robustez (`engines.node`, casks con contraseña, bloqueo, rotación del historial); landing en Astro; plugin de Claude probado en conversación.
+Decisiones que tiene que tomar Pavel:
+
+- **Cifrar el backup de `export` con contraseña:** una dependencia de cifrado en Rust (igual en todos los sistemas) o llamar a `openssl` (en Windows no suele estar). Recomendación: la dependencia.
+- **Índice comunitario de plugins:** dónde vive (otro repositorio, o el mismo `repoke-plugins` con una sección aparte) y quién revisa lo que entra.
+- **deno y volta:** propuesta de descartarlos. deno no sabe decir qué globales están desactualizados, y volta lleva tiempo sin mantenimiento.
+- **`softwareupdate` de macOS:** solo si Pavel lo pide.
+
+Hecho el 28-10 por la tarde: imagen Open Graph; robustez (`engines.node`, casks con contraseña, bloqueo, rotación del historial); landing en Astro; plugin de Claude probado en conversación; v0.3.0 publicada.
+
+Hecho el 28-10 por la noche (en los commits sin subir): timeouts por gestor (`[timeouts]`); `--refresh` solo en gestores con índice; `engines.node` también en `init`; yarn 1 y bun; cargo en paralelo; `[node] remove_old`; Node LTS en el catálogo de `init`; pistas de brew para fórmulas desconocidas y taps que no se pueden clonar; herramientas MCP `export` e `init_preview`; documentación EN/ES, landing (con la salida real de `repoke list`), skill de Claude y README al día. Ojo: en el Mac de Pavel yarn 1 falla porque `~/.npmrc` usa `${NODE_AUTH_TOKEN}` sin definir; repoke lo explica.
 
 Normas del proyecto: commits en Conventional Commits y en inglés, firmados con `paveldelpozo@gmail.com`; cada función nueva actualiza la landing y las referencias EN/ES (la CI lo vigila); tras cada cambio, `cargo install --path . --force`; releases con `scripts/release.sh --crate` (sin argumentos calcula la versión semántica).
 
@@ -168,4 +180,4 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 
 ## Preguntas abiertas
 
-- Ninguna por ahora. (La de recibir issues con el repositorio privado se resolvió al hacerlo público el 28-10.)
+- Las cuatro decisiones de arriba (cifrado del backup, índice comunitario, deno y volta, `softwareupdate`), más si se suben los commits y se saca la 0.4.0, y si se puede arrancar Docker para asdf.
