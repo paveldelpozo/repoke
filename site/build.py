@@ -17,9 +17,11 @@ from render import render
 
 SITE = Path(__file__).resolve().parent
 ROOT = SITE.parent
+ORIGIN = "https://repoke.paveldelpozo.es"
 BASE = {"en": "/", "es": "/es/"}
 DOCS = {"en": ROOT / "docs", "es": ROOT / "docs" / "es"}
-ASSETS = ["style.css", "site.js", "logo.svg", "favicon.svg"]
+OG = {"en": ("og.png", "en_US"), "es": ("og-es.png", "es_ES")}
+ASSETS = ["style.css", "site.js", "logo.svg", "favicon.svg", "og.png", "og-es.png"]
 
 # The suits mark the four sections of the landing page, as they mark the four aces in the logo.
 SUITS = {
@@ -60,6 +62,10 @@ def page(layout, strings, lang, name, content, main_class=""):
         description=html.escape(description),
         url_en=BASE["en"] + file,
         url_es=BASE["es"] + file,
+        url_self=BASE[lang] + file,
+        origin=ORIGIN,
+        og_image=OG[lang][0],
+        og_locale=OG[lang][1],
         selected_en=' selected' if lang == "en" else "",
         selected_es=' selected' if lang == "es" else "",
         home=BASE[lang],

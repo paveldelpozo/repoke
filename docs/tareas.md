@@ -110,7 +110,7 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] Tap público `paveldelpozo/homebrew-tap` creado con la fórmula de v0.1.0 (28-10). Homebrew 7 obliga a `brew trust paveldelpozo/tap` antes de instalar desde un tap de terceros: va en el README y tendrá que ir en la landing.
 - [x] Repositorio de repoke **público** (28-10), tras reescribir el historial: commits con `paveldelpozo@gmail.com` y sin la IP del servidor. `self-update` ya lee las releases sin token.
 - [x] Commit del tap reescrito con el Gmail y subido (28-10).
-- [ ] Probar `brew install` desde el tap una vez hecho `brew trust` (en el Mac de Pavel convive con la versión de cargo).
+- [ ] Probar `brew install` desde el tap una vez hecho `brew trust`: lo hará un compañero de Pavel como beta-tester.
 - [x] Primera release `v0.1.0` (28-10, privada): cinco binarios con su `.sha256`. `repoke self-update --check` con `GITHUB_TOKEN` la lee bien y detecta la instalación por cargo.
 - [x] Publicado en crates.io: `repoke 0.1.0` (28-10). Las próximas versiones, con `scripts/release.sh --crate`.
 - [x] Token de crates.io revocado y sustituido por uno nuevo (Pavel, 28-10).
@@ -124,7 +124,7 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] Plugin de Claude Code en `integrations/claude-code/` (skill `repoke` + `.mcp.json`) y marketplace en `.claude-plugin/marketplace.json`. `claude plugin validate` pasa en los dos. `release.sh` sube también la versión de `plugin.json`.
 - [x] README: instalación en Claude Code, Codex y cualquier cliente MCP.
 - [x] Plugin activado en todos los perfiles de Claude con `hvf` (`plugin_add`, marketplace `paveldelpozo/repoke`), 28-10.
-- [ ] Probarlo en una conversación nueva: pedir "¿qué tengo desactualizado?" y ver que usa `check_updates`.
+- [x] Probado en una conversación nueva (28-10): "¿qué tengo desactualizado?" usa `check_updates`.
 - [ ] Más herramientas MCP si hacen falta: `export`, `init --dry-run`.
 
 ## Fase 8 · Plugins de la comunidad (hecha)
@@ -164,7 +164,7 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] Autodespliegue: los `watchPaths` no incluían las referencias nuevas; ampliados a `site/**`, `docs/commands.md`, `docs/plugins.md`, `docs/es/**` y `Cargo.toml`, y desde entonces redespliega solo.
 - [x] La landing muestra la última versión publicada (junto a la instalación y en el pie), leída de `Cargo.toml` en el build: cada release la actualiza sin tocar nada (28-10, a petición de Pavel).
 - [ ] **Paso final: convertir la landing a Astro** (Pavel, 28-10). A partir de ahora, cualquier landing nueva se hace en Astro salvo que él diga lo contrario.
-- [ ] Imagen para compartir en redes (Open Graph) a partir del logo.
+- [x] Imagen para compartir en redes (Open Graph): `site/og.html`, renderizada por `site/og.sh` en `og.png` y `og-es.png`.
 
 ## Preguntas abiertas
 

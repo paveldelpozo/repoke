@@ -50,7 +50,8 @@
         "Writing a repoke plugin",
         "How to add a package manager to repoke: a TOML file that declares commands and how to read their output, or an executable that answers a small JSON protocol."
       ]
-    }
+    },
+    "og_alt": "Four aces fanned out next to the name repoke and the line: every package manager on your machine, one command."
   },
   "es": {
     "skip": "Saltar al contenido",
@@ -103,6 +104,7 @@
         "Cómo escribir un plugin de repoke",
         "Cómo añadir un gestor de paquetes a repoke: un fichero TOML que declara los comandos y cómo leer su salida, o un ejecutable que responde a un protocolo JSON pequeño."
       ]
-    }
+    },
+    "og_alt": "Cuatro ases en abanico junto al nombre repoke y la frase: todos tus gestores de paquetes, un solo comando."
   }
 }
