@@ -29,6 +29,35 @@
       });
     }
 
+    // Install tabs: the panel shown is the one named by <html data-os>, set in <head>.
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"][data-os]'));
+    function select(tab, focus) {
+      root.dataset.os = tab.dataset.os;
+      tabs.forEach(function (t) {
+        t.setAttribute("aria-selected", t === tab ? "true" : "false");
+        t.tabIndex = t === tab ? 0 : -1;
+      });
+      if (focus) tab.focus();
+    }
+    tabs.forEach(function (tab, i) {
+      if (tab.dataset.os === root.dataset.yourOs) {
+        var hint = document.createElement("span");
+        hint.className = "yours";
+        hint.textContent = tab.closest("[data-yours]").dataset.yours;
+        tab.appendChild(hint);
+      }
+      tab.addEventListener("click", function () { select(tab); });
+      tab.addEventListener("keydown", function (e) {
+        var step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+        if (e.key === "Home" || e.key === "End") step = 0;
+        if (step === undefined) return;
+        e.preventDefault();
+        var next = e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : (i + step + tabs.length) % tabs.length;
+        select(tabs[next], true);
+      });
+      if (tab.dataset.os === root.dataset.os) select(tab);
+    });
+
     // Command blocks get a copy button; real output (pre.output) doesn't.
     if (!navigator.clipboard) return;
     var text = document.body.dataset;

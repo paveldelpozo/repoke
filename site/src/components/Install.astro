@@ -1,0 +1,88 @@
+---
+import { version } from "../site.js";
+
+const { lang } = Astro.props;
+const download = "https://github.com/paveldelpozo/repoke/releases/latest/download";
+const brew = "brew tap paveldelpozo/tap && brew trust paveldelpozo/tap\nbrew install repoke";
+const cargo = "cargo install repoke";
+const linux = `mkdir -p ~/.local/bin
+curl -fsSL ${download}/repoke-$(uname -m)-unknown-linux-musl.tar.gz | tar -xz -C ~/.local/bin ./repoke`;
+const windows = `$dir = "$env:LOCALAPPDATA\\Programs\\repoke"
+Invoke-WebRequest ${download}/repoke-x86_64-pc-windows-gnu.zip -OutFile "$env:TEMP\\repoke.zip"
+Expand-Archive "$env:TEMP\\repoke.zip" $dir -Force
+[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$dir", "User")`;
+const releases = "https://github.com/paveldelpozo/repoke/releases";
+
+const t = {
+  en: {
+    install: "Install",
+    latest: "Latest release:",
+    notes: "release notes",
+    systems: "Operating system",
+    yours: "your system",
+    rust: "or with Rust",
+    homebrew: "or with Homebrew, as on macOS",
+    mac_note: "The binaries for Apple silicon and Intel are also in the",
+    linux_note: "A static binary for x86_64 and arm64 that runs on any distribution. <code>~/.local/bin</code> has to be on your <code>PATH</code>.",
+    windows_note: "In PowerShell, without administrator rights. Open a new terminal afterwards so it picks up the <code>PATH</code>. To upgrade Chocolatey packages, run repoke from an administrator terminal.",
+    self_update: "keeps it current.",
+  },
+  es: {
+    install: "Instalar",
+    latest: "Última versión:",
+    notes: "novedades",
+    systems: "Sistema operativo",
+    yours: "tu sistema",
+    rust: "o con Rust",
+    homebrew: "o con Homebrew, igual que en macOS",
+    mac_note: "Los binarios para Apple silicon e Intel también están en las",
+    linux_note: "Un binario estático para x86_64 y arm64 que funciona en cualquier distribución. <code>~/.local/bin</code> tiene que estar en tu <code>PATH</code>.",
+    windows_note: "En PowerShell, sin permisos de administrador. Abre una terminal nueva después para que coja el <code>PATH</code>. Para actualizar los paquetes de Chocolatey, lanza repoke desde una terminal de administrador.",
+    self_update: "lo mantiene al día.",
+  },
+}[lang];
+
+const systems = [
+  ["mac", "macOS"],
+  ["linux", "Linux"],
+  ["windows", "Windows"],
+];
+---
+<div id="install" class="install" data-yours={t.yours}>
+  <h2 class="label">{t.install}</h2>
+  <p class="version">{t.latest} <strong>v{version}</strong> · <a href={`${releases}/tag/v${version}`}>{t.notes}</a></p>
+
+  <div class="os-tabs" role="tablist" aria-label={t.systems}>
+    {systems.map(([id, name]) => (
+      <button type="button" role="tab" id={`os-tab-${id}`} aria-controls={`os-${id}`} data-os={id}>{name}</button>
+    ))}
+  </div>
+
+  <div class="os-panel" id="os-mac" role="tabpanel" aria-labelledby="os-tab-mac" data-os="mac">
+    <h3>macOS</h3>
+    <pre><code>{brew}</code></pre>
+    <p class="or">{t.rust}</p>
+    <pre><code>{cargo}</code></pre>
+    <p class="note">{t.mac_note} <a href={releases}>releases</a>.</p>
+  </div>
+
+  <div class="os-panel" id="os-linux" role="tabpanel" aria-labelledby="os-tab-linux" data-os="linux">
+    <h3>Linux</h3>
+    <pre><code>{linux}</code></pre>
+    <p class="note" set:html={t.linux_note} />
+    <p class="or">{t.homebrew}</p>
+    <pre><code>{brew}</code></pre>
+    <p class="or">{t.rust}</p>
+    <pre><code>{cargo}</code></pre>
+  </div>
+
+  <div class="os-panel" id="os-windows" role="tabpanel" aria-labelledby="os-tab-windows" data-os="windows">
+    <h3>Windows</h3>
+    <pre><code>{windows}</code></pre>
+    <p class="note" set:html={t.windows_note} />
+    <p class="or">{t.rust}</p>
+    <pre><code>{cargo}</code></pre>
+  </div>
+
+  <p class="note"><code>repoke self-update</code> {t.self_update}</p>
+</div>

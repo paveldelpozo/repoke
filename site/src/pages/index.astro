@@ -1,23 +1,15 @@
 ---
 import Base from "../layouts/Base.astro";
+import Install from "../components/Install.astro";
 import Suit from "../components/Suit.astro";
 import listing from "../list-output.txt?raw";
-import { version } from "../site.js";
 ---
 <Base lang="en" name="index">
     <section class="intro">
       <h1>Every package manager on your machine, one&nbsp;command.</h1>
       <p class="lead">repoke finds Homebrew, npm, pnpm, pip, cargo, apt, winget and the rest of what you have installed, shows what is outdated and upgrades what you pick. In a terminal it asks first. In scripts, schedules and AI agents it runs without asking and answers in JSON.</p>
 
-      <div id="install" class="install">
-        <h2 class="label">Install</h2>
-        <p class="version">Latest release: <strong>v{version}</strong> · <a href={`https://github.com/paveldelpozo/repoke/releases/tag/v${version}`}>release notes</a></p>
-        <pre><code>brew tap paveldelpozo/tap &amp;&amp; brew trust paveldelpozo/tap
-brew install repoke</code></pre>
-        <p class="or">or with Rust</p>
-        <pre><code>cargo install repoke</code></pre>
-        <p class="note">Or download the binary for macOS, Linux or Windows from the <a href="https://github.com/paveldelpozo/repoke/releases">releases</a>. <code>repoke self-update</code> keeps it current.</p>
-      </div>
+      <Install lang="en" />
     </section>
 
     <section id="managers">

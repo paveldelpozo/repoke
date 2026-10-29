@@ -165,6 +165,42 @@ section { padding: 2.75rem 0; border-top: 1px solid var(--line); }
 .version { margin: -0.3rem 0 0.75rem; color: var(--muted); font-size: 0.95rem; }
 .version strong { color: var(--ink); }
 
+/* One tab per OS, the visitor's selected on load. Without JS there are no tabs and every
+   panel shows under its own heading. */
+.os-tabs { display: none; gap: 0.25rem; margin: 0 0 1rem; border-bottom: 1px solid var(--line); }
+html[data-os] .os-tabs { display: flex; flex-wrap: wrap; }
+.os-tabs button {
+  min-height: 44px;
+  padding: 0 0.85rem;
+  margin-bottom: -1px;
+  border: 1px solid transparent;
+  border-radius: 6px 6px 0 0;
+  background: none;
+  color: var(--muted);
+  font: 0.95rem var(--sans);
+  cursor: pointer;
+}
+.os-tabs button:hover { color: var(--ink); }
+.os-tabs button[aria-selected="true"] {
+  color: var(--ink);
+  font-weight: 600;
+  background: var(--paper);
+  border-color: var(--line) var(--line) var(--paper);
+}
+.yours { margin-left: 0.4rem; color: var(--red); font-size: 0.8rem; font-weight: 400; }
+@media (max-width: 30rem) {
+  html[data-os] .os-tabs { flex-wrap: nowrap; align-items: flex-end; }
+  html[data-os] .os-tabs button { padding: 0 0.6rem; }
+  .yours { display: block; margin: 0; line-height: 1.2; white-space: nowrap; }
+}
+
+.os-panel h3 { font: 600 1rem/1.4 var(--sans); margin: 1rem 0 0.5rem; }
+html[data-os] .os-panel h3 { display: none; }
+html[data-os] .os-panel { display: none; }
+html[data-os="mac"] .os-panel[data-os="mac"],
+html[data-os="linux"] .os-panel[data-os="linux"],
+html[data-os="windows"] .os-panel[data-os="windows"] { display: block; }
+
 .or { margin: 0.5rem 0; color: var(--muted); font-size: 0.95rem; }
 .note { color: var(--muted); font-size: 0.95rem; }
 

@@ -36,11 +36,14 @@ const nav = s.nav.map(([href, label]) => {
   <meta property="og:image:alt" content={s.og_alt}>
   <meta name="twitter:card" content="summary_large_image">
   <script is:inline>
-    // Before the first paint: the saved theme, and the language (saved, else the browser's).
+    // Before the first paint: the saved theme, the visitor's OS for the install tabs, and the
+    // language (saved, else the browser's).
     (function () {
       var root = document.documentElement, theme, lang;
       try { theme = localStorage.getItem("theme"); lang = localStorage.getItem("lang"); } catch (e) {}
       if (theme === "light" || theme === "dark") root.dataset.theme = theme;
+      var platform = ((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent).toLowerCase();
+      root.dataset.os = root.dataset.yourOs = /win/.test(platform) ? "windows" : /linux|x11|cros|chrome os|android/.test(platform) ? "linux" : "mac";
       if (!lang) {
         lang = (navigator.languages || [navigator.language || ""])
           .map(function (l) { return String(l).slice(0, 2).toLowerCase(); })
