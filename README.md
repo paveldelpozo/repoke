@@ -123,7 +123,7 @@ repoke never waits for input when stdin is not a terminal: a manager that tries 
 | apt      | APT                         | Linux         | Debian   | needs sudo; `--refresh` runs `apt-get update` |
 | dnf      | DNF                         | Linux         | Fedora   | needs sudo |
 | pacman   | pacman                      | Linux         | Arch     | needs sudo; always a full `-Syu`, Arch has no partial upgrades: a selection, `--package` or `--hold` still upgrades everything |
-| zypper   | zypper                      | Linux         | openSUSE | needs sudo; no `export`, zypper doesn't tell what you installed from dependencies |
+| zypper   | zypper                      | Linux         | openSUSE | needs sudo; `export` takes what `zypper packages --userinstalled` marks as installed by you |
 | snap     | Snap                        | Linux         |          | needs sudo |
 | flatpak  | Flatpak                     | Linux         |          | |
 | winget   | WinGet                      | Windows       |          | |
@@ -148,7 +148,7 @@ Planned: deno, volta. See [docs/tareas.md](docs/tareas.md).
 
 ### Plugins
 
-Any other manager can be added without changing repoke: a TOML file in `~/.config/repoke/managers/` that says which commands to run and how to read their output, or a `repoke-<id>` executable on your PATH that answers a small JSON protocol. Plugins show up in every command, including the MCP server.
+Any other manager can be added without changing repoke: a TOML file in `~/.config/repoke/managers/` that says which commands to run and how to read their output, or a `repoke-<id>` executable on your PATH that answers a small JSON protocol. Plugins show up in every command, including the MCP server. A plugin can also name config files for `export` to carry, which is how the official `git` and `zsh` plugins bring `.gitconfig` and `.zshrc` to a new machine.
 
 ```sh
 repoke plugin new gh-ext          # TOML template in ~/.config/repoke/managers/gh-ext.toml
