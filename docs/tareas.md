@@ -4,10 +4,11 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 
 ## Estado al cierre de la sesión del 28-10-2026
 
-Publicado: **v0.6.0** (29-10) en GitHub (5 binarios), crates.io, el tap `paveldelpozo/tap` y el plugin de Claude Code; landing bilingüe en https://repoke.paveldelpozo.es (Dokploy, proyecto «repoke» → «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`, se redespliega sola); plugins oficiales en `paveldelpozo/repoke-plugins` (`omz`, `vscode`) con el índice comunitario montado (release `files`, Discussions, cifras diarias). En el Mac de Pavel: repoke instalado con cargo desde el código local, plugins `omz` y `vscode`, `[brew] greedy = true`, el modo programado a las 03:00 y las cifras de plugins a las 04:30.
+Publicado: **v0.6.1** (29-10) en GitHub (5 binarios), crates.io, el tap `paveldelpozo/tap` y el plugin de Claude Code; landing bilingüe en https://repoke.paveldelpozo.es (Dokploy, proyecto «repoke» → «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`, se redespliega sola); plugins oficiales en `paveldelpozo/repoke-plugins` (`omz`, `vscode`) con el índice comunitario montado (release `files`, Discussions, cifras diarias). En el Mac de Pavel: repoke instalado con cargo desde el código local, plugins `omz` y `vscode`, `[brew] greedy = true`, el modo programado a las 03:00 y las cifras de plugins a las 04:30.
 
 Lo siguiente, por orden (actualizado el 29-10):
 
+1. **v0.6.1 publicada** (29-10, la lanzó Pavel): yarn con variables de `.npmrc` sin definir y hora local en `schedule status`.
 1. **v0.6.0 publicada** (29-10, la lanzó Pavel): plugins de la comunidad con descargas y votos, versión actual en dnf, resumen de pacman y modo programado sin systemd.
 2. **Primera ejecución programada revisada** (29-10): 9 paquetes actualizados (brew, fnm y extensiones de VS Code); las cifras de plugins también se subieron. yarn falló porque `~/.npmrc` usa `${NODE_AUTH_TOKEN}` sin definir: ahora repoke lanza yarn con las variables que faltan vacías (`env VAR=`), como las trata npm. `schedule status` enseña la hora local (antes UTC).
 3. **Pruebas que solo puede hacer Pavel:** las preguntas interactivas de `export --encrypt` e `init` en una terminal real; un cask que pida contraseña (`.pkg`); `[node] remove_old = true` en real; `softwareupdate` el día que Apple publique algo.
