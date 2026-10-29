@@ -105,7 +105,7 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] PATH: el planificador arranca con un PATH mínimo. Se guarda el del usuario sin duplicados y cambiando la carpeta por sesión de fnm (`fnm_multishells/…`, que desaparece) por `$FNM_DIR/aliases/default/bin`.
 - [x] Probado en el Mac: plist validado con `plutil`, `schedule run` en modo consulta con un HOME falso, `status` con el historial.
 - [x] Instalado en el Mac de Pavel (28-10).
-- [ ] Comprobar el 29-10 por la mañana con `repoke schedule status` que la ejecución de las 03:00 fue bien (Pavel).
+- [x] Ejecución de las 03:00 del 29-10 revisada: 9 paquetes actualizados; yarn falló por `${NODE_AUTH_TOKEN}`, arreglado en la v0.6.1.
 - [ ] Windows: no hay notificación (habría que usar un toast de PowerShell).
 - [x] Sin systemd (29-10, Debian en Docker): `install` daba la línea de crontab con un error y sin guardar la configuración, así que `schedule run` no hacía nada. Ahora la guarda; `status` mira `crontab -l`; systemd se detecta por `/run/systemd/system` (en un contenedor con `cron` instalado hay `systemctl` sin systemd).
 - [ ] Con systemd de verdad (timer de usuario): en el portátil con Ubuntu de Pavel.
