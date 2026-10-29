@@ -23,8 +23,14 @@ struct Spec {
     os: Vec<String>,
     #[serde(default)]
     needs_root: bool,
-    outdated: Query,
-    upgrade: Run,
+    /// Optional, so a manager can exist only to carry config files.
+    #[serde(default)]
+    outdated: Option<Query>,
+    #[serde(default)]
+    upgrade: Option<Run>,
+    /// Config files, relative to the home directory, that `export` can carry over.
+    #[serde(default)]
+    config: Vec<String>,
     #[serde(default)]
     refresh: Option<Run>,
     #[serde(default)]
@@ -76,6 +82,7 @@ pub struct Declared {
     name: &'static str,
     binary: &'static str,
     spec: Spec,
+    config: &'static [&'static str],
     outdated_pattern: Option<Regex>,
     installed_pattern: Option<Regex>,
 }
@@ -115,7 +122,16 @@ fn parse(text: &str) -> Result<Declared, String> {
     if spec.id.is_empty() {
         return Err("`id` is empty".into());
     }
-    let outdated_pattern = pattern(&spec.outdated, "outdated")?;
+    if spec.outdated.is_none() && spec.config.is_empty() {
+        return Err("declares neither [outdated] nor `config`, so it has nothing to do".into());
+    }
+    if spec.outdated.is_some() != spec.upgrade.is_some() {
+        return Err("[outdated] and [upgrade] go together".into());
+    }
+    let outdated_pattern = match &spec.outdated {
+        Some(query) => pattern(query, "outdated")?,
+        None => None,
+    };
     let installed_pattern = match &spec.installed {
         Some(query) => pattern(query, "installed")?,
         None => None,
@@ -124,6 +140,7 @@ fn parse(text: &str) -> Result<Declared, String> {
         id: leak(spec.id.clone()),
         name: leak(spec.name.clone()),
         binary: leak(spec.binary.clone()),
+        config: super::config_files(spec.config.clone())?,
         spec,
         outdated_pattern,
         installed_pattern,
@@ -262,7 +279,9 @@ impl Manager for Declared {
     }
 
     fn outdated(&self, bin: &Path) -> Result<Vec<Package>, String> {
-        let query = &self.spec.outdated;
+        let Some(query) = &self.spec.outdated else {
+            return Ok(Vec::new());
+        };
         let text = capture_within(bin, &query.command, self.timeout())?.expect(&query.ok_codes)?;
         Ok(rows(query, self.outdated_pattern.as_ref(), &text)?
             .into_iter()
@@ -279,7 +298,10 @@ impl Manager for Declared {
             .iter()
             .map(|p| (p.name.clone(), p.latest.clone()))
             .collect();
-        expand(&self.spec.upgrade, &pairs)
+        let Some(upgrade) = &self.spec.upgrade else {
+            return Vec::new();
+        };
+        expand(upgrade, &pairs)
             .into_iter()
             .map(|(args, covered)| Step {
                 commands: vec![args],
@@ -311,11 +333,13 @@ impl Manager for Declared {
     }
 
     fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
-        let query = self
-            .spec
-            .installed
-            .as_ref()
-            .ok_or("this manager has no [installed] section")?;
+        let Some(query) = &self.spec.installed else {
+            // A manager that only carries config files has nothing else to export.
+            if !self.config.is_empty() {
+                return Ok(Vec::new());
+            }
+            return Err("this manager has no [installed] section".into());
+        };
         let text = capture_within(bin, &query.command, self.timeout())?.expect(&query.ok_codes)?;
         Ok(rows(query, self.installed_pattern.as_ref(), &text)?
             .into_iter()
@@ -339,6 +363,10 @@ impl Manager for Declared {
                 Step::install(args, &covered)
             })
             .collect()
+    }
+
+    fn config_files(&self) -> &'static [&'static str] {
+        self.config
     }
 }
 
@@ -406,7 +434,7 @@ command = ["upgrade", "--cask", "{packages}"]
         )
         .unwrap();
         let output = r#"{"casks":[{"name":"caskhub","installed_versions":["0.9.0"],"current_version":"0.9.3"}]}"#;
-        let found = rows(&declared.spec.outdated, None, output).unwrap();
+        let found = rows(declared.spec.outdated.as_ref().unwrap(), None, output).unwrap();
         assert_eq!(
             found,
             [Row {
@@ -446,7 +474,7 @@ command = ["extension", "upgrade", "{name}"]
         .unwrap();
         let text = "[gh-dash]: would have upgraded from v4.1.0 to v4.2.0\n[gh-copilot]: already up to date\n";
         let found = rows(
-            &declared.spec.outdated,
+            declared.spec.outdated.as_ref().unwrap(),
             declared.outdated_pattern.as_ref(),
             text,
         )
@@ -484,6 +512,29 @@ command = ["extension", "upgrade", "{name}"]
         );
         assert!(parse(&no_group).err().unwrap().contains("(?P<name>"));
         assert!(parse("id = \"x\"\nbogus = 1\n").is_err());
+    }
+
+    #[test]
+    fn carries_config_files_alone() {
+        let base = "id = \"git\"\nname = \"Git\"\nbinary = \"git\"\n";
+        let git = parse(&format!(
+            "{base}config = [\".gitconfig\", \".config/git/ignore\"]\n"
+        ))
+        .unwrap();
+        assert_eq!(git.config_files(), [".gitconfig", ".config/git/ignore"]);
+        assert!(git.outdated(Path::new("git")).unwrap().is_empty());
+        assert!(git.installed(Path::new("git")).unwrap().is_empty());
+
+        assert!(parse(base).err().unwrap().contains("nothing to do"));
+        for outside in ["/etc/passwd", "../.ssh/id_ed25519", ".config/../../x", ""] {
+            let error = parse(&format!("{base}config = [\"{outside}\"]\n"))
+                .err()
+                .unwrap();
+            assert!(
+                error.contains("inside the home directory"),
+                "{outside}: {error}"
+            );
+        }
     }
 
     #[test]

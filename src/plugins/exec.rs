@@ -27,6 +27,9 @@ struct Describe {
     /// Optional subcommands it implements: `refresh`, `installed`, `install`.
     #[serde(default)]
     capabilities: Vec<String>,
+    /// Config files, relative to the home directory, that `export` can carry over.
+    #[serde(default)]
+    config: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -53,6 +56,7 @@ pub struct Exec {
     os: Vec<String>,
     needs_root: bool,
     capabilities: Vec<String>,
+    config: &'static [&'static str],
 }
 
 pub fn discover() -> Vec<Candidate> {
@@ -140,6 +144,7 @@ fn describe(id: &str, path: &Path) -> Result<Exec, String> {
         os: describe.os,
         needs_root: describe.needs_root,
         capabilities: describe.capabilities,
+        config: super::config_files(describe.config)?,
     })
 }
 
@@ -222,6 +227,10 @@ impl Manager for Exec {
 
     fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
         if !self.can("installed") {
+            // A plugin that only carries config files has nothing else to export.
+            if !self.config.is_empty() {
+                return Ok(Vec::new());
+            }
             return Err("this plugin doesn't list what is installed".into());
         }
         let json = capture_within(bin, ["installed"], self.timeout())?.expect(&[0])?;
@@ -245,6 +254,10 @@ impl Manager for Exec {
         } else {
             Vec::new()
         }
+    }
+
+    fn config_files(&self) -> &'static [&'static str] {
+        self.config
     }
 }
 
@@ -321,7 +334,7 @@ mod tests {
             &dir,
             "demo",
             r#"case "$1" in
-  describe) echo '{"protocol":1,"id":"demo","name":"Demo","capabilities":["installed"]}' ;;
+  describe) echo '{"protocol":1,"id":"demo","name":"Demo","capabilities":["installed"],"config":[".demorc"]}' ;;
   detect) echo '{"installed":true,"version":"1.2.3"}' ;;
   outdated) echo '[{"name":"a","current":"1","latest":"2"}]' ;;
   installed) echo '[{"name":"a","version":"1"}]' ;;
@@ -339,6 +352,7 @@ esac"#,
         let steps = exec.upgrade_steps(&path, &exec.outdated(&path).unwrap());
         assert_eq!(steps[0].commands[0], ["upgrade", "a"]);
         assert!(exec.install_steps(&path, &[Installed::new("a")]).is_empty());
+        assert_eq!(exec.config_files(), [".demorc"]);
         fs::remove_dir_all(dir).unwrap();
     }
 

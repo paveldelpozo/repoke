@@ -115,6 +115,31 @@ fn leak(text: String) -> &'static str {
     Box::leak(text.into_boxed_str())
 }
 
+/// The config files a plugin carries in `export`. `init` writes them back, so they must stay
+/// inside the home directory.
+fn config_files(paths: Vec<String>) -> Result<&'static [&'static str], String> {
+    for path in &paths {
+        let relative = Path::new(path);
+        if path.is_empty()
+            || relative.has_root()
+            || relative
+                .components()
+                .any(|c| !matches!(c, std::path::Component::Normal(_)))
+        {
+            return Err(format!(
+                "config file `{path}` must be a path inside the home directory, like .gitconfig"
+            ));
+        }
+    }
+    Ok(Box::leak(
+        paths
+            .into_iter()
+            .map(leak)
+            .collect::<Vec<_>>()
+            .into_boxed_slice(),
+    ))
+}
+
 pub fn list(json: bool) -> Result<ExitCode, String> {
     let sources = &loaded().sources;
     if json {

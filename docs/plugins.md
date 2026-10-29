@@ -71,6 +71,19 @@ A command must exit 0 unless you list other accepted codes in `ok_codes = [0, 1]
 | `[installed]` | `export` | like `[outdated]`, with `name` and `version` |
 | `[install]` | `init` | like `[upgrade]`; `{version}` is the version recorded in the snapshot |
 
+### Config files
+
+`config` lists files, relative to your home directory, that `repoke export` offers to save with the manager's packages and `repoke init` puts back, like the config of the built-in managers: values that look like secrets are taken out unless you encrypt them, and links into a dotfiles repository are recorded as links.
+
+```toml
+id = "git"
+name = "Git config"
+binary = "git"
+config = [".gitconfig", ".config/git/config", ".config/git/ignore"]
+```
+
+A manager can be only that: without `[outdated]` and `[upgrade]` it has nothing to update, and `export` carries its files. Paths must stay inside the home directory.
+
 Unknown keys are an error, so a typo shows up in `repoke plugin list` instead of being ignored.
 
 ## Executable plugins, protocol 1
@@ -92,6 +105,7 @@ Runs every time repoke starts, so keep it instant: no network, no slow commands.
 - `os`: optional; values are `macos`, `linux` and `windows`. Empty means all.
 - `needs_root`: optional; when true, `upgrade` runs through `sudo -n`, and `--no-sudo` skips it.
 - `capabilities`: optional subcommands it implements, among `refresh`, `installed` and `install`.
+- `config`: optional config files, relative to the home directory, that `export` can carry over, as in [TOML managers](#config-files).
 
 ### `detect`
 

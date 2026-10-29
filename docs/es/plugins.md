@@ -71,6 +71,19 @@ Un comando tiene que salir con 0, salvo que indiques otros códigos válidos en 
 | `[installed]` | `export` | como `[outdated]`, con `name` y `version` |
 | `[install]` | `init` | como `[upgrade]`; `{version}` es la versión guardada en la foto |
 
+### Ficheros de configuración
+
+`config` enumera ficheros, relativos a tu carpeta personal, que `repoke export` ofrece guardar con los paquetes del gestor y que `repoke init` vuelve a poner, igual que la configuración de los gestores integrados: los valores que parecen secretos se quitan salvo que los cifres, y los enlaces a un repositorio de dotfiles se guardan como enlaces.
+
+```toml
+id = "git"
+name = "Git config"
+binary = "git"
+config = [".gitconfig", ".config/git/config", ".config/git/ignore"]
+```
+
+Un gestor puede ser solo eso: sin `[outdated]` ni `[upgrade]` no tiene nada que actualizar, y `export` se lleva sus ficheros. Las rutas tienen que quedarse dentro de la carpeta personal.
+
 Las claves desconocidas son un error, así que una errata aparece en `repoke plugin list` en vez de ignorarse.
 
 ## Plugins ejecutables, protocolo 1
@@ -92,6 +105,7 @@ Se ejecuta cada vez que arranca repoke, así que tiene que ser inmediato: sin re
 - `os`: opcional; los valores son `macos`, `linux` y `windows`. Vacío significa todos.
 - `needs_root`: opcional; si es true, `upgrade` se ejecuta con `sudo -n` y `--no-sudo` lo salta.
 - `capabilities`: subcomandos opcionales que implementa, entre `refresh`, `installed` e `install`.
+- `config`: opcional; ficheros de configuración, relativos a la carpeta personal, que `export` puede llevarse, como en los [gestores en TOML](#ficheros-de-configuración).
 
 ### `detect`
 
