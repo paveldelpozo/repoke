@@ -1,5 +1,5 @@
 //! `repoke self-update`, and the once-a-day notice that a newer repoke is out. Releases come
-//! from GitHub; an install made by Homebrew or cargo is left to that manager.
+//! from GitHub; an install made by Homebrew, cargo, Scoop or winget is left to that manager.
 
 use std::env;
 use std::fs;
@@ -20,6 +20,8 @@ const REPO: &str = "paveldelpozo/repoke";
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const TARGET: &str = env!("REPOKE_TARGET");
 const DAY: u64 = 86_400;
+/// The package identifier in microsoft/winget-pkgs.
+const WINGET_ID: &str = "PavelDelPozo.repoke";
 
 #[derive(Deserialize)]
 struct Release {
@@ -39,6 +41,8 @@ struct Asset {
 enum Method {
     Brew,
     Cargo,
+    Scoop,
+    Winget,
     Binary,
 }
 
@@ -84,6 +88,14 @@ pub fn run(args: &SelfUpdateArgs) -> Result<ExitCode, String> {
     let delegated: Option<&[&str]> = match method {
         Method::Brew => Some(&["brew", "upgrade", "repoke"]),
         Method::Cargo => Some(&["cargo", "install", "repoke", "--locked"]),
+        // scoop is a .cmd/.ps1 shim, which Command only finds through cmd.
+        Method::Scoop => Some(&["cmd", "/C", "scoop", "update", "repoke"]),
+        // winget replaces the .exe in place, and Windows won't let a running program be replaced.
+        Method::Winget => {
+            return Err(format!(
+                "repoke {latest} is available; it was installed with winget, so close repoke and run `winget upgrade {WINGET_ID}`"
+            ));
+        }
         Method::Binary => None,
     };
     let action = match delegated {
@@ -138,6 +150,13 @@ fn method(exe: &Path) -> Method {
     let text = exe.to_string_lossy();
     if text.contains("/Cellar/") || text.contains("/linuxbrew/") {
         return Method::Brew;
+    }
+    let windows = text.to_lowercase().replace('/', "\\");
+    if windows.contains("\\scoop\\apps\\repoke\\") {
+        return Method::Scoop;
+    }
+    if windows.contains("\\microsoft\\winget\\packages\\") {
+        return Method::Winget;
     }
     let cargo_bin = env::var_os("CARGO_HOME")
         .map(PathBuf::from)
@@ -354,5 +373,17 @@ mod tests {
             Method::Brew
         );
         assert_eq!(method(Path::new("/usr/local/bin/repoke")), Method::Binary);
+        assert_eq!(
+            method(Path::new(
+                r"C:\Users\pavel\scoop\apps\repoke\0.7.0\repoke.exe"
+            )),
+            Method::Scoop
+        );
+        assert_eq!(
+            method(Path::new(
+                r"C:\Users\pavel\AppData\Local\Microsoft\WinGet\Packages\PavelDelPozo.repoke_Microsoft.Winget.Source_8wekyb3d8bbwe\repoke.exe"
+            )),
+            Method::Winget
+        );
     }
 }

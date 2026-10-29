@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Builds the release archives, then tags, publishes the GitHub release and updates the Homebrew
-# tap. Releases are made locally because GitHub Actions minutes are not used for this project.
+# Builds the release archives, then tags, publishes the GitHub release, updates the Homebrew
+# tap and the Scoop bucket and submits to winget. Releases are made locally because GitHub
+# Actions minutes are not used for this project.
 # Versions follow semver, worked out from Conventional Commits since the last tag: a `!` or a
 # `BREAKING CHANGE` bumps the major version, `feat:` the minor one, anything else the patch.
 # Usage: scripts/release.sh [auto|major|minor|patch|X.Y.Z] [--dry-run] [--crate]
@@ -60,6 +61,7 @@ fi
 tag="v$version"
 echo "releasing $tag (from ${last_tag:-the first commit}, bump: $bump)"
 tap_dir="${TAP_DIR:-$HOME/Documents/Repositories/personal/hivefold/homebrew-tap}"
+bucket_dir="${BUCKET_DIR:-$HOME/Documents/Repositories/personal/repoke/scoop-bucket}"
 repo="paveldelpozo/repoke"
 targets=(
   aarch64-apple-darwin
@@ -141,49 +143,7 @@ if ((${#missing[@]})) && ! $dry_run; then
   exit 1
 fi
 
-sha() { cut -d' ' -f1 "dist/repoke-$1.tar.gz.sha256" 2>/dev/null || echo "MISSING"; }
-url="https://github.com/$repo/releases/download/$tag"
-cat > dist/repoke.rb <<EOF
-# frozen_string_literal: true
-
-# Finds the package managers on a system and keeps them up to date.
-class Repoke < Formula
-  desc "Finds the package managers on your system and keeps them up to date"
-  homepage "https://github.com/$repo"
-  version "$version"
-  license any_of: ["MIT", "Apache-2.0"]
-
-  on_macos do
-    on_arm do
-      url "$url/repoke-aarch64-apple-darwin.tar.gz"
-      sha256 "$(sha aarch64-apple-darwin)"
-    end
-    on_intel do
-      url "$url/repoke-x86_64-apple-darwin.tar.gz"
-      sha256 "$(sha x86_64-apple-darwin)"
-    end
-  end
-
-  on_linux do
-    on_arm do
-      url "$url/repoke-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "$(sha aarch64-unknown-linux-musl)"
-    end
-    on_intel do
-      url "$url/repoke-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "$(sha x86_64-unknown-linux-musl)"
-    end
-  end
-
-  def install
-    bin.install "repoke"
-  end
-
-  test do
-    assert_match version.to_s, shell_output("#{bin}/repoke --version")
-  end
-end
-EOF
+scripts/manifests.sh "$version"
 
 if $dry_run; then
   step "dry run, nothing published"
@@ -224,6 +184,25 @@ if [[ -d "$tap_dir/.git" ]]; then
   git -C "$tap_dir" push --quiet
 else
   echo "no tap at $tap_dir (set TAP_DIR); the formula is in dist/repoke.rb"
+fi
+
+step "Scoop bucket"
+if [[ -d "$bucket_dir/.git" ]]; then
+  mkdir -p "$bucket_dir/bucket"
+  cp dist/repoke.json "$bucket_dir/bucket/repoke.json"
+  git -C "$bucket_dir" add bucket/repoke.json
+  git -C "$bucket_dir" commit --quiet -m "repoke $version"
+  git -C "$bucket_dir" push --quiet
+else
+  echo "no bucket at $bucket_dir (set BUCKET_DIR); the manifest is in dist/repoke.json"
+fi
+
+step "winget"
+# A new version reaches winget through a pull request to microsoft/winget-pkgs, reviewed there.
+if command -v wingetcreate >/dev/null; then
+  wingetcreate submit --prtitle "New version: PavelDelPozo.repoke version $version" dist/winget
+else
+  echo "manifests in dist/winget: open a pull request to microsoft/winget-pkgs adding them as manifests/p/PavelDelPozo/repoke/$version/"
 fi
 
 if $crate; then
