@@ -276,7 +276,7 @@ pub fn status(json: bool) -> Result<ExitCode, String> {
     match &status.last_run {
         Some(run) => println!(
             "Last run: {}, {} {}",
-            utc(run.started),
+            local_time(run.started),
             run.message,
             style(format!("(log: {})", status.log.display())).dim()
         ),
@@ -508,7 +508,25 @@ fn parse_at(at: &str) -> Result<(u8, u8), String> {
     Ok((h, m))
 }
 
-/// `YYYY-MM-DD HH:MM UTC`; repoke has no time zone database.
+/// The system's `date` knows the time zone and its DST rules, which repoke doesn't: BSD `date`
+/// takes `-r`, GNU `date` takes `-d @`. Without either, UTC.
+fn local_time(unix: u64) -> String {
+    let format = "+%Y-%m-%d %H:%M";
+    let attempts = [
+        ["-r".to_string(), unix.to_string(), format.to_string()],
+        ["-d".to_string(), format!("@{unix}"), format.to_string()],
+    ];
+    if cfg!(unix) {
+        for args in attempts {
+            if let Ok(time) = capture("date", &args).and_then(|o| o.expect(&[0])) {
+                return time.trim().to_string();
+            }
+        }
+    }
+    utc(unix)
+}
+
+/// `YYYY-MM-DD HH:MM UTC`.
 fn utc(unix: u64) -> String {
     let minutes = unix % 86_400 / 60;
     format!(

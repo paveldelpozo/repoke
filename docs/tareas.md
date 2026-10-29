@@ -9,7 +9,7 @@ Publicado: **v0.6.0** (29-10) en GitHub (5 binarios), crates.io, el tap `pavelde
 Lo siguiente, por orden (actualizado el 29-10):
 
 1. **v0.6.0 publicada** (29-10, la lanzó Pavel): plugins de la comunidad con descargas y votos, versión actual en dnf, resumen de pacman y modo programado sin systemd.
-2. **Pavel, 29-10 por la mañana:** `repoke schedule status` para ver cómo fue la primera ejecución programada (y `~/Library/Logs/repoke/last-run.log` si algo falló), y `~/Library/Logs/repoke-plugins/stats.log` para la primera de las cifras.
+2. **Primera ejecución programada revisada** (29-10): 9 paquetes actualizados (brew, fnm y extensiones de VS Code); las cifras de plugins también se subieron. yarn falló porque `~/.npmrc` usa `${NODE_AUTH_TOKEN}` sin definir: ahora repoke lanza yarn con las variables que faltan vacías (`env VAR=`), como las trata npm. `schedule status` enseña la hora local (antes UTC).
 3. **Pruebas que solo puede hacer Pavel:** las preguntas interactivas de `export --encrypt` e `init` en una terminal real; un cask que pida contraseña (`.pkg`); `[node] remove_old = true` en real; `softwareupdate` el día que Apple publique algo.
 4. **Un compañero de Pavel, como beta-tester:** `brew install` desde el tap tras `brew trust paveldelpozo/tap`.
 5. **Linux y Windows:** apt, dnf, pacman, zypper y el modo programado sin systemd, probados en Docker (29-10). Quedan flatpak, snap, el timer de systemd (portátil con Ubuntu) y Windows (winget, scoop, choco), que sigue sin máquina.
