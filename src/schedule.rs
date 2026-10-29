@@ -491,8 +491,36 @@ fn notify(message: &str) {
         let _ = capture("osascript", ["-e", &script]);
     } else if cfg!(target_os = "linux") && manager::locate("notify-send").is_some() {
         let _ = capture("notify-send", ["repoke", message]);
+    } else if cfg!(windows) {
+        // The message goes in through the environment so it is never parsed as PowerShell.
+        let _ = Command::new("powershell.exe")
+            .args([
+                "-NoProfile",
+                "-NonInteractive",
+                "-WindowStyle",
+                "Hidden",
+                "-Command",
+                TOAST,
+            ])
+            .env("REPOKE_MESSAGE", message)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status();
     }
 }
+
+/// A Windows toast through WinRT, which only Windows PowerShell 5.1 (not pwsh 7) can load.
+/// Windows drops toasts from an app id it doesn't know, so it borrows PowerShell's own.
+const TOAST: &str = r#"
+[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+$xml = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)
+$text = $xml.GetElementsByTagName('text')
+$text.Item(0).AppendChild($xml.CreateTextNode('repoke')) | Out-Null
+$text.Item(1).AppendChild($xml.CreateTextNode($env:REPOKE_MESSAGE)) | Out-Null
+$app = '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe'
+[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($app).Show([Windows.UI.Notifications.ToastNotification]::new($xml))
+"#;
 
 /// `HH:MM` on a 24-hour clock.
 fn parse_at(at: &str) -> Result<(u8, u8), String> {
