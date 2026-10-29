@@ -1,6 +1,6 @@
 [package]
 name = "repoke"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2024"
 rust-version = "1.89"
 description = "Finds the package managers on your system and keeps them up to date, interactively or unattended"

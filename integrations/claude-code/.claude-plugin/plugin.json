@@ -1,7 +1,7 @@
 {
   "name": "repoke",
   "description": "Check and upgrade the package managers on this machine through repoke",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "author": {
     "name": "Pavel del Pozo",
     "url": "https://github.com/paveldelpozo"
