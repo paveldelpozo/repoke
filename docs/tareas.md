@@ -4,10 +4,11 @@ Lista viva del proyecto. Se marcan, añaden y anotan aquí las tareas, los halla
 
 ## Estado al cierre de la sesión del 28-10-2026
 
-Publicado: **v0.6.1** (29-10) en GitHub (5 binarios), crates.io, el tap `paveldelpozo/tap` y el plugin de Claude Code; landing bilingüe en https://repoke.paveldelpozo.es (Dokploy, proyecto «repoke» → «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`, se redespliega sola); plugins oficiales en `paveldelpozo/repoke-plugins` (`omz`, `vscode`) con el índice comunitario montado (release `files`, Discussions, cifras diarias). En el Mac de Pavel: repoke instalado con cargo desde el código local, plugins `omz` y `vscode`, `[brew] greedy = true`, el modo programado a las 03:00 y las cifras de plugins a las 04:30.
+Publicado: **v0.7.0** (29-10) en GitHub (5 binarios), crates.io, el tap `paveldelpozo/tap` y el plugin de Claude Code; landing bilingüe en https://repoke.paveldelpozo.es (Dokploy, proyecto «repoke» → «Landing», `applicationId` `llp0KBoAGGxkY8k40Q9WG`, se redespliega sola); plugins oficiales en `paveldelpozo/repoke-plugins` (`omz`, `vscode`) con el índice comunitario montado (release `files`, Discussions, cifras diarias). En el Mac de Pavel: repoke instalado con cargo desde el código local, plugins `omz` y `vscode`, `[brew] greedy = true`, el modo programado a las 03:00 y las cifras de plugins a las 04:30.
 
 Lo siguiente, por orden (actualizado el 29-10):
 
+1. **v0.7.0 publicada** (29-10, la lanzó Pavel): `export` con zypper, toast en Windows, configuración en los plugins (`git`, `zsh`), ocho plugins oficiales nuevos y el bucket de Scoop.
 1. **v0.6.1 publicada** (29-10, la lanzó Pavel): yarn con variables de `.npmrc` sin definir y hora local en `schedule status`.
 1. **v0.6.0 publicada** (29-10, la lanzó Pavel): plugins de la comunidad con descargas y votos, versión actual en dnf, resumen de pacman y modo programado sin systemd.
 2. **Primera ejecución programada revisada** (29-10): 9 paquetes actualizados (brew, fnm y extensiones de VS Code); las cifras de plugins también se subieron. yarn falló porque `~/.npmrc` usa `${NODE_AUTH_TOKEN}` sin definir: ahora repoke lanza yarn con las variables que faltan vacías (`env VAR=`), como las trata npm. `schedule status` enseña la hora local (antes UTC).
@@ -162,7 +163,7 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] En repoke, `plugin search`, `plugin install <id>` (enseña el código y pregunta; `--yes`, `--force`) y `plugin remove <id>` (solo borra lo que instaló). `REPOKE_PLUGIN_INDEX` para otro índice.
 - [x] `paveldelpozo/repoke-plugins` publicado (28-10, lo creó Pavel). Prueba de punta a punta: `plugin search` e `install vscode` desde el índice real de GitHub, y `check` con las 4 extensiones pendientes.
 - [x] tpm, zinit, antidote, lazy.nvim, vim-plug y componentes de gcloud (29-10): escritos y probados de punta a punta en Ubuntu 24.04 en Docker. Falta publicarlos (`scripts/publish.py … --discussion`, lo lanza Pavel) y probarlos en macOS.
-- [ ] Scoop y winget (29-10): `scripts/manifests.sh` escribe los manifiestos y `release.sh` actualiza el bucket (`../scoop-bucket`, creado en local) y envía a winget con `wingetcreate` si está. Falta que Pavel cree `paveldelpozo/scoop-bucket` en GitHub, el primer PR a `microsoft/winget-pkgs` y probarlo en Windows.
+- [ ] Scoop y winget (29-10): `scripts/manifests.sh` escribe los manifiestos y `release.sh` actualiza el bucket (`../scoop-bucket`, creado en local) y envía a winget con `wingetcreate` si está. Bucket publicado en `paveldelpozo/scoop-bucket` con la v0.7.0. winget: `scripts/winget-pr.sh` abre el PR desde el fork por la API (wingetcreate solo existe en Windows). Falta el primer PR (0.7.0) y probarlo en Windows.
 - Se quedan en el núcleo, por ser gestores de paquetes: mas, rustup.
 
 ## Landing (publicada en https://repoke.paveldelpozo.es)

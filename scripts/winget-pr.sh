@@ -39,7 +39,7 @@ fi
 gh pr create --repo "$upstream" --head "$login:$branch" --base master --title "$title" --body "$(cat <<EOF
 $id $version: [repoke](https://github.com/paveldelpozo/repoke) finds the package managers on a system and keeps them up to date. Portable zip (x64) from the GitHub release.
 
-- [x] Have you signed the [Contributor License Agreement](https://cla.opensource.microsoft.com/microsoft/winget-pkgs)?
+- [ ] Have you signed the [Contributor License Agreement](https://cla.opensource.microsoft.com/microsoft/winget-pkgs)?
 - [x] Have you checked that there aren't other open [pull requests](https://github.com/microsoft/winget-pkgs/pulls) for the same manifest update/change?
 - [x] This PR only modifies one (1) manifest
 - [x] Have you validated your manifest against the [schema](https://github.com/microsoft/winget-cli/tree/master/schemas/JSON/manifests/v1.9.0)?
