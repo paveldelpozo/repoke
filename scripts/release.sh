@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the release archives, then tags, publishes the GitHub release, updates the Homebrew
-# tap and the Scoop bucket and submits to winget. Releases are made locally because GitHub
-# Actions minutes are not used for this project.
+# tap and the Scoop bucket and opens the winget pull request. Releases are made locally because
+# GitHub Actions minutes are not used for this project.
 # Versions follow semver, worked out from Conventional Commits since the last tag: a `!` or a
 # `BREAKING CHANGE` bumps the major version, `feat:` the minor one, anything else the patch.
 # Usage: scripts/release.sh [auto|major|minor|patch|X.Y.Z] [--dry-run] [--crate]
@@ -199,11 +199,7 @@ fi
 
 step "winget"
 # A new version reaches winget through a pull request to microsoft/winget-pkgs, reviewed there.
-if command -v wingetcreate >/dev/null; then
-  wingetcreate submit --prtitle "New version: PavelDelPozo.repoke version $version" dist/winget
-else
-  echo "manifests in dist/winget: open a pull request to microsoft/winget-pkgs adding them as manifests/p/PavelDelPozo/repoke/$version/"
-fi
+scripts/winget-pr.sh "$version" || echo "winget: retry with scripts/winget-pr.sh $version"
 
 if $crate; then
   step "crates.io"
