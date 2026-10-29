@@ -43,7 +43,7 @@ repoke upgrade --hold eslint    # deja un paquete como está</code></pre>
       <pre><code>repoke export                 # lo que instalaste, y tu configuración si quieres
 repoke init --from foto       # en la máquina nueva, solo lo que falta
 repoke init                   # o elige herramientas de un catálogo</code></pre>
-      <p>Los valores que parecen secretos, como los tokens de registro de <code>.npmrc</code>, se quitan antes de guardar la foto, salvo que prefieras guardarlos cifrados con una contraseña (<code>--encrypt</code>), y al restaurar nunca se sustituye un fichero tuyo sin preguntar antes y guardar una copia.</p>
+      <p>Los valores que parecen secretos, como los tokens de registro de <code>.npmrc</code>, se quitan antes de guardar la foto, salvo que prefieras guardarlos cifrados con una contraseña (<code>--encrypt</code>), y al restaurar nunca se sustituye un fichero tuyo sin preguntar antes y guardar una copia. Con los plugins <code>git</code> y <code>zsh</code> también viajan <code>.gitconfig</code> y <code>.zshrc</code>, y los ficheros que enlazan a tu repositorio de dotfiles se guardan como enlaces.</p>
       <pre><code>repoke schedule install                 # cada día a las 03:00, actualiza lo que no pide sudo
 repoke schedule install --check-only    # o solo consulta, y avisa
 repoke schedule status                  # cuándo se ejecuta, y cómo fue la última vez
@@ -63,7 +63,7 @@ repoke mcp                              # servidor MCP por stdio</code></pre>
       <pre><code>repoke plugin search            # plugins oficiales y de la comunidad, con descargas y votos
 repoke plugin install vscode    # comprueba que es la versión revisada, enseña su código y pregunta
 repoke plugin new mi-herramienta   # empieza el tuyo desde una plantilla</code></pre>
-      <p>Cualquier otro gestor se puede añadir con un fichero TOML o un ejecutable pequeño. <a href="plugins.html">La guía de plugins</a> explica las dos formas y cómo compartir el tuyo: los plugins de la comunidad entran por pull request, se revisan y quedan fijados por su sha256, y se votan en <a href="https://github.com/paveldelpozo/repoke-plugins/discussions/categories/plugins">GitHub Discussions</a>.</p>
+      <p>Los plugins oficiales cubren oh-my-zsh, zinit, antidote, tpm de tmux, lazy.nvim, vim-plug, las extensiones de VS Code y los componentes de gcloud. Cualquier otro gestor se puede añadir con un fichero TOML o un ejecutable pequeño. <a href="plugins.html">La guía de plugins</a> explica las dos formas y cómo compartir el tuyo: los plugins de la comunidad entran por pull request, se revisan y quedan fijados por su sha256, y se votan en <a href="https://github.com/paveldelpozo/repoke-plugins/discussions/categories/plugins">GitHub Discussions</a>.</p>
     </section>
 
     <section id="commands">

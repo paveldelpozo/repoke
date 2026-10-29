@@ -68,7 +68,7 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] Windows: winget, scoop, choco. winget y scoop no tienen JSON: se leen sus tablas por la posición de las columnas.
 - [x] Probados de verdad en el Mac de Pavel (28-10): brew, npm, pnpm, fnm, pip, uv, cargo, rustup, composer.
 - [x] Probados en Docker con imágenes antiguas, para que hubiera actualizaciones (29-10): **apt** (Debian 12 de 2023: 45 pendientes, iguales que `apt list --upgradable`, todas instaladas en 8 s; `export` bien), **dnf** (Fedora 41; ahora enseña la versión actual con `rpm -q`), **pacman** (Arch de octubre, x86_64 emulado con `DisableSandbox`; el resumen cuenta ahora todo lo que actualiza `-Syu`, no solo lo elegido) y **zypper** (Leap 16.0; Leap 15.6 ya no recibe actualizaciones).
-- [ ] `export` para zypper: zypper no distingue lo que instalaste tú de las dependencias (¿`/var/log/zypp/history`?).
+- [x] `export` e `init` para zypper (29-10): `zypper packages --userinstalled` marca con `i+` lo que pediste tú, mejor que reconstruirlo de `/var/log/zypp/history`. Probado en Leap 16.
 - [ ] flatpak y snap sin probar: snap necesita systemd en marcha, y flatpak descargaría runtimes de cientos de MB.
 - [ ] Probar winget, scoop y choco en un Windows real; la salida de winget cambia con el idioma y la versión.
 - [ ] Probar mas, nvm, gem y mise en una máquina que los tenga.
@@ -93,7 +93,7 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [ ] Probar las preguntas interactivas de `export` e `init` en una terminal real.
 - [x] Cifrar el backup con contraseña (28-10, noche): `export --encrypt`, o la opción «Keep them, encrypted» por fichero, guarda la configuración con sus secretos en un único `files.age` (formato age, un solo scrypt por exportación o restauración; `age -d` lo abre sin repoke). `init` pide la contraseña antes de instalar nada (tres intentos) o la lee de `REPOKE_PASSWORD`; restaura con permisos `600`; `--dry-run` sin contraseña los marca como no comparados. Crate `age` 0.12: +66 KB al binario. Probado con un `HOME` falso; falta probar las preguntas interactivas en una terminal real y abrir un `files.age` con la herramienta `age`.
 - [x] Node en el catálogo: `node@lts` con fnm (resuelve la línea LTS más nueva con `ls-remote --lts`) o nvm (`lts/*`), y queda como la versión por defecto. Solo se ofrece si fnm o nvm ya están instalados.
-- [ ] Configuraciones que no son de un gestor (`~/.gitconfig`, `~/.zshrc`): vendrán con los plugins oficiales (fase 9).
+- [x] Configuraciones que no son de un gestor (29-10): los plugins pueden declarar `config` (en `describe` o en el TOML, que puede no tener `[outdated]`); plugins oficiales `git` y `zsh`, probados en el Mac de Pavel (reconoce sus dotfiles) y con `init` en Debian.
 - [x] Al restaurar en otra máquina: el lote fallido ya se reintentaba paquete a paquete; ahora brew explica las fórmulas o casks que no conoce (tap no configurado, renombrado) y los taps que no puede clonar (privados o borrados).
 
 ## Fase 5 · Modo programado (hecha e instalada)
@@ -106,7 +106,7 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] Probado en el Mac: plist validado con `plutil`, `schedule run` en modo consulta con un HOME falso, `status` con el historial.
 - [x] Instalado en el Mac de Pavel (28-10).
 - [x] Ejecución de las 03:00 del 29-10 revisada: 9 paquetes actualizados; yarn falló por `${NODE_AUTH_TOKEN}`, arreglado en la v0.6.1.
-- [ ] Windows: no hay notificación (habría que usar un toast de PowerShell).
+- [x] Windows: notificación con un toast de Windows PowerShell 5.1 (29-10), con el identificador de PowerShell porque Windows descarta los de apps desconocidas. Sin probar: no hay Windows.
 - [x] Sin systemd (29-10, Debian en Docker): `install` daba la línea de crontab con un error y sin guardar la configuración, así que `schedule run` no hacía nada. Ahora la guarda; `status` mira `crontab -l`; systemd se detecta por `/run/systemd/system` (en un contenedor con `cron` instalado hay `systemctl` sin systemd).
 - [ ] Con systemd de verdad (timer de usuario): en el portátil con Ubuntu de Pavel.
 - [x] Evitar dos ejecuciones a la vez: `upgrade` e `init` bloquean `run.lock` en la carpeta de estado (`File::try_lock`, por eso el MSRV pasa a 1.89); el segundo sale con 75.
@@ -161,7 +161,8 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [x] `vscode` (Python): extensiones con una versión **estable** más nueva en el Marketplace (las pre-release se ignoran y solo se pide el historial completo de las extensiones cuya última versión es pre-release), más `installed` e `install` para `export` e `init`. Probado con las 57 extensiones de Pavel: 4 pendientes, en unos 4 segundos.
 - [x] En repoke, `plugin search`, `plugin install <id>` (enseña el código y pregunta; `--yes`, `--force`) y `plugin remove <id>` (solo borra lo que instaló). `REPOKE_PLUGIN_INDEX` para otro índice.
 - [x] `paveldelpozo/repoke-plugins` publicado (28-10, lo creó Pavel). Prueba de punta a punta: `plugin search` e `install vscode` desde el índice real de GitHub, y `check` con las 4 extensiones pendientes.
-- [ ] tpm, zinit, antidote, lazy.nvim, vim-plug y componentes de gcloud: Pavel no tiene ninguno instalado, así que quedan pendientes hasta poder probarlos en una máquina que los tenga.
+- [x] tpm, zinit, antidote, lazy.nvim, vim-plug y componentes de gcloud (29-10): escritos y probados de punta a punta en Ubuntu 24.04 en Docker. Falta publicarlos (`scripts/publish.py … --discussion`, lo lanza Pavel) y probarlos en macOS.
+- [ ] Scoop y winget (29-10): `scripts/manifests.sh` escribe los manifiestos y `release.sh` actualiza el bucket (`../scoop-bucket`, creado en local) y envía a winget con `wingetcreate` si está. Falta que Pavel cree `paveldelpozo/scoop-bucket` en GitHub, el primer PR a `microsoft/winget-pkgs` y probarlo en Windows.
 - Se quedan en el núcleo, por ser gestores de paquetes: mas, rustup.
 
 ## Landing (publicada en https://repoke.paveldelpozo.es)
