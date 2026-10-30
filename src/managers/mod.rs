@@ -13,7 +13,7 @@ mod gem;
 mod mas;
 mod mise;
 mod node_versions;
-mod npm;
+pub(crate) mod npm;
 mod nvm;
 mod pacman;
 mod pip;

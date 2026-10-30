@@ -61,7 +61,7 @@ fn initialize(params: &Value) -> Value {
         "protocolVersion": version,
         "capabilities": { "tools": {} },
         "serverInfo": { "name": "repoke", "version": env!("CARGO_PKG_VERSION") },
-        "instructions": "Check what is outdated with check_updates before upgrading. upgrade only previews unless dry_run is false, and never uses sudo: managers that need it are skipped and the user has to run `repoke upgrade` in a terminal."
+        "instructions": "Check what is outdated with check_updates before upgrading. upgrade only previews unless dry_run is false, and never uses sudo: managers that need it are skipped and the user has to run `repoke upgrade` in a terminal. A `blocked` event means the package was installed but its manager refused to run its install scripts, so it may not work: tell the user and show its hint, and never bypass the block yourself."
     })
 }
 
@@ -103,7 +103,7 @@ fn tools() -> Value {
         },
         {
             "name": "upgrade",
-            "description": "Upgrades pending packages and reports each result. Previews by default; pass dry_run false to change the system. Managers that need sudo are skipped.",
+            "description": "Upgrades pending packages and reports each result. Previews by default; pass dry_run false to change the system. Managers that need sudo are skipped. Packages installed with their install scripts blocked (npm 12 does this by default) come back as blocked events with a hint for the user.",
             "inputSchema": { "type": "object", "properties": upgrade },
             "annotations": { "destructiveHint": true, "readOnlyHint": false }
         },
@@ -138,7 +138,7 @@ fn tools() -> Value {
         },
         {
             "name": "schedule_status",
-            "description": "Whether a periodic run is scheduled, and how the last one went.",
+            "description": "Whether a periodic run is scheduled, and how the last one went, including packages it installed with their install scripts blocked.",
             "inputSchema": { "type": "object", "properties": {} },
             "annotations": { "readOnlyHint": true }
         }

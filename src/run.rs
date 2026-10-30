@@ -16,7 +16,7 @@ use inquire::{InquireError, MultiSelect};
 use serde::Serialize;
 
 use crate::check::Found;
-use crate::manager::{self, Manager, Package, Step};
+use crate::manager::{self, Blocked, Manager, Package, Printed, Step};
 use crate::progress::Progress;
 
 pub const EXIT_CANCELLED: u8 = 130;
@@ -121,6 +121,15 @@ pub enum Event<'a> {
         reason: &'a str,
         packages: &'a [Package],
     },
+    /// Installed, but the manager refused to run its install scripts, so it may not work.
+    Blocked {
+        action: Action,
+        manager: &'a str,
+        reason: &'a str,
+        hint: &'a str,
+        packages: &'a [Package],
+        seconds: f64,
+    },
     Retrying {
         manager: &'a str,
         error: &'a str,
@@ -133,6 +142,7 @@ pub struct Tally {
     pub done: usize,
     pub failed: usize,
     pub skipped: usize,
+    pub blocked: usize,
     pub planned: usize,
     pub seconds: f64,
 }
@@ -142,6 +152,7 @@ impl Tally {
         self.done += other.done;
         self.failed += other.failed;
         self.skipped += other.skipped;
+        self.blocked += other.blocked;
         self.planned += other.planned;
         self.seconds += other.seconds;
     }
@@ -339,7 +350,7 @@ impl<'a> Engine<'a> {
         for m in &self.managers {
             total.add(&m.tally);
         }
-        let failed = checks_failed || total.failed > 0;
+        let failed = checks_failed || total.failed > 0 || total.blocked > 0;
         let summary = Summary {
             action: self.options.action,
             total,
@@ -367,8 +378,14 @@ impl<'a> Engine<'a> {
     }
 
     /// Runs the step's commands in order and stops at the first one that fails.
-    fn attempt(&self, found: &Found, step: &Step, root: bool) -> (Duration, Result<(), String>) {
+    fn attempt(
+        &self,
+        found: &Found,
+        step: &Step,
+        root: bool,
+    ) -> (Duration, Result<Printed, String>) {
         let started = Instant::now();
+        let mut printed = Printed::default();
         for args in &step.commands {
             let (command, shown) = command_line(found, args, root);
             self.report.emit(&Event::Running {
@@ -379,27 +396,59 @@ impl<'a> Engine<'a> {
             let bar = self.progress.spinner(self.manager(), &shown);
             let outcome = execute(&command, &bar, found.manager.timeout());
             bar.finish_and_clear();
-            if let Err(error) = outcome {
-                return (started.elapsed(), Err(format!("{shown} {error}")));
+            match outcome {
+                Ok(out) => {
+                    printed.stdout.push_str(&out.stdout);
+                    printed.stderr.push_str(&out.stderr);
+                }
+                Err(error) => return (started.elapsed(), Err(format!("{shown} {error}"))),
             }
         }
-        (started.elapsed(), Ok(()))
+        (started.elapsed(), Ok(printed))
     }
 
-    fn record(&mut self, packages: &[Package], elapsed: Duration, outcome: Result<(), String>) {
+    fn record(
+        &mut self,
+        packages: &[Package],
+        elapsed: Duration,
+        outcome: Result<Printed, String>,
+    ) {
         let manager = self.manager();
         let action = self.options.action;
         let seconds = elapsed.as_secs_f64();
         self.tally().seconds += seconds;
         match outcome {
-            Ok(()) => {
-                self.tally().done += packages.len();
-                self.report.emit(&Event::Done {
-                    action,
-                    manager,
-                    packages,
-                    seconds,
-                });
+            Ok(printed) => {
+                let blocked: Vec<Blocked> = self
+                    .managers
+                    .last()
+                    .map(|m| m.manager.blocked(packages, &printed))
+                    .unwrap_or_default();
+                let done: Vec<Package> = packages
+                    .iter()
+                    .filter(|p| !blocked.iter().any(|b| &b.package == *p))
+                    .cloned()
+                    .collect();
+                if !done.is_empty() {
+                    self.tally().done += done.len();
+                    self.report.emit(&Event::Done {
+                        action,
+                        manager,
+                        packages: &done,
+                        seconds,
+                    });
+                }
+                for b in &blocked {
+                    self.tally().blocked += 1;
+                    self.report.emit(&Event::Blocked {
+                        action,
+                        manager,
+                        reason: &b.reason,
+                        hint: &b.hint,
+                        packages: slice::from_ref(&b.package),
+                        seconds: if done.is_empty() { seconds } else { 0.0 },
+                    });
+                }
             }
             Err(error) => {
                 self.tally().failed += packages.len();
@@ -504,6 +553,17 @@ impl Reporter {
                 self.packages(&style("-").yellow().to_string(), packages, 0.0);
                 println!("      {}", style(reason).yellow());
             }
+            Event::Blocked {
+                reason,
+                hint,
+                packages,
+                seconds,
+                ..
+            } => {
+                self.packages(&style("!").yellow().to_string(), packages, *seconds);
+                println!("      {}", style(reason).yellow());
+                println!("      {} {}", style("→").yellow(), style(hint).yellow());
+            }
             Event::Retrying { .. } => println!(
                 "  {} {}",
                 style("↻").yellow(),
@@ -593,6 +653,18 @@ impl Reporter {
             println!("  {}", row(m.name, &m.tally));
         }
         println!("  {}", style(row("Total", total)).bold());
+        if total.blocked > 0 {
+            println!(
+                "\n{}",
+                style(format!(
+                    "{} installed without running {} install scripts, so {} may not work: see above.",
+                    plural(total.blocked, "package"),
+                    if total.blocked == 1 { "its" } else { "their" },
+                    if total.blocked == 1 { "it" } else { "they" },
+                ))
+                .yellow()
+            );
+        }
         println!("\nFinished in {}.", duration(summary.elapsed_seconds));
     }
 }
@@ -697,7 +769,11 @@ fn authenticate(progress: &Progress) -> Result<(), String> {
 }
 
 /// The manager's output is streamed into the spinner so a long install shows what it is doing.
-fn execute(command: &[String], bar: &ProgressBar, timeout: Option<Duration>) -> Result<(), String> {
+fn execute(
+    command: &[String],
+    bar: &ProgressBar,
+    timeout: Option<Duration>,
+) -> Result<Printed, String> {
     let (program, args) = command.split_first().expect("command has a program");
     let mut child = Command::new(program)
         .args(args)
@@ -717,23 +793,29 @@ fn execute(command: &[String], bar: &ProgressBar, timeout: Option<Duration>) -> 
         .map(|pipe| {
             let (bar, lines) = (bar.clone(), Arc::clone(&lines));
             thread::spawn(move || {
+                let mut raw = String::new();
                 for line in BufReader::new(pipe).lines().map_while(Result::ok) {
+                    raw.push_str(&line);
+                    raw.push('\n');
                     let line = line.trim();
                     if !line.is_empty() && !is_warning(line) {
                         bar.set_message(line.to_string());
                         lines.lock().expect("output lock").push(line.to_string());
                     }
                 }
+                raw
             })
         })
         .collect();
 
     let status = manager::wait_within(&mut child, timeout, program.as_ref())?;
-    for reader in readers {
-        let _ = reader.join();
-    }
+    let mut raw = readers.into_iter().map(|r| r.join().unwrap_or_default());
+    let printed = Printed {
+        stdout: raw.next().unwrap_or_default(),
+        stderr: raw.next().unwrap_or_default(),
+    };
     if status.success() {
-        return Ok(());
+        return Ok(printed);
     }
     let lines = lines.lock().expect("output lock");
     Err(format!(
@@ -819,5 +901,100 @@ mod tests {
     #[test]
     fn execute_succeeds_on_zero_exit() {
         assert!(execute(&sh("echo done"), &ProgressBar::hidden(), None).is_ok());
+    }
+
+    /// An npm 12 stand-in: it runs `pkg-with-script`'s postinstall only when its `npmrc` has
+    /// `allow-scripts` for it, as npm does with ~/.npmrc, and logs every install it is asked for.
+    #[cfg(unix)]
+    fn fake_npm(dir: &std::path::Path) -> std::path::PathBuf {
+        use std::os::unix::fs::PermissionsExt;
+        fs::create_dir_all(dir.join("lib/node_modules")).unwrap();
+        let d = dir.display();
+        let script = format!(
+            r#"#!/bin/sh
+case "$1" in
+  prefix) echo "{d}" ;;
+  install)
+    echo "$*" >> "{d}/calls"
+    blocked=',"unreviewedScripts":[{{"name":"pkg-with-script","version":"2.0.0","path":"{d}/lib/node_modules/pkg-with-script","scripts":{{"postinstall":"node install.js"}}}}]'
+    grep -qx 'allow-scripts=pkg-with-script' "{d}/npmrc" 2>/dev/null && blocked=''
+    echo 'npm warn deprecated plain@2.0.0' >&2
+    echo '{{"added":0,"changed":2,"change":[{{"to":{{"path":"{d}/lib/node_modules/pkg-with-script"}}}},{{"to":{{"path":"{d}/lib/node_modules/plain"}}}}]'"$blocked"'}}'
+    ;;
+esac
+"#
+        );
+        let path = dir.join("npm");
+        fs::write(&path, script).unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+        // See plugins::exec: a file another test's fork still holds open fails with ETXTBSY.
+        for _ in 0..100 {
+            match Command::new(&path).output() {
+                Err(e) if e.kind() == std::io::ErrorKind::ExecutableFileBusy => {
+                    thread::sleep(Duration::from_millis(10));
+                }
+                _ => break,
+            }
+        }
+        path
+    }
+
+    #[cfg(unix)]
+    fn upgrade_with(npm: std::path::PathBuf) -> ((usize, usize, usize), ExitCode) {
+        let package = |name: &str| Package {
+            name: name.into(),
+            current: "1.0.0".into(),
+            latest: "2.0.0".into(),
+        };
+        let progress = Progress::new(true);
+        let mut engine = Engine::new(
+            Options {
+                action: Action::Upgrade,
+                json: true,
+                dry_run: false,
+                no_sudo: true,
+                interactive: false,
+            },
+            &progress,
+        );
+        let found = Found {
+            manager: &crate::managers::npm::Npm,
+            path: npm,
+        };
+        engine.run_manager(
+            &found,
+            &[package("pkg-with-script"), package("plain")],
+            |found, packages| found.manager.upgrade_steps(&found.path, packages),
+        );
+        let t = &engine.managers[0].tally;
+        let counts = (t.done, t.blocked, t.failed);
+        (counts, engine.finish(Instant::now(), false))
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_package_whose_scripts_npm_blocked_is_not_upgraded() {
+        let dir = std::env::temp_dir().join(format!("repoke-npm-blocked-{}", std::process::id()));
+        let (counts, code) = upgrade_with(fake_npm(&dir));
+        assert_eq!(counts, (1, 1, 0));
+        assert_eq!(code, ExitCode::FAILURE);
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn scripts_allowed_in_npmrc_run_without_repoke_overriding_npm() {
+        let dir = std::env::temp_dir().join(format!("repoke-npm-allowed-{}", std::process::id()));
+        let npm = fake_npm(&dir);
+        fs::write(dir.join("npmrc"), "allow-scripts=pkg-with-script\n").unwrap();
+        let (counts, code) = upgrade_with(npm);
+        assert_eq!(counts, (2, 0, 0));
+        assert_eq!(code, ExitCode::SUCCESS);
+        let calls = fs::read_to_string(dir.join("calls")).unwrap();
+        assert_eq!(
+            calls.trim(),
+            "install --global pkg-with-script@2.0.0 plain@2.0.0 --json"
+        );
+        fs::remove_dir_all(dir).unwrap();
     }
 }

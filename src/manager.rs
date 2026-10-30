@@ -151,6 +151,21 @@ impl Step {
     }
 }
 
+/// Everything a step's commands printed, unfiltered.
+#[derive(Debug, Default)]
+pub struct Printed {
+    pub stdout: String,
+    pub stderr: String,
+}
+
+/// A package whose install scripts were blocked: why, and how the user can run them.
+#[derive(Debug, PartialEq)]
+pub struct Blocked {
+    pub package: Package,
+    pub reason: String,
+    pub hint: String,
+}
+
 pub trait Manager: Sync {
     fn id(&self) -> &'static str;
     fn name(&self) -> &'static str;
@@ -194,6 +209,12 @@ pub trait Manager: Sync {
     /// A suggestion for a failure the manager recognises, shown under the error.
     fn hint(&self, _packages: &[Package], _error: &str) -> Option<String> {
         None
+    }
+
+    /// Packages a step installed while the manager refused to run their install scripts, read
+    /// from what its commands printed. They count as blocked, not upgraded: they may not work.
+    fn blocked(&self, _packages: &[Package], _printed: &Printed) -> Vec<Blocked> {
+        Vec::new()
     }
 
     /// How long one of its commands may run: `[timeouts]` in the config, else no limit for

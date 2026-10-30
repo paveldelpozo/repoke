@@ -216,6 +216,9 @@ struct Status {
     next_run: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     last_run: Option<HistoryEntry>,
+    /// Packages the last run installed with their install scripts blocked, as its log has them.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    blocked: Vec<Value>,
     log: PathBuf,
 }
 
@@ -248,6 +251,9 @@ pub fn status(json: bool) -> Result<ExitCode, String> {
                 .find_map(|l| serde_json::from_str::<HistoryEntry>(l).ok())
         });
 
+    let blocked = fs::read_to_string(log.join("last-run.log"))
+        .map(|text| blocked_in(&text))
+        .unwrap_or_default();
     let status = Status {
         installed: registered && settings.is_some(),
         every: settings.as_ref().map(|s| s.every),
@@ -255,6 +261,7 @@ pub fn status(json: bool) -> Result<ExitCode, String> {
         check_only: settings.as_ref().map(|s| s.check_only),
         next_run,
         last_run,
+        blocked,
         log: log.join("last-run.log"),
     };
     if json {
@@ -283,7 +290,30 @@ pub fn status(json: bool) -> Result<ExitCode, String> {
         None if settings.is_some() => println!("It hasn't run yet."),
         None => {}
     }
+    for event in &status.blocked {
+        for package in event["packages"].as_array().into_iter().flatten() {
+            println!(
+                "  {} {}: {}",
+                style("!").yellow(),
+                package["name"].as_str().unwrap_or("?"),
+                event["reason"].as_str().unwrap_or_default()
+            );
+        }
+        println!(
+            "    {} {}",
+            style("→").yellow(),
+            style(event["hint"].as_str().unwrap_or_default()).yellow()
+        );
+    }
     Ok(ExitCode::SUCCESS)
+}
+
+/// The `blocked` events in a run's log, which keeps the `--json` lines as they were printed.
+fn blocked_in(log: &str) -> Vec<Value> {
+    log.lines()
+        .filter_map(|l| serde_json::from_str::<Value>(l).ok())
+        .filter(|e| e["event"] == "blocked")
+        .collect()
 }
 
 /// What the scheduler runs. It calls this same binary with `--json` and reads the events.
@@ -400,10 +430,29 @@ fn summarize_upgrade(stdout: &str) -> (String, bool) {
     };
     let count = |field: &str| summary[field].as_u64().unwrap_or(0);
     let (done, failed, skipped) = (count("done"), count("failed"), count("skipped"));
+    let blocked: Vec<String> = events
+        .iter()
+        .filter(|e| e["event"] == "blocked")
+        .flat_map(|e| {
+            let manager = e["manager"].as_str().unwrap_or("?");
+            e["packages"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(move |p| Some(format!("{}:{}", manager, p["name"].as_str()?)))
+        })
+        .collect();
 
     let mut parts = Vec::new();
     if done > 0 {
         parts.push(format!("upgraded {}", packages(done)));
+    }
+    if !blocked.is_empty() {
+        parts.push(format!(
+            "{} installed with blocked install scripts and may not work ({}), see `repoke schedule status`",
+            packages(blocked.len() as u64),
+            blocked.join(", ")
+        ));
     }
     if failed > 0 {
         parts.push(format!(
@@ -942,6 +991,20 @@ mod tests {
             summarize_upgrade(&stdout),
             ("Upgraded 5 packages, 1 failed (composer)".to_string(), true)
         );
+        let blocked = [
+            r#"{"event":"blocked","action":"upgrade","manager":"npm","reason":"installed, but npm blocked the install scripts of @anthropic-ai/claude-code (postinstall), so it may not work","hint":"run them now","packages":[{"name":"@anthropic-ai/claude-code","current":"2.1.312","latest":"2.1.314"}],"seconds":2.5}"#,
+            r#"{"event":"summary","action":"upgrade","done":16,"failed":0,"skipped":0,"blocked":1,"planned":0,"seconds":2.0,"elapsed_seconds":3.0,"managers":[]}"#,
+        ]
+        .join("\n");
+        assert_eq!(
+            summarize_upgrade(&blocked),
+            ("Upgraded 16 packages, 1 package installed with blocked install scripts and may not work (npm:@anthropic-ai/claude-code), see `repoke schedule status`".to_string(), true)
+        );
+        let log =
+            format!("$ repoke upgrade --yes --no-sudo --json\n{blocked}\nnpm warn something\n");
+        let found = blocked_in(&log);
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0]["hint"], "run them now");
         let quiet = r#"{"event":"summary","action":"upgrade","done":0,"failed":0,"skipped":0,"planned":0,"seconds":0.0,"elapsed_seconds":1.0,"managers":[]}"#;
         assert!(!summarize_upgrade(quiet).1);
     }
