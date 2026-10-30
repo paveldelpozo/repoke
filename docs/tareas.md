@@ -112,6 +112,8 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [ ] Con systemd de verdad (timer de usuario): en el portátil con Ubuntu de Pavel.
 - [x] Evitar dos ejecuciones a la vez: `upgrade` e `init` bloquean `run.lock` en la carpeta de estado (`File::try_lock`, por eso el MSRV pasa a 1.89); el segundo sale con 75.
 - [x] Rotar `history.jsonl`: guarda las últimas 1000 ejecuciones.
+- [x] Scripts de instalación bloqueados (30-10, rama `fix-npm-blocked-scripts`): la ejecución de las 03:00 instaló `@anthropic-ai/claude-code@2.1.314` con npm 12.2.1, que no ejecuta los `postinstall` sin `allow-scripts`, y repoke lo dio por actualizado aunque `claude` quedó sin su binario nativo. Ahora npm instala con `--json` y repoke lee `unreviewedScripts` (solo de las carpetas que esa orden colocó, según `add` y `change`): el paquete sale como `blocked`, con el motivo y los dos comandos (`npm install --global --allow-scripts=…` o `allow-scripts=…` en `~/.npmrc`), la ejecución sale con 1, la notificación lo nombra y `schedule status` enseña la pista. pnpm («Ignored build scripts», y pista para `ERR_PNPM_IGNORED_BUILDS`) y bun («Blocked N postinstall») igual, leyendo su texto. repoke no autoriza nada: lo que permita la configuración de npm lo ejecuta npm.
+- [ ] `check` no avisa de que un paquete pendiente va a quedar bloqueado (habría que mirar sus scripts en el registro y la política de npm), ni recuerda los que quedaron bloqueados en una ejecución anterior: pendiente de que Pavel decida.
 
 ## Fase 6 · Distribución (publicada)
 

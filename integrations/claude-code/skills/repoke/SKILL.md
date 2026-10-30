@@ -18,9 +18,13 @@ Report the result grouped by manager, with current and latest versions. Say whic
 1. Unless the user already said to upgrade everything, ask what to upgrade. Narrow it with `only` (managers), `packages` (`name` or `manager:name`) and `hold` (packages to leave alone).
 2. Preview first: `upgrade` with the default `dry_run`, or `repoke upgrade --yes --no-sudo --dry-run --json`. Show the commands it would run.
 3. Run it with `dry_run: false`, or `repoke upgrade --yes --no-sudo --json` with the same filters.
-4. Report from the events: `done` and `failed` per package (with the error's last lines), `skipped`, then the `summary` totals.
+4. Report from the events: `done`, `blocked` and `failed` per package (with the error's last lines), `skipped`, then the `summary` totals.
 
-Never upgrade without `--no-sudo` and never run sudo yourself. Managers that need root (apt, dnf, pacman, a system npm) and Homebrew casks that ask for a password come back as `skipped`; tell the user to run `repoke upgrade` in their own terminal for those. npm, pnpm and yarn globals whose new version needs a newer Node are `skipped` too, with the version they need. Exit code 75 means another upgrade is already running: wait and try again.
+Never upgrade without `--no-sudo` and never run sudo yourself. Managers that need root (apt, dnf, pacman, a system npm) and Homebrew casks that ask for a password come back as `skipped`; tell the user to run `repoke upgrade` in their own terminal for those. npm, pnpm and yarn globals whose new version needs a newer Node are `skipped` too, with the version they need.
+
+A `blocked` event is a package that was installed while its manager refused to run its install scripts (npm 12 does this for every package not in `allow-scripts`; pnpm and bun do it for builds they haven't approved), so it may not work. It is not upgraded: report its `reason` and pass on its `hint`, which has the command that runs the scripts and the setting that allows them from now on. Running untrusted install scripts is the user's decision: never run that command, edit `~/.npmrc` or pass `--allow-scripts`, `--dangerously-allow-all-scripts` or similar yourself. `schedule_status` lists the packages the last scheduled run left blocked, under `blocked`.
+
+Exit code 75 means another upgrade is already running: wait and try again.
 
 Node versions under fnm or nvm show up as `node@<major>`: upgrading moves to the newest release of that major line and carries the global npm packages over. Moving to a new major is the user's call.
 

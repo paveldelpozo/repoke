@@ -44,9 +44,11 @@ Managers run one after another, each with its own spinner showing the last line 
 
 npm, pnpm and Yarn 1 globals whose new version declares an `engines.node` range the Node in use doesn't meet are skipped with the version they need, instead of installing and then failing to run.
 
+npm 12 and later don't run the install scripts (`preinstall`, `install`, `postinstall`) of packages you haven't allowed, `npm install -g` included, and still exit 0. Some tools need theirs: Claude Code puts its native binary in place in `postinstall`. repoke reads npm's own report (`npm install --global --json`) and marks such a package as blocked, not upgraded: it may not work. Under it you get two ways out: run its scripts now with `npm install --global --allow-scripts=<package> <package>@<version>`, or allow them from now on by adding `allow-scripts=<package>` to `~/.npmrc`. repoke never allows scripts by itself: what `allow-scripts` in your npm config allows runs as usual, because npm applies it. pnpm (which ignores build scripts it hasn't approved) and bun (which blocks the `postinstall` of dependencies it doesn't trust) get the same treatment, each with its own command.
+
 Only one `upgrade` or `init` runs at a time: a second one exits with 75 straight away.
 
-Exits 0 when everything selected was upgraded, 1 when something failed, 75 when another run was in progress, 130 when the list was cancelled.
+Exits 0 when everything selected was upgraded, 1 when something failed or was installed with its scripts blocked, 75 when another run was in progress, 130 when the list was cancelled.
 
 ## repoke export
 
@@ -110,7 +112,7 @@ By default the job runs `repoke upgrade --yes --no-sudo`. Schedulers start jobs 
 
 ### repoke schedule status
 
-Whether a run is scheduled, when, and how the last one went. `--json` prints it as JSON.
+Whether a run is scheduled, when, and how the last one went, with what to run for each package it installed with its scripts blocked. `--json` prints it as JSON, those packages under `blocked`.
 
 ### repoke schedule run
 
@@ -208,6 +210,7 @@ remove_old = true                # fnm and nvm: once a line's new release runs, 
 | `done` | Packages upgraded or installed, with `seconds` |
 | `failed` | Packages that failed, with the `error` and sometimes a `hint` |
 | `skipped` | Packages left out, with the `reason` |
+| `blocked` | A package installed while its manager refused to run its install scripts, with the `reason` and a `hint` with what to run |
 | `retrying` | A batch failed and is retried one package at a time |
 | `config` | `init` only: what happened to a config file |
 | `summary` | Totals, the whole run's `elapsed_seconds` and a per-manager breakdown |
@@ -218,7 +221,7 @@ remove_old = true                # fnm and nvm: once a line's new release runs, 
 |------|---------|
 | 0 | Done, or everything is up to date |
 | 100 | `check` and `self-update --check`: there is something to update |
-| 1 | A manager failed to check, upgrade or install |
+| 1 | A manager failed to check, upgrade or install, or installed a package with its install scripts blocked |
 | 2 | Invalid arguments or config, or `--yes` needed outside a terminal |
 | 75 | `upgrade` and `init`: another `upgrade` or `init` is running |
 | 130 | The interactive list was cancelled |

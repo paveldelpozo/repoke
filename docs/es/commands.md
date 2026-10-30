@@ -44,9 +44,11 @@ Los gestores van uno detrás de otro, cada uno con su indicador mostrando la úl
 
 Los globales de npm, pnpm y Yarn 1 cuya nueva versión declara en `engines.node` un rango que no cumple el Node en uso se saltan, indicando qué versión necesitan, en vez de instalarse y luego no arrancar.
 
+npm 12 y posteriores no ejecutan los scripts de instalación (`preinstall`, `install`, `postinstall`) de los paquetes que no hayas autorizado, también con `npm install -g`, y aun así salen con 0. Hay herramientas que los necesitan: Claude Code coloca su binario nativo en el `postinstall`. repoke lee el informe del propio npm (`npm install --global --json`) y marca ese paquete como bloqueado, no como actualizado: puede no funcionar. Debajo te da las dos salidas: ejecutar sus scripts ahora con `npm install --global --allow-scripts=<paquete> <paquete>@<versión>`, o autorizarlos de aquí en adelante añadiendo `allow-scripts=<paquete>` a `~/.npmrc`. repoke nunca autoriza scripts por su cuenta: lo que autorice el `allow-scripts` de tu configuración de npm se ejecuta como siempre, porque lo aplica npm. pnpm (que ignora los scripts de compilación que no has aprobado) y bun (que bloquea el `postinstall` de las dependencias en las que no confía) reciben el mismo trato, cada uno con su comando.
+
 Solo puede haber un `upgrade` o un `init` a la vez: si ya hay uno en marcha, el segundo sale enseguida con 75.
 
-Sale con 0 si se actualizó todo lo seleccionado, con 1 si algo falló, con 75 si había otra ejecución en marcha y con 130 si se canceló la lista.
+Sale con 0 si se actualizó todo lo seleccionado, con 1 si algo falló o se instaló con sus scripts bloqueados, con 75 si había otra ejecución en marcha y con 130 si se canceló la lista.
 
 ## repoke export
 
@@ -110,7 +112,7 @@ Por defecto, la tarea ejecuta `repoke upgrade --yes --no-sudo`. Los planificador
 
 ### repoke schedule status
 
-Si hay una ejecución programada, cuándo, y cómo fue la última. Con `--json`, la imprime en JSON.
+Si hay una ejecución programada, cuándo, y cómo fue la última, con lo que hay que lanzar para cada paquete que instaló con sus scripts bloqueados. Con `--json`, la imprime en JSON, con esos paquetes en `blocked`.
 
 ### repoke schedule run
 
@@ -208,6 +210,7 @@ remove_old = true                # fnm y nvm: cuando la nueva versión de una l�
 | `done` | Paquetes actualizados o instalados, con `seconds` |
 | `failed` | Paquetes que fallaron, con el `error` y a veces una pista (`hint`) |
 | `skipped` | Paquetes que se dejaron fuera, con el motivo (`reason`) |
+| `blocked` | Un paquete que se instaló sin que su gestor ejecutara sus scripts de instalación, con el motivo (`reason`) y una pista (`hint`) con lo que hay que lanzar |
 | `retrying` | Un lote falló y se reintenta paquete a paquete |
 | `config` | Solo `init`: qué pasó con un fichero de configuración |
 | `summary` | Totales, la duración de toda la ejecución (`elapsed_seconds`) y el desglose por gestor |
@@ -218,7 +221,7 @@ remove_old = true                # fnm y nvm: cuando la nueva versión de una l�
 |--------|-------------|
 | 0 | Hecho, o todo está al día |
 | 100 | `check` y `self-update --check`: hay algo que actualizar |
-| 1 | Un gestor falló al consultar, actualizar o instalar |
+| 1 | Un gestor falló al consultar, actualizar o instalar, o instaló un paquete con sus scripts de instalación bloqueados |
 | 2 | Argumentos o configuración no válidos, o falta `--yes` fuera de una terminal |
 | 75 | `upgrade` e `init`: hay otro `upgrade` o `init` en marcha |
 | 130 | Se canceló la lista interactiva |

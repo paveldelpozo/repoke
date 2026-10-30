@@ -35,7 +35,7 @@ import listing from "../../list-output.txt?raw";
 repoke upgrade                  # elige de una lista, con todo marcado
 repoke upgrade --dry-run        # los comandos que lanzaría
 repoke upgrade --hold eslint    # deja un paquete como está</code></pre>
-      <p>Cada paquete tiene su línea con el resultado y lo que tardó, y un fallo enseña el comando con el final de su salida. Los gestores se consultan a la vez y se actualizan uno detrás de otro. npm instala la versión exacta que ha listado, así que una release más nueva no puede romper el Node que tienes. Las versiones de Node de fnm o nvm suben a la última de su misma versión mayor y se llevan tus paquetes globales.</p>
+      <p>Cada paquete tiene su línea con el resultado y lo que tardó, y un fallo enseña el comando con el final de su salida. Los gestores se consultan a la vez y se actualizan uno detrás de otro. npm instala la versión exacta que ha listado, así que una release más nueva no puede romper el Node que tienes. Cuando npm 12, pnpm o bun instalan un paquete sin ejecutar sus scripts de instalación, repoke no lo da por actualizado: lo marca como bloqueado, dice qué scripts se quedaron sin ejecutar y te da el comando para lanzarlos, y la ejecución programada te avisa. Las versiones de Node de fnm o nvm suben a la última de su misma versión mayor y se llevan tus paquetes globales.</p>
     </section>
 
     <section id="machines">

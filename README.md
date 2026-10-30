@@ -81,7 +81,7 @@ Any other MCP client: run `repoke mcp` as a stdio server. Without MCP, agents ca
 
 ### Unattended use
 
-`upgrade` without `--yes` refuses to run outside a terminal (exit 2) instead of waiting for input. With `--json` it prints one event per line (`check_failed`, `running`, `planned`, `done`, `failed`, `skipped`, `retrying`, then `summary`). `done` and `failed` carry `action` (`upgrade` or `install`) and `seconds`; `summary` has the totals, `elapsed_seconds` for the whole run and a per-manager breakdown. `init` adds a `config` event per config file. A manager that needs root is called with `sudo -n`, so it fails at once when there is no cached password; `--no-sudo` skips it instead.
+`upgrade` without `--yes` refuses to run outside a terminal (exit 2) instead of waiting for input. With `--json` it prints one event per line (`check_failed`, `running`, `planned`, `done`, `failed`, `skipped`, `blocked`, `retrying`, then `summary`). `blocked` is a package installed while its manager refused to run its install scripts (npm 12 does this by default for packages not in `allow-scripts`), so it may not work; it carries a `hint` with what to run, and the run exits 1. `done` and `failed` carry `action` (`upgrade` or `install`) and `seconds`; `summary` has the totals, `elapsed_seconds` for the whole run and a per-manager breakdown. `init` adds a `config` event per config file. A manager that needs root is called with `sudo -n`, so it fails at once when there is no cached password; `--no-sudo` skips it instead.
 
 ### Configuration
 
@@ -104,7 +104,7 @@ greedy = true                    # also casks that update themselves (Chrome, Sl
 |------|---------|
 | 0    | `check`: everything is up to date. `upgrade`: everything selected was upgraded |
 | 100  | `check`: updates are available |
-| 1    | A manager failed to check or upgrade (details in the output) |
+| 1    | A manager failed to check or upgrade, or installed a package with its install scripts blocked (details in the output) |
 | 2    | Invalid arguments or config, or `upgrade` without `--yes` outside a terminal |
 | 75   | `upgrade` or `init`: another one is already running |
 | 130  | The interactive selection was cancelled |
