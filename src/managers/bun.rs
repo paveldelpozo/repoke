@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::manager::{Installed, Manager, Package, Step, capture, lines};
+use crate::manager::{Blocked, Installed, Manager, Package, Printed, Step, capture, lines};
 
 pub struct Bun;
 
@@ -51,6 +51,44 @@ impl Manager for Bun {
     fn config_files(&self) -> &'static [&'static str] {
         &[".bunfig.toml"]
     }
+
+    /// bun skips the postinstall of dependencies outside `trustedDependencies` and its own
+    /// default list, and only says how many; its line carries the command that names them.
+    fn blocked(&self, packages: &[Package], printed: &Printed) -> Vec<Blocked> {
+        let output = format!("{}\n{}", printed.stdout, printed.stderr);
+        let Some(line) = output
+            .lines()
+            .map(plain)
+            .find(|l| l.trim_start().starts_with("Blocked ") && l.contains("postinstall"))
+        else {
+            return Vec::new();
+        };
+        packages
+            .iter()
+            .map(|p| Blocked {
+                package: p.clone(),
+                reason: "installed, but bun blocked postinstall scripts it doesn't trust, so it may not work".into(),
+                hint: format!(
+                    "bun says: {}; `bun pm trust <name>` runs one and trusts it from now on",
+                    line.trim()
+                ),
+            })
+            .collect()
+    }
+}
+
+/// Without the colour codes bun adds.
+fn plain(line: &str) -> String {
+    let mut text = String::new();
+    let mut chars = line.chars();
+    while let Some(c) = chars.next() {
+        if c == '\u{1b}' {
+            chars.by_ref().find(|c| c.is_ascii_alphabetic());
+        } else {
+            text.push(c);
+        }
+    }
+    text
 }
 
 /// Rows of a table drawn with bars: `| cowsay | 1.5.0 | 1.5.0 | 1.6.0 |`, after a header row.
@@ -106,6 +144,29 @@ mod tests {
             .map(|p| format!("{} {} {}", p.name, p.current, p.latest))
             .collect();
         assert_eq!(rows, ["cowsay 1.5.0 1.6.0", "is-number 6.0.0 7.0.0"]);
+    }
+
+    #[test]
+    fn reports_blocked_postinstalls() {
+        let package = Package {
+            name: "@vue/cli".into(),
+            current: "5.0.8".into(),
+            latest: "5.0.9".into(),
+        };
+        let blocked = Printed {
+            stdout: "installed @vue/cli@5.0.9\n\n\u{1b}[1m1 package\u{1b}[0m installed\nBlocked 1 postinstall. Run `bun pm -g untrusted` for details.\n".into(),
+            stderr: String::new(),
+        };
+        let found = Bun.blocked(std::slice::from_ref(&package), &blocked);
+        assert_eq!(found.len(), 1);
+        assert!(found[0].hint.starts_with(
+            "bun says: Blocked 1 postinstall. Run `bun pm -g untrusted` for details."
+        ));
+        let clean = Printed {
+            stdout: "installed @vue/cli@5.0.9\n1 package installed\n".into(),
+            stderr: String::new(),
+        };
+        assert!(Bun.blocked(&[package], &clean).is_empty());
     }
 
     #[test]
