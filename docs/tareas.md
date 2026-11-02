@@ -170,6 +170,21 @@ Normas del proyecto: commits en Conventional Commits y en inglés, firmados con 
 - [ ] Scoop y winget (29-10): `scripts/manifests.sh` escribe los manifiestos; `release.sh` actualiza el bucket `paveldelpozo/scoop-bucket` (publicado con la v0.7.0) y abre el PR de winget con `scripts/winget-pr.sh` (API de GitHub; wingetcreate solo existe en Windows). PR microsoft/winget-pkgs#464665 abierto, CLA firmado y las 10 validaciones pasadas, incluida la instalación en Windows; falta que lo apruebe un moderador. Un LaunchAgent avisa por Telegram (`~/.hivefold/watch/winget-repoke`). Al aprobarse: `winget install` y Scoop en la pestaña de Windows de la landing (EN/ES).
 - Se quedan en el núcleo, por ser gestores de paquetes: mas, rustup.
 
+## Fase 10 · Instalar gestores desde cero (pendiente, pedida por Pavel el 02-11)
+
+Poder instalar cualquiera de los gestores soportados que falte en la máquina, en el sistema operativo donde corre repoke, con un comando propio (nombre por decidir: `repoke setup <gestor>`) y desde `init`. Hoy `init` solo instala con Homebrew siete gestores (`VIA_BREW` en `src/init.rs`) y para el resto da una pista con la web (`hint`).
+
+- [ ] Recetas por gestor y SO, en datos (como `catalog.toml`), por orden de preferencia: otro gestor ya instalado (brew, apt, dnf, pacman, zypper, winget, scoop) o el instalador oficial (Homebrew, rustup, uv, fnm, nvm, bun, mise, Scoop, Chocolatey), con la URL fija y su modo desatendido (`NONINTERACTIVE=1`, `-y`…).
+- [ ] Dependencias: npm, pnpm y yarn necesitan Node (fnm, nvm o el paquete del sistema); pip, Python; gem, Ruby; composer, PHP; cargo, rustup. Resolver el orden y enseñarlo en el plan antes de instalar.
+- [ ] Lo que no se instala: apt, dnf, pacman, zypper y `softwareupdate` son del sistema; winget viene con Windows (App Installer); mas solo con brew. Decirlo con un mensaje claro.
+- [ ] Seguridad: enseñar el comando o script antes de ejecutarlo y pedir confirmación (`--yes` en desatendido), nunca `sudo` sin avisar, y nada que se descargue y ejecute sin que salga en el plan.
+- [ ] PATH y perfil de la shell: tras instalar, comprobar con `locate` que repoke encuentra el gestor; si el instalador toca `~/.zshrc` o `~/.bashrc` (brew `shellenv`, `~/.cargo/env`, fnm `env`), que sea idempotente y avisar de que hay que abrir otra terminal.
+- [ ] `init --from` y `init` usan las recetas en vez de `VIA_BREW` y `hint`; herramienta MCP equivalente (`setup_preview`).
+- [ ] Tests: unitarios del plan y de las dependencias con gestores falsos; de punta a punta en Docker (Debian, Fedora, Arch, openSUSE, desde una imagen sin nada) y, en macOS, los instaladores de usuario en un `HOME` falso. Windows queda sin probar mientras no haya máquina.
+- [ ] Documentación EN/ES, landing (EN/ES), skill de Claude y README.
+
+Estimación (02-11): unos 4 días de trabajo con agente, unas 30-40 horas de una persona. Diseño y modelo de recetas 0,5 días; motor (plan, dependencias, confirmación, PATH) 1 día; recetas para los 26 gestores en los tres SO, unas 40, 1-1,5 días; tests y pruebas en Docker 1 día; `init`, MCP, documentación y landing 0,5 días. Riesgos: los instaladores cambian sus scripts y opciones; Windows sin máquina para probar; macOS desde cero (sin Homebrew ni las Command Line Tools) solo se puede probar en una máquina limpia o una VM.
+
 ## Landing (publicada en https://repoke.paveldelpozo.es)
 
 - [x] Logo del **repóker de ases** (diseño propio a partir de la idea de Pavel): cuatro ases en abanico con su palo en la esquina, colores alternos y el as de corazones delante; favicon con el as de corazones. `site/logo.svg`, `site/favicon.svg`.
