@@ -387,7 +387,10 @@ mod tests {
             beside(INDEX, "plugins/omz/repoke-omz"),
             "https://raw.githubusercontent.com/paveldelpozo/repoke-plugins/main/plugins/omz/repoke-omz"
         );
-        assert_eq!(beside("/tmp/x/index.toml", "plugins/a"), "/tmp/x/plugins/a");
+        assert_eq!(
+            Path::new(&beside("/tmp/x/index.toml", "plugins/a")),
+            Path::new("/tmp/x/plugins/a")
+        );
     }
 
     #[test]
