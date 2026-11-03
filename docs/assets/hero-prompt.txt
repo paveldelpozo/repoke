@@ -1,0 +1,9 @@
+Generation mode: built-in image_gen (no CLI fallback).
+Use case: ads-marketing
+Asset type: premium GitHub README hero banner, wide landscape 2.5:1.
+Primary request: Create a polished editorial brand banner for repoke, a developer CLI that finds installed package managers and lets users check and selectively upgrade packages. Inspired by its existing four-aces playing card identity and warm ivory, ink black and oxblood red website.
+Scene/backdrop: warm ivory #FFFDF8 paper, exceptionally restrained fine print texture.
+Subject: right half has a beautifully art-directed tangible fan of four ivory ace playing cards, black club, red diamond, black spade, red heart, realistic paper thickness and soft grounded shadows. Refined letterpress details, no casino props. Left half has generous clean typography with large lowercase serif wordmark "repoke" in near black and a small oxblood rule.
+Text (verbatim): "repoke" and below it "Your package managers." on one line and "One command." on next line. Below the tagline, a small clean monospaced command "$ repoke check".
+Composition/framing: wide horizontal banner, balanced spacious editorial layout, left text occupies 55 percent, cards on right 40 percent; all content with generous safe margins. Typography very legible at GitHub README width 830 pixels. Top quality crafted product identity, warm studio lighting, professional developer tool, no gradients, no glow, no floating UI panels.
+Constraints: exact text only as provided, no extra text, no third-party logos, no watermark, no badges, no claims of speed or usage numbers. Cards are a brand metaphor not an app screenshot.
