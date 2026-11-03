@@ -9,6 +9,7 @@
 <p align="center"><strong>Find outdated packages across your machine. Choose what gets upgraded.</strong></p>
 
 <p align="center">
+  <a href="https://github.com/dobbygl/repoke/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/dobbygl/repoke/ci.yml?style=flat-square&amp;label=CI" alt="CI: formatting, Clippy and tests"></a>
   <a href="https://github.com/paveldelpozo/repoke/releases"><img src="https://img.shields.io/github/v/release/paveldelpozo/repoke?style=flat-square&amp;color=B3121F" alt="Latest release"></a>
   <a href="https://crates.io/crates/repoke"><img src="https://img.shields.io/crates/v/repoke?style=flat-square&amp;color=B3121F" alt="crates.io version"></a>
   <a href="https://github.com/paveldelpozo/repoke/releases"><img src="https://img.shields.io/badge/platforms-macOS%20%7C%20Linux%20%7C%20Windows-17140F?style=flat-square" alt="Platforms: macOS, Linux, Windows"></a>
@@ -194,7 +195,7 @@ scripts/release.sh minor       # or major, patch, or an exact version like 1.2.0
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org/) so the release script can work out the next [semver](https://semver.org/) version: `feat:` is a minor bump, `fix:` and the other types a patch, and `!` or `BREAKING CHANGE` a major one. Release notes are grouped by those types.
 
-The GitHub workflow is manual (`gh workflow run CI`) so pushes don't spend Actions minutes. To run the quick checks before every push, opt in to the bundled hook with `git config core.hooksPath .githooks`. Cross-target clippy needs `rustup target add x86_64-unknown-linux-gnu x86_64-pc-windows-msvc`.
+GitHub Actions runs formatting checks, Clippy and tests on macOS, Linux and Windows for every push and pull request. You can also start it manually with `gh workflow run CI`. New runs cancel older runs for the same branch or pull request. To run the quick checks before every push, opt in to the bundled hook with `git config core.hooksPath .githooks`. Cross-target clippy needs `rustup target add x86_64-unknown-linux-gnu x86_64-pc-windows-msvc`.
 
 The website (https://repoke.paveldelpozo.es) is an Astro project in `site/` that renders `docs/`: `pnpm install && pnpm build` there writes it to `site/dist`. Every command and option in `repoke --help` must appear in `docs/commands.md` and `docs/es/commands.md`; `scripts/ci.sh` checks it.
 
