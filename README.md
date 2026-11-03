@@ -9,7 +9,7 @@
 <p align="center"><strong>Find outdated packages across your machine. Choose what gets upgraded.</strong></p>
 
 <p align="center">
-  <a href="https://github.com/dobbygl/repoke/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/dobbygl/repoke/ci.yml?style=flat-square&amp;label=CI" alt="CI: formatting, Clippy and tests"></a>
+  <a href="https://github.com/paveldelpozo/repoke/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/paveldelpozo/repoke/ci.yml?style=flat-square&amp;label=CI" alt="CI: formatting, Clippy and tests"></a>
   <a href="https://github.com/paveldelpozo/repoke/releases"><img src="https://img.shields.io/github/v/release/paveldelpozo/repoke?style=flat-square&amp;color=B3121F" alt="Latest release"></a>
   <a href="https://crates.io/crates/repoke"><img src="https://img.shields.io/crates/v/repoke?style=flat-square&amp;color=B3121F" alt="crates.io version"></a>
   <a href="https://github.com/paveldelpozo/repoke/releases"><img src="https://img.shields.io/badge/platforms-macOS%20%7C%20Linux%20%7C%20Windows-17140F?style=flat-square" alt="Platforms: macOS, Linux, Windows"></a>
