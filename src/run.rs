@@ -818,13 +818,27 @@ fn execute(
         return Ok(printed);
     }
     let lines = lines.lock().expect("output lock");
+    // A backtrace comes after the message and would push it out of the tail.
+    let kept: Vec<&str> = lines
+        .iter()
+        .map(String::as_str)
+        .filter(|line| !is_backtrace_frame(line))
+        .collect();
     Err(format!(
         "exited with {}\n{}",
         status
             .code()
             .map_or("a signal".to_string(), |c| c.to_string()),
-        lines[lines.len().saturating_sub(40)..].join("\n")
+        kept[kept.len().saturating_sub(40)..].join("\n")
     ))
+}
+
+/// A Ruby stack frame, like `/opt/homebrew/bin/gem:12:in '<main>'`.
+fn is_backtrace_frame(line: &str) -> bool {
+    line.split_once(":in ").is_some_and(|(at, _)| {
+        at.rsplit_once(':')
+            .is_some_and(|(_, n)| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()))
+    })
 }
 
 /// Warnings about unrelated config (e.g. an `.npmrc` token) would bury the actual error.
@@ -869,6 +883,22 @@ mod tests {
             error.contains("working") && error.contains("broken"),
             "{error}"
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn execute_keeps_the_message_and_drops_the_backtrace() {
+        let error = execute(
+            &sh("echo 'ERROR:  While executing gem' >&2; echo \"    You don't have write permissions\" >&2; \
+                 for i in 1 2 3 4 5 6 7 8 9 10 11 12; do echo \"\tlib/a.rb:$i:in 'Foo#bar'\" >&2; done; \
+                 echo 'Updating rdoc'; exit 1"),
+            &ProgressBar::hidden(),
+            None,
+        )
+        .unwrap_err();
+        assert!(error.contains("While executing gem"), "{error}");
+        assert!(error.contains("write permissions"), "{error}");
+        assert!(!error.contains(":in "), "{error}");
     }
 
     #[cfg(unix)]
