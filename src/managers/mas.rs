@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::manager::{Installed, Manager, Package, Step, capture, lines};
+use crate::manager::{Installed, Manager, Package, Step, capture, lines, needs_sudo};
 
 pub struct Mas;
 
@@ -26,6 +26,16 @@ impl Manager for Mas {
             .into_iter()
             .map(|(_, package)| package)
             .collect())
+    }
+
+    /// mas 7 needs root to install and upgrade, and when it isn't root it runs `sudo` itself,
+    /// whose password prompt would sit unseen behind the spinner.
+    fn needs_root(&self, bin: &Path) -> bool {
+        needs_sudo()
+            && self
+                .version(bin)
+                .and_then(|v| v.split('.').next()?.parse::<u32>().ok())
+                .is_none_or(|major| major >= 7)
     }
 
     /// Apps are listed by name but upgraded by App Store id, so the ids are looked up again.

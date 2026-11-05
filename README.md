@@ -119,7 +119,7 @@ repoke never waits for input when stdin is not a terminal: a manager that tries 
 |----------|-----------------------------|---------------|----------|-------|
 | brew     | Homebrew formulae and casks | macOS, Linux  | macOS    | `--refresh` runs `brew update` |
 | softwareupdate | macOS Software Update | macOS        | macOS    | needs sudo; updates that restart the Mac are left to System Settings |
-| mas      | Mac App Store               | macOS         |          | |
+| mas      | Mac App Store               | macOS         |          | mas 7+ needs sudo to install and upgrade |
 | apt      | APT                         | Linux         | Debian   | needs sudo; `--refresh` runs `apt-get update` |
 | dnf      | DNF                         | Linux         | Fedora   | needs sudo |
 | pacman   | pacman                      | Linux         | Arch     | needs sudo; always a full `-Syu`, Arch has no partial upgrades: a selection, `--package` or `--hold` still upgrades everything |
