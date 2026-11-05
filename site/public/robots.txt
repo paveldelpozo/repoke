@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://repoke.paveldelpozo.es/sitemap.xml

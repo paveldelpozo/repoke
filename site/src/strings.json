@@ -44,16 +44,16 @@
     "built_from": "This page is built from",
     "pages": {
       "index": [
-        "repoke: every package manager, one command",
-        "repoke finds the package managers on your machine (Homebrew, npm, pnpm, pip, cargo, apt, winget and more), shows what is outdated and upgrades what you pick, from a terminal, a script, a schedule or an AI agent."
+        "repoke: update all your package managers with one command",
+        "Update Homebrew, npm, pnpm, pip, cargo, apt, winget and more with one command. repoke lists outdated packages and upgrades the ones you pick."
       ],
       "commands": [
-        "Command reference · repoke",
-        "Every repoke command and option: list, check, upgrade, export, init, schedule, self-update, mcp and plugin, with configuration, JSON output and exit codes."
+        "repoke command reference: check, upgrade, schedule",
+        "Every repoke command and option: list, check outdated packages, upgrade, export, schedule, self-update, mcp and plugin, plus config, JSON output and exit codes."
       ],
       "plugins": [
-        "Writing a repoke plugin",
-        "How to add a package manager to repoke: a TOML file that declares commands and how to read their output, or an executable that answers a small JSON protocol."
+        "Write a repoke plugin to add a package manager",
+        "Add a package manager to repoke with a TOML file that declares its commands, or with an executable that answers a small JSON protocol."
       ]
     },
     "og_alt": "Four aces fanned out next to the name repoke and the line: every package manager on your machine, one command."
@@ -103,16 +103,16 @@
     "built_from": "Esta página se genera a partir de",
     "pages": {
       "index": [
-        "repoke: todos tus gestores de paquetes, un solo comando",
-        "repoke encuentra los gestores de paquetes de tu máquina (Homebrew, npm, pnpm, pip, cargo, apt, winget y más), te dice qué está desactualizado y actualiza lo que elijas, desde una terminal, un script, una tarea programada o un agente de IA."
+        "repoke: actualiza todos tus gestores de paquetes con un comando",
+        "Actualiza Homebrew, npm, pnpm, pip, cargo, apt, winget y más con un comando. repoke lista los paquetes desactualizados y actualiza los que elijas."
       ],
       "commands": [
-        "Referencia de comandos · repoke",
-        "Todos los comandos y opciones de repoke: list, check, upgrade, export, init, schedule, self-update, mcp y plugin, con la configuración, la salida JSON y los códigos de salida."
+        "Referencia de comandos de repoke: check, upgrade, schedule",
+        "Todos los comandos y opciones de repoke: list, check, upgrade, export, schedule, self-update, mcp y plugin, con configuración, salida JSON y códigos de salida."
       ],
       "plugins": [
-        "Cómo escribir un plugin de repoke",
-        "Cómo añadir un gestor de paquetes a repoke: un fichero TOML que declara los comandos y cómo leer su salida, o un ejecutable que responde a un protocolo JSON pequeño."
+        "Escribe un plugin de repoke para añadir un gestor de paquetes",
+        "Añade un gestor de paquetes a repoke con un fichero TOML que declara sus comandos, o con un ejecutable que responde a un pequeño protocolo JSON."
       ]
     },
     "og_alt": "Cuatro ases en abanico junto al nombre repoke y la frase: todos tus gestores de paquetes, un solo comando."

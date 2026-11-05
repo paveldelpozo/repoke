@@ -1,6 +1,7 @@
 ---
 import strings from "../strings.json";
 import { BASE, OG, version } from "../site.js";
+import cargo from "../../../Cargo.toml?raw";
 
 const { lang, name, doc = false } = Astro.props;
 const s = strings[lang];
@@ -8,6 +9,25 @@ const [title, description] = s.pages[name];
 const file = name === "index" ? "" : `${name}.html`;
 const [ogImage, ogLocale] = OG[lang];
 const origin = Astro.site.origin;
+const url = origin + BASE[lang] + file;
+const license = cargo.match(/^license = "(.+)"$/m)[1].split(" OR ");
+
+const softwareApplication = name === "index" && {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "repoke",
+  description,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "macOS, Linux, Windows",
+  softwareVersion: version,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
+  license: license.map((id) => `https://spdx.org/licenses/${id}`),
+  url,
+  codeRepository: "https://github.com/paveldelpozo/repoke",
+  downloadUrl: "https://github.com/paveldelpozo/repoke/releases",
+  author: { "@type": "Person", name: "Pavel del Pozo" },
+  inLanguage: lang,
+};
 
 const nav = s.nav.map(([href, label]) => {
   const url = href.startsWith("http") ? href : BASE[lang] + href;
@@ -21,14 +41,16 @@ const nav = s.nav.map(([href, label]) => {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{title}</title>
   <meta name="description" content={description}>
-  <link rel="alternate" hreflang="en" href={BASE.en + file}>
-  <link rel="alternate" hreflang="es" href={BASE.es + file}>
+  <link rel="canonical" href={url}>
+  <link rel="alternate" hreflang="en" href={origin + BASE.en + file}>
+  <link rel="alternate" hreflang="es" href={origin + BASE.es + file}>
+  <link rel="alternate" hreflang="x-default" href={origin + BASE.en + file}>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="repoke">
   <meta property="og:title" content={title}>
   <meta property="og:description" content={description}>
-  <meta property="og:url" content={origin + BASE[lang] + file}>
+  <meta property="og:url" content={url}>
   <meta property="og:locale" content={ogLocale}>
   <meta property="og:image" content={`${origin}/${ogImage}`}>
   <meta property="og:image:width" content="1200">
@@ -51,10 +73,11 @@ const nav = s.nav.map(([href, label]) => {
       }
       if (lang !== root.lang) {
         var other = document.querySelector('link[rel="alternate"][hreflang="' + lang + '"]');
-        if (other) location.replace(other.getAttribute("href") + location.hash);
+        if (other) location.replace(new URL(other.href).pathname + location.hash);
       }
     })();
   </script>
+  {softwareApplication && <script type="application/ld+json" set:html={JSON.stringify(softwareApplication)} />}
   <link rel="stylesheet" href="/style.css">
   <script is:inline src="/site.js" defer></script>
   <script is:inline src="/consent.js" defer></script>
