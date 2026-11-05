@@ -54,9 +54,19 @@
       "plugins": [
         "Write a repoke plugin to add a package manager",
         "Add a package manager to repoke with a TOML file that declares its commands, or with an executable that answers a small JSON protocol."
+      ],
+      "404": [
+        "Page not found | repoke",
+        "This page does not exist."
       ]
     },
-    "og_alt": "Four aces fanned out next to the name repoke and the line: every package manager on your machine, one command."
+    "og_alt": "Four aces fanned out next to the name repoke and the line: every package manager on your machine, one command.",
+    "not_found": {
+      "title": "Page not found",
+      "text": "That address does not lead anywhere. It may have moved, or the link may have a typo.",
+      "home": "Go to the home page",
+      "commands": "Read the command reference"
+    }
   },
   "es": {
     "skip": "Saltar al contenido",
@@ -113,8 +123,18 @@
       "plugins": [
         "Escribe un plugin de repoke para añadir un gestor de paquetes",
         "Añade un gestor de paquetes a repoke con un fichero TOML que declara sus comandos, o con un ejecutable que responde a un pequeño protocolo JSON."
+      ],
+      "404": [
+        "Página no encontrada | repoke",
+        "Esta página no existe."
       ]
     },
-    "og_alt": "Cuatro ases en abanico junto al nombre repoke y la frase: todos tus gestores de paquetes, un solo comando."
+    "og_alt": "Cuatro ases en abanico junto al nombre repoke y la frase: todos tus gestores de paquetes, un solo comando.",
+    "not_found": {
+      "title": "Página no encontrada",
+      "text": "Esa dirección no lleva a ninguna parte. Puede que se haya movido o que el enlace tenga una errata.",
+      "home": "Ir al inicio",
+      "commands": "Leer la referencia de comandos"
+    }
   }
 }

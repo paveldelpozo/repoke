@@ -1,0 +1,14 @@
+---
+import Base from "../layouts/Base.astro";
+import { BASE } from "../site.js";
+import strings from "../strings.json";
+
+const s = strings.en.not_found;
+---
+<Base lang="en" name="404">
+  <section class="intro">
+    <h1>{s.title}</h1>
+    <p class="lead">{s.text}</p>
+    <p><a href={BASE.en}>{s.home}</a> <span aria-hidden="true">·</span> <a href={BASE.en + "commands.html"}>{s.commands}</a></p>
+  </section>
+</Base>
