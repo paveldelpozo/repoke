@@ -42,6 +42,16 @@ impl Manager for Gem {
                 .is_ok_and(|dir| !writable(Path::new(dir.trim())))
     }
 
+    /// Homebrew's Ruby links read-only files from its Cellar into the gem directory (`rdoc_plugin.rb`),
+    /// and a gem that ships the same file can't replace them, even though the directory is writable.
+    fn hint(&self, _packages: &[Package], error: &str) -> Option<String> {
+        let (_, rest) = error.split_once("write permissions for the ")?;
+        let path = rest.split_once(" directory")?.0;
+        Some(format!(
+            "gem can't overwrite {path}: if it is a symlink into the Homebrew Cellar, delete it and upgrade again"
+        ))
+    }
+
     /// Gems that only exist as a Ruby default (`default: 13.0.6`) are part of Ruby itself.
     fn installed(&self, bin: &Path) -> Result<Vec<Installed>, String> {
         Ok(lines(bin, ["list", "--local"])?
@@ -91,5 +101,13 @@ mod tests {
         assert_eq!(packages.len(), 2);
         assert_eq!(packages[1].current, "2.4.10");
         assert_eq!(packages[1].latest, "2.5.23");
+    }
+
+    #[test]
+    fn hints_at_the_file_gem_cannot_overwrite() {
+        let error = "ERROR:  While executing gem ... (Gem::FilePermissionError)\n    You don't have write permissions for the /opt/homebrew/lib/ruby/gems/4.0.0/plugins/rdoc_plugin.rb directory.";
+        let hint = Gem.hint(&[], error).unwrap();
+        assert!(hint.contains("plugins/rdoc_plugin.rb"), "{hint}");
+        assert!(Gem.hint(&[], "exited with 1").is_none());
     }
 }
