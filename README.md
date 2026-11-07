@@ -1,73 +1,120 @@
-# repoke
+<p align="center">
+  <a href="https://repoke.paveldelpozo.es">
+    <img src="docs/assets/repoke-hero.jpg" alt="repoke — Your package managers. One command. Run repoke check to see what needs updating." width="100%">
+  </a>
+</p>
 
-Finds the package managers installed on your system, shows what is outdated and updates what you choose: everything at once, one manager or single packages. It works interactively in a terminal and unattended for scripts, cron and AI agents.
+<h1 align="center"><img src="site/public/logo.svg" width="48" alt=""> repoke</h1>
 
-> Status: early development.
+<p align="center"><strong>Find outdated packages across your machine. Choose what gets upgraded.</strong></p>
 
-## Install
+<p align="center">
+  <a href="https://github.com/paveldelpozo/repoke/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/paveldelpozo/repoke/ci.yml?style=flat-square&amp;label=CI" alt="CI: formatting, Clippy and tests"></a>
+  <a href="https://github.com/paveldelpozo/repoke/releases"><img src="https://img.shields.io/github/v/release/paveldelpozo/repoke?style=flat-square&amp;color=B3121F" alt="Latest release"></a>
+  <a href="https://crates.io/crates/repoke"><img src="https://img.shields.io/crates/v/repoke?style=flat-square&amp;color=B3121F" alt="crates.io version"></a>
+  <a href="https://github.com/paveldelpozo/repoke/releases"><img src="https://img.shields.io/badge/platforms-macOS%20%7C%20Linux%20%7C%20Windows-17140F?style=flat-square" alt="Platforms: macOS, Linux, Windows"></a>
+  <a href="LICENSE-MIT"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-17140F?style=flat-square" alt="License: MIT OR Apache-2.0"></a>
+</p>
 
-```sh
-brew tap paveldelpozo/tap && brew trust paveldelpozo/tap   # Homebrew asks you to trust third-party taps
-brew install repoke                                        # macOS and Linux
-cargo install repoke                                       # anywhere with Rust
-```
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#supported-managers">Supported managers</a> ·
+  <a href="#with-ai-agents">AI agents</a> ·
+  <a href="https://repoke.paveldelpozo.es/commands.html">Docs</a> ·
+  <a href="https://repoke.paveldelpozo.es/es/">Español</a>
+</p>
 
-or download the archive for your system from the [releases](https://github.com/paveldelpozo/repoke/releases) and put `repoke` on your `PATH`. `repoke self-update` updates it, through Homebrew or cargo when it was installed with them; `--check` only reports (exit 100 when there is a newer version). In a terminal, repoke also mentions a new version once a day; `REPOKE_NO_UPDATE_CHECK=1` turns that off.
+Homebrew for apps. npm for globals. pip for Python. cargo for Rust. Keeping a development machine current means remembering a different command for each.
 
-## Usage
+**repoke brings 26 built-in managers into one CLI.** It detects the ones you have, checks for updates and runs their native commands for the packages you select. Use it interactively, on a schedule or through an AI agent with MCP.
 
-```sh
-repoke list                       # supported managers and whether they are installed
-repoke check                      # pending updates, read only
-repoke check --only brew,pnpm     # restrict to some managers
-repoke check --exclude npm --json # machine-readable output
+> [!NOTE]
+> repoke is in early development. Platform support and real-system verification vary by manager; see [the compatibility table](#supported-managers).
 
-repoke upgrade                    # pick what to upgrade from a list (all preselected)
-repoke upgrade --dry-run          # print the commands, change nothing
-repoke upgrade --yes              # upgrade everything pending without asking
-repoke upgrade --yes --json --no-sudo --hold eslint
-```
+## Quick start
 
-### Moving to another machine
-
-```sh
-repoke export                         # asks, per manager, whether to include its config files
-repoke export --yes --config -o snap  # unattended: config included, secret values removed
-REPOKE_PASSWORD=… repoke export --yes --encrypt -o snap  # config with its secrets, encrypted
-repoke init --from snap               # pick what to install (all preselected), then restore config
-repoke init --from snap --dry-run     # what would be installed and restored
-repoke init                           # fresh machine: pick tools from a catalog (ripgrep, fd, gh…)
-repoke init --tools ripgrep,fd --yes  # the same without the picker
-```
-
-`export` writes a folder with `repoke.toml`, one line per package (`cask:firefox`, `eslint==10.13.0`), and `files/` with the config files at their path under your home. It records only what you installed on purpose, not dependencies. Lines that look like secrets (`_authToken=…`, `password: …`, private keys) are found before saving: interactively you choose to remove their values, leave the file out or keep it; unattended, the values are always removed. `${VAR}` references are kept. With `--encrypt` (or choosing it for one file) config files keep their secrets and go into `files.age`, an [age](https://age-encryption.org) file encrypted with a password that `init` asks for before installing anything; `REPOKE_PASSWORD` gives it without a prompt. A config that is a symlink into a git repository is recorded as coming from your dotfiles (with the repository's remote) instead of being copied.
-
-`init --from` skips managers the machine doesn't have for its OS, installs only what is missing, runs Homebrew first (it often installs the other managers) and offers to install a still-missing manager with Homebrew. Config files are compared first: missing ones are restored, equal ones left alone, and different ones are kept unless you choose the snapshot's copy (or pass `--overwrite`), with yours backed up as `<file>.repoke-<date>.bak`. Removed secret values are filled back from the file already on the machine, so restoring never swaps a real token for the placeholder.
-
-### On a schedule
+Install with **Homebrew** on macOS or Linux:
 
 ```sh
-repoke schedule install                        # daily at 03:00, upgrades what needs no sudo
-repoke schedule install --every weekly --at 08:30 --check-only --exclude brew
-repoke schedule install --dry-run              # print the scheduler files and commands
-repoke schedule status                         # schedule, next run (Linux) and the last result
-repoke schedule run                            # run the job now, as the scheduler would
-repoke schedule remove
+brew tap paveldelpozo/tap
+brew trust paveldelpozo/tap
+brew install repoke
 ```
 
-The job is registered with the system scheduler: a launchd agent (`~/Library/LaunchAgents/repoke.schedule.plist`) on macOS, a systemd user timer (`repoke.timer`) on Linux, a `repoke` task in the Task Scheduler on Windows. Where systemd isn't running (a container, WSL), `install` saves the schedule and prints the crontab line to add. A run missed while the machine was asleep or off happens at the next wake or boot. It calls `repoke schedule run`, which runs `upgrade --yes --no-sudo` (or `check` with `--check-only`), keeps the output of the last run and a `history.jsonl` in `~/Library/Logs/repoke` (`~/.local/state/repoke` on Linux, `%LOCALAPPDATA%\repoke` on Windows) and sends a system notification when something was upgraded, failed or is pending. Schedulers start jobs with a bare `PATH`, so `install` saves yours, swapping fnm's per-shell folder for its `default` alias; run `install` again after changing your `PATH`.
+Or with **Cargo** (Rust 1.89+):
 
-### With AI agents
-
-`repoke mcp` is an MCP server over stdio with six tools: `list_managers`, `check_updates`, `upgrade`, `export`, `init_preview` and `schedule_status`. `upgrade` only previews unless it gets `dry_run: false`, and never uses sudo.
-
-Claude Code: the plugin adds the MCP server and a skill that tells Claude when and how to use it.
-
+```sh
+cargo install repoke
 ```
+
+Prefer a binary? [Download a release for macOS, Linux or Windows](https://github.com/paveldelpozo/repoke/releases) and put `repoke` on your `PATH`.
+
+Start with a read-only check, then preview or choose your updates:
+
+```sh
+repoke check                 # see what's outdated; no packages changed
+repoke upgrade --dry-run     # preview the commands
+repoke upgrade               # choose from a list; all packages start selected
+```
+
+`check` exits with **100 when updates are available**, 0 when everything is current and 1 when a manager fails. Update repoke itself with `repoke self-update`.
+
+## One place for the work around your packages
+
+| What you want to do | How repoke helps |
+| --- | --- |
+| See what's installed | `repoke list` detects supported managers on your machine. |
+| Choose your updates | Filter by manager, select packages or hold a package back. Preview with `--dry-run`. |
+| Set up another machine | Export explicitly installed packages and optional config; restore what's missing. |
+| Stop checking manually | Schedule checks or upgrades with your OS scheduler. Get notified when updates are available, applied or fail. |
+| Let an agent help | Built-in MCP server, JSON output and unattended operation. |
+| Add another manager | Declare commands in TOML or write a small executable plugin. |
+
+### Keep control of each upgrade
+
+```sh
+repoke check --only brew,pnpm           # focus on specific managers
+repoke upgrade --hold eslint           # leave a package alone
+repoke upgrade --package npm:typescript # select one package
+repoke upgrade --yes --no-sudo --json   # unattended; skip managers needing sudo
+```
+
+> [!IMPORTANT]
+> **pacman always performs a full system upgrade (`-Syu`).** Package selections and holds cannot narrow it. Use `--exclude pacman` to leave it out.
+
+### Take your setup with you
+
+```sh
+repoke export -o my-setup              # save packages; asks about config files
+repoke init --from my-setup --dry-run  # preview installs and config restoration
+repoke init --from my-setup            # choose what to restore
+```
+
+Config export detects values that look like secrets and offers redaction, omission or password encryption with `--encrypt`. Unattended, unencrypted exports redact detected values. Review snapshots before sharing them. Existing, different config files are kept unless you choose to replace them, with a backup made before replacement.
+
+Starting fresh? `repoke init` opens a curated tool catalog. [Snapshot and restore options →](docs/commands.md#repoke-export)
+
+### Check while you're away
+
+```sh
+repoke schedule install --check-only  # daily check at 03:00; no upgrades
+repoke schedule status               # inspect the schedule and last result
+repoke schedule remove               # remove the schedule
+```
+
+For automatic upgrades, use `repoke schedule install`: it runs with `--yes --no-sudo`. Scheduling uses launchd, systemd user timers or Windows Task Scheduler; without systemd, repoke prints a crontab line to add. [Scheduling options →](docs/commands.md#repoke-schedule)
+
+## With AI agents
+
+`repoke mcp` exposes six tools over stdio: `list_managers`, `check_updates`, `upgrade`, `export`, `init_preview` and `schedule_status`. The MCP upgrade tool **previews by default** and never uses sudo; executing an upgrade requires `dry_run: false`.
+
+**Claude Code** — install the plugin for the MCP server and usage skill:
+
+```text
 /plugin install repoke --marketplace paveldelpozo/repoke
 ```
 
-Codex, in `~/.codex/config.toml`:
+**Codex** — add to `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.repoke]
@@ -75,41 +122,9 @@ command = "repoke"
 args = ["mcp"]
 ```
 
-Any other MCP client: run `repoke mcp` as a stdio server. Without MCP, agents can call `repoke check --json` and `repoke upgrade --yes --no-sudo --json` directly; `--package` narrows an upgrade to single packages (`name` or `manager:name`).
+For other MCP clients, configure `repoke mcp` as a stdio server. Install repoke first and ensure it is on the client's `PATH`.
 
-`--only`, `--exclude`, `--hold` and `--refresh` (runs `brew update` first) work with both `check` and `upgrade`. In a terminal, spinners on stderr show what each manager is doing; with `--json` or when piped there are none.
-
-### Unattended use
-
-`upgrade` without `--yes` refuses to run outside a terminal (exit 2) instead of waiting for input. With `--json` it prints one event per line (`check_failed`, `running`, `planned`, `done`, `failed`, `skipped`, `blocked`, `retrying`, then `summary`). `blocked` is a package installed while its manager refused to run its install scripts (npm 12 does this by default for packages not in `allow-scripts`), so it may not work; it carries a `hint` with what to run, and the run exits 1. `done` and `failed` carry `action` (`upgrade` or `install`) and `seconds`; `summary` has the totals, `elapsed_seconds` for the whole run and a per-manager breakdown. `init` adds a `config` event per config file. A manager that needs root is called with `sudo -n`, so it fails at once when there is no cached password; `--no-sudo` skips it instead.
-
-### Configuration
-
-`~/.config/repoke/config.toml` (`%APPDATA%\repoke\config.toml` on Windows, or the file in `REPOKE_CONFIG`):
-
-```toml
-exclude = ["brew"]               # managers left out unless named in --only
-hold = ["eslint", "pnpm:pnpm"]   # never upgraded nor reported, as name or manager:name
-plugin_timeout = "10m"           # longest a plugin command may run (600, 90s, 10m, 1h; 0 = no limit)
-
-[brew]
-greedy = true                    # also casks that update themselves (Chrome, Slack…), which brew skips
-```
-
-`REPOKE_PLUGIN_TIMEOUT` overrides `plugin_timeout` for one run.
-
-### Exit codes
-
-| Code | Meaning |
-|------|---------|
-| 0    | `check`: everything is up to date. `upgrade`: everything selected was upgraded |
-| 100  | `check`: updates are available |
-| 1    | A manager failed to check or upgrade, or installed a package with its install scripts blocked (details in the output) |
-| 2    | Invalid arguments or config, or `upgrade` without `--yes` outside a terminal |
-| 75   | `upgrade` or `init`: another one is already running |
-| 130  | The interactive selection was cancelled |
-
-repoke never waits for input when stdin is not a terminal: a manager that tries to prompt fails instead of hanging.
+Scripts can use `repoke check --json` and `repoke upgrade --yes --no-sudo --json` directly. Without a terminal, `upgrade` requires `--yes` and exits instead of waiting for input. [JSON events and exit codes →](docs/commands.md#json-output)
 
 ## Supported managers
 
@@ -146,22 +161,28 @@ repoke never waits for input when stdin is not a terminal: a manager that tries 
 
 Planned: deno, volta. See [docs/tareas.md](docs/tareas.md).
 
-### Plugins
 
-Any other manager can be added without changing repoke: a TOML file in `~/.config/repoke/managers/` that says which commands to run and how to read their output, or a `repoke-<id>` executable on your PATH that answers a small JSON protocol. Plugins show up in every command, including the MCP server. A plugin can also name config files for `export` to carry, which is how the official `git` and `zsh` plugins bring `.gitconfig` and `.zshrc` to a new machine.
+## Extend repoke
 
 ```sh
-repoke plugin new gh-ext          # TOML template in ~/.config/repoke/managers/gh-ext.toml
-repoke plugin new omz --exec      # ./repoke-omz, a script speaking the protocol
-repoke plugin list                # what was found, and any problem with it
-repoke plugin search              # official plugins (github.com/paveldelpozo/repoke-plugins)
-repoke plugin install vscode      # shows its code, asks, installs into ~/.local/bin
-repoke plugin remove vscode
+repoke plugin search          # browse official and community plugins
+repoke plugin install vscode  # review its code before confirming installation
+repoke plugin new gh-ext      # scaffold a TOML manager
 ```
 
-How to write one: [docs/plugins.md](docs/plugins.md). Examples: [examples/plugins](examples/plugins) (GitHub CLI extensions, oh-my-zsh).
+Plugins participate in every command, including MCP. Add your own with a TOML file or a `repoke-<id>` executable on your `PATH`.
 
-## Development
+[Plugin guide](docs/plugins.md) · [Example plugins](examples/plugins) · [Plugin registry](https://github.com/paveldelpozo/repoke-plugins)
+
+## Go deeper
+
+- [Command reference](docs/commands.md): every command, configuration, JSON events and exit codes.
+- [Referencia en español](docs/es/commands.md): comandos, configuración y automatización.
+- [Roadmap](docs/tareas.md): planned work and known gaps.
+- [Report a bug or request a manager](https://github.com/paveldelpozo/repoke/issues): include your OS, manager and repoke version.
+
+<details>
+<summary><strong>Developing repoke</strong></summary>
 
 ```sh
 scripts/ci.sh           # what CI checks: fmt, clippy for macOS/Linux/Windows, tests
@@ -174,12 +195,17 @@ scripts/release.sh minor       # or major, patch, or an exact version like 1.2.0
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org/) so the release script can work out the next [semver](https://semver.org/) version: `feat:` is a minor bump, `fix:` and the other types a patch, and `!` or `BREAKING CHANGE` a major one. Release notes are grouped by those types.
 
-The GitHub workflow is manual (`gh workflow run CI`) so pushes don't spend Actions minutes. To run the quick checks before every push, opt in to the bundled hook with `git config core.hooksPath .githooks`. Cross-target clippy needs `rustup target add x86_64-unknown-linux-gnu x86_64-pc-windows-msvc`.
+GitHub Actions runs formatting checks, Clippy and tests on macOS, Linux and Windows for every push and pull request. You can also start it manually with `gh workflow run CI`. New runs cancel older runs for the same branch or pull request. To run the quick checks before every push, opt in to the bundled hook with `git config core.hooksPath .githooks`. Cross-target clippy needs `rustup target add x86_64-unknown-linux-gnu x86_64-pc-windows-msvc`.
 
 The website (https://repoke.paveldelpozo.es) is an Astro project in `site/` that renders `docs/`: `pnpm install && pnpm build` there writes it to `site/dist`. Every command and option in `repoke --help` must appear in `docs/commands.md` and `docs/es/commands.md`; `scripts/ci.sh` checks it.
 
 Each manager lives in `src/managers/<id>.rs` and implements the `Manager` trait in `src/manager.rs`. Output parsing is a pure function with tests over real captured output.
 
-## License
 
-Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT license](LICENSE-MIT), at your option.
+</details>
+
+---
+
+**Fewer update commands to remember?** [Star repoke](https://github.com/paveldelpozo/repoke) so you can find it again, or share it with someone maintaining a development machine. Real-world reports for unverified managers are especially useful.
+
+Licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
