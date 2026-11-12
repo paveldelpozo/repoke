@@ -7,7 +7,7 @@
 - Every new feature updates the command docs in both languages (`docs/commands.md` and `docs/es/commands.md`) and the landing in `site/`, which is available in English and Spanish. `scripts/check-docs.py` fails if a command or option is missing from either reference.
 - When updating the landing, record the latest published version in the repository. The landing reads it from `Cargo.toml` at build time, so a release keeps it current.
 - After each change that passes verification, reinstall the local binary with `cargo install --path . --force`.
-- Before merging or integrating any branch or worktree, read its QA status in `docs/tareas.md` and the brain project note, state it explicitly, and do not merge if the last QA failed or is pending.
+- Before merging or integrating any branch or worktree, read its status and QA in its task note under `~/.hivefold/brain/Proyectos/repoke/tareas/` (the `hvf:` block), which you manage from the project manager in the hvf web app. State it explicitly, and never merge if the last QA is FAIL or pending.
 
 ## How to verify
 
